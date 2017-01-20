@@ -33,3 +33,7 @@ Configuration sample:
         ]
     }
 ```
+
+# Limitation
+
+Only RollerShutter tested. Other devices not tested.
