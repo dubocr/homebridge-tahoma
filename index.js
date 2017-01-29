@@ -13,6 +13,7 @@ var execution = {
 */
 const STATE_CLOSURE = "core:ClosureState";
 const STATE_OPEN_CLOSED = "core:OpenClosedState";
+const STATE_OPEN_CLOSED_PEDESTRIAN = "core:OpenClosedPedestrianState";
 const STATE_LOCKED_UNLOCKED = "core:LockedUnlockedState";
 const STATE_PRIORITY_LOCK = "core:PriorityLockLevelState";
 const STATE_ACTIVE_ZONES = "core:ActiveZonesState";
@@ -161,6 +162,23 @@ OverkizPlatform.prototype = {
   }
 }
 
+function OverkizCommand(name) {
+	this.type = 1;
+	this.name = name;
+	this.parameters = [];
+}
+
+function OverkizState(name) {
+	this.name = name;
+	this.characteristics = { main: null, target: null, status: null };
+}
+
+OverkizState.prototype = {
+	convert: function(value) { return value; },
+	getCommand: function(value) { return null; },
+	getStatus: function(running) { return null; }
+}
+
 function OverkizAccessory(log, platform, device) {
     // device info
     //this.states = [];
@@ -184,78 +202,176 @@ OverkizAccessory.prototype = {
             .setCharacteristic(Characteristic.Model, this.device.uiClass)
             .setCharacteristic(Characteristic.SerialNumber, this.device.deviceURL);
     
-    	var currentState = null;
-		switch (this.device.uiClass) {
+    	switch (this.device.uiClass) {
             case "RollerShutter":
-            	currentState = this.getHomekitStateCharacteristic(STATE_CLOSURE, this._look_state(STATE_CLOSURE)).value;
-    			this.service = new Service.WindowCovering(this.device.label);
-                this.service.getCharacteristic(Characteristic.CurrentPosition)
-                    .on('get', this.getState.bind(this, STATE_CLOSURE))
-                    .updateValue(currentState);
-                this.service.getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setTarget.bind(this, STATE_CLOSURE))
-                    .value = currentState;
-                this.service.getCharacteristic(Characteristic.PositionState)
-                    .on('get', this.getCommandStatus.bind(this, STATE_CLOSURE));
+            	this.service = new Service.WindowCovering(this.device.label);
             break;
-            case "DoorLock":
-    			currentState = this.getHomekitStateCharacteristic(STATE_LOCKED_UNLOCKED, this._look_state(STATE_LOCKED_UNLOCKED)).value;
+            case "DoorLock": // Portail
     			this.service = new Service.LockMechanism(this.device.label);
-                this.service.getCharacteristic(Characteristic.LockCurrentState)
-                    .on('get', this.getState.bind(this, STATE_LOCKED_UNLOCKED))
-                    .updateValue(currentState);
-                this.service.getCharacteristic(Characteristic.LocktargetStates)
-                    .on('set', this.setTarget.bind(this, STATE_LOCKED_UNLOCKED))
-                    .value = currentState;;
             break;
-            case "Gate":
-            	currentState = this.getHomekitStateCharacteristic(STATE_CLOSURE, this._look_state(STATE_CLOSURE)).value;
-    			this.service = new Service.Door(this.device.label);
-                this.service.getCharacteristic(Characteristic.CurrentPosition)
-                    .on('get', this.getState.bind(this, STATE_CLOSURE))
-                    .updateValue(currentState);
-                this.service.getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setTarget.bind(this, STATE_CLOSURE))
-                    .value = currentState;;
-                this.service.getCharacteristic(Characteristic.PositionState)
-                    .on('get', this.getState.bind(this, STATE_OPEN_CLOSED));
+            case "Gate": // Portail
+            	this.service = new Service.GarageDoorOpener(this.device.label);
+            break;
+            case "GarageDoor": // Porte Garage
+            	this.service = new Service.GarageDoorOpener(this.device.label);
             break;
             case "Alarm":
-            	currentState = this.getHomekitStateCharacteristic(STATE_ACTIVE_ZONES, this._look_state(STATE_ACTIVE_ZONES)).value;
-    			this.service = new Service.SecuritySystem(this.device.label);
-                this.service.getCharacteristic(Characteristic.SecuritySystemCurrentState)
-                    .on('get', this.getState.bind(this, STATE_ACTIVE_ZONES))
-                    .updateValue(currentState);
-                this.service.getCharacteristic(Characteristic.SecuritySystemtargetStates)
-                    .on('set', this.setTarget.bind(this, STATE_ACTIVE_ZONES))
-                    .value = currentState;;
+            	this.service = new Service.SecuritySystem(this.device.label);
             break;
             case "HeatingSystem":
-            	currentState = this.getHomekitStateCharacteristic(STATE_TARGET_TEMP, this._look_state(STATE_TARGET_TEMP)).value;
-    			var currentState2 = this.getHomekitStateCharacteristic(STATE_HEATING_ON_OFF, this._look_state(STATE_HEATING_ON_OFF)).value;
-    			this.service = new Service.Thermostat(this.device.label);
-                this.service.getCharacteristic(Characteristic.CurrentTemperature)
-                    .on('get', this.getState.bind(this, STATE_TARGET_TEMP))
-                    .updateValue(currentState);
-                this.service.getCharacteristic(Characteristic.TargetTemperature)
-                    .on('set', this.setTarget.bind(this, STATE_TARGET_TEMP))
-                    .value = currentState;
-                this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-                    .on('get', this.getState.bind(this, STATE_HEATING_ON_OFF))
-                    .updateValue(currentState2);
-                this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                    .on('set', this.setTarget.bind(this, STATE_HEATING_ON_OFF))
-                    .value = currentState;;
+            	this.service = new Service.Thermostat(this.device.label);
             break;
             default:
-            	var STATE = "OnOff";
-            	currentState = this.getHomekitStateCharacteristic(STATE, this._look_state(STATE)).value;
             	this.service = new Service.Switch(this.device.label);
-                /*this.service.getCharacteristic(Characteristic.On)
-                    .on('set', this.setState.bind(this, STATE))
-                    .on('get', this.getState.bind(this, STATE));*/
             break;
         }
+        
+        var accessory = this;
+        for(state of this.device.states) {
+        	var overkizState = new OverkizState(state.name);
+			switch(state.name) {
+				case STATE_CLOSURE:
+					if(this.service.UUID == Service.WindowCovering.UUID) {
+						overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.CurrentPosition);
+						overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.TargetPosition);
+						overkizState.characteristics.status = this.service.getCharacteristic(Characteristic.PositionState);
+						overkizState.convert = function(value) { return 100-value; };
+						overkizState.getCommand = function(value) {
+							var command = new OverkizCommand('setPosition');
+							command.parameters = [100-value];
+							return command;
+						};
+						overkizState.getStatus = function(running) {
+							if(!running) // Not running
+								return Characteristic.PositionState.STOPPED;
+							else if(this.characteristics.target.value == 100 || this.characteristics.target.value > this.characteristics.main.value)
+								return Characteristic.PositionState.INCREASING;
+							else
+								return Characteristic.PositionState.DECREASING;
+						};
+					}
+				break;
+				case 'core:OpenClosedUnknownState':
+					overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.CurrentDoorState);
+					overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.TargetDoorState);
+					overkizState.convert = function(value) {
+						switch(value) {
+							case 'unknown':
+							case 'open' : return Characteristic.CurrentDoorState.OPEN; break;
+							case 'closed' : return Characteristic.CurrentDoorState.CLOSED; break;
+						}
+					};
+					overkizState.getCommand = function(value) {
+						return new OverkizCommand(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close');
+					};
+				break;
+				case STATE_OPEN_CLOSED_PEDESTRIAN:
+					overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.CurrentDoorState);
+					overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.TargetDoorState);
+					overkizState.convert = function(value) {
+						switch(value) {
+							case 'unknown':
+							case 'open' : return Characteristic.CurrentDoorState.OPEN; break;
+							case 'pedestrian' : return Characteristic.CurrentDoorState.STOPPED; break;
+							case 'closed' : return Characteristic.CurrentDoorState.CLOSED; break;
+						}
+					};
+					overkizState.getCommand = function(value) {
+						return new OverkizCommand(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close');
+					};
+				break;
+				case STATE_LOCKED_UNLOCKED:
+					overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.LockCurrentState);
+					overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.LockTargetState);
+					overkizState.convert = function(value) { return value == 'locked' ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED; };
+					overkizState.getCommand = function(value) {
+						var command = new OverkizCommand(value == Characteristic.LockTargetState.SECURED ? 'lock' : 'unlock');
+						return command;
+					};
+				break;
+				case STATE_ACTIVE_ZONES:
+					overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.SecuritySystemCurrentState);
+					overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.SecuritySystemTargetState);
+					overkizState.convert = function(value) {
+						switch(value) {
+							default:
+							case '': return Characteristic.SecuritySystemCurrentState.DISARMED;
+							case 'A,B': return Characteristic.SecuritySystemCurrentState.STAY_ARM;
+							case 'A,B,C': return Characteristic.SecuritySystemCurrentState.AWAY_ARM;
+							case 'A': return Characteristic.SecuritySystemCurrentState.NIGHT_ARM;
+							case 'triggered': return Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED;
+						}
+					};
+					overkizState.getCommand = function(value) {
+						var commandName = null;
+						switch(value) {
+							default:
+							case Characteristic.SecuritySystemTargetState.STAY_ARM:
+							case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+							case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+								 commandName = 'alarmOn';
+							break;
+							case Characteristic.SecuritySystemTargetState.DISARM:
+								 commandName = 'alarmOff';
+							break;
+						}
+						return commandName != null ? new OverkizCommand(commandName): null;
+					};
+				break;
+				case STATE_HEATING_ON_OFF:
+					overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
+					overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState);
+					overkizState.convert = function(value) { return value == 'off' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT; };
+					overkizState.getCommand = function(value) {
+						var command = new OverkizCommand('setHeatingOnOffState');
+						switch(value) {
+							case Characteristic.TargetHeatingCoolingState.AUTO:
+							case Characteristic.TargetHeatingCoolingState.HEAT:
+							case Characteristic.TargetHeatingCoolingState.COOL:
+								 command.parameters = ['on'];
+							break;
+							case Characteristic.TargetHeatingCoolingState.OFF:
+							default:
+								 command.parameters = ['off'];
+							break;
+						}
+						return command;
+					};
+				break;
+				case STATE_TARGET_TEMP:
+					overkizState.characteristics.main = this.service.getCharacteristic(Characteristic.CurrentTemperature);
+					overkizState.characteristics.target = this.service.getCharacteristic(Characteristic.TargetTemperature);
+					overkizState.getCommand = function(value) {
+						var command = new OverkizCommand('setHeatingTargetTemperature');
+						command.parameters = [value];
+						return command;
+					};
+				break;
+				case STATE_OPEN_CLOSED:
+					overkizState.getCommand = function(value) {
+						return new OverkizCommand(value ? 'open' : 'close');
+					};
+				break;
+				default:
+				break;
+			}
+					
+			/* Configure HAP */
+			if(overkizState.characteristics.main != null) {
+				overkizState.characteristics.main
+					.on('get', accessory.getState.bind(accessory, overkizState))
+					.updateValue(overkizState.convert(state.value));
+			}
+			if(overkizState.characteristics.target != null) {
+				overkizState.characteristics.target
+					.on('set', accessory.setTarget.bind(accessory, overkizState))
+					.updateValue(overkizState.convert(state.value));
+			}
+			if(overkizState.characteristics.status != null) {
+				overkizState.characteristics.status
+					.updateValue(overkizState.getStatus(false));
+			}
+		}
 
 		return [informationService, this.service];
     },
@@ -263,35 +379,26 @@ OverkizAccessory.prototype = {
     /* Generic commands */
 	
 	identify: function(callback) {
-		executeCommand({ type:1, name: 'identify', parameters: [] }, callback, function() {});
+		//this.executeCommand({ type:1, name: 'identify', parameters: [] }, callback, function() {});
+		callback();
 	},
 	
     /*
 		Refresh component state
 		Return state in cache
 	*/
-	getState: function(name, callback) {
+	getState: function(state, callback) {
 		var that = this;
-        this.requestState(name, function(error, value) {
+        this.requestState(state.name, function(error, value) {
         	if(error) {
         		that.log(error);
         		callback(error);
         	} else {
-        		c = that.getHomekitStateCharacteristic(name, value);
-            	callback(null, c.value);
-            	that.log('['+that.name+'] ' + name + "=" + c.value);
+        		var convert = state.convert(value);
+        		callback(null, convert);
+            	that.log('['+that.name+'] ' + state.name + "=" + value);
             }
         });
-	},
-	
-	/*
-		Provide information about the command in progress
-		Return state in cache
-	*/
-	getCommandStatus: function(name, callback) {
-		var characteristic = that.getHomekitCommandCharacteristic(name, this.currentCommand);
-        this.log('Get ' + name + ' command status => ' + characteristic.value);
-		callback(null, characteristic.value);
 	},
 	
 	/*
@@ -300,181 +407,52 @@ OverkizAccessory.prototype = {
 		value: The new value of the state
 		callback: HomeKit callback
 	*/
-	setTarget: function(name, value, callback) {
+	setTarget: function(state, value, callback) {
 		var that = this;
-		
 		// Obtain the Overkiz corresponding command for this state and this new value
-		var command = this.getOverkizCommand(name, value);
-
-		that.log('['+that.name+'] ' + "Set " + name + " to " + value + " => " + command.name + "(" + command.parameters + ")");
-		this.executeCommand(command, function(status, err) {
-			switch(status) {
-				case execution.INIT:
-					callback(err);
-				break;
-				case execution.START:
-					// Command started callback
-					if(err == null) {
-						// Update command status characteristic
-						var commandCharac = that.getHomekitCommandCharacteristic(name, command);
-						if(commandCharac.name != null) {
-							var name2 = that.service.getCharacteristic(commandCharac.name).updateValue(commandCharac.value).displayName;
-							that.log('['+that.name+'] ' + command.name + ' in progress (' + name2 + '=' + commandCharac.value + ')');
+		var command = state.getCommand(value);
+		if(command == null) {
+			callback(new Error('No command configured'));
+		} else {
+			that.log('['+that.name+'] ' + "Set " + state.name + " to " + value + " => " + command.name + "(" + command.parameters + ")");
+			this.executeCommand(command, function(status, err) {
+				switch(status) {
+					case execution.INIT:
+						callback(err);
+					break;
+					case execution.START:
+						// Command started callback
+						if(err == null) {
+							// Update command status characteristic
+							if(state.characteristics.status != null)
+								state.characteristics.status.updateValue(state.getStatus(true));
 						} else 
-							that.log(commandCharac + ' --- ' + name);
-					} else 
-						that.log(err);
-				break;
-				case execution.END:
-					// Command executed callback
-					// Update command state characteristic
-					var commandCharac = that.getHomekitCommandCharacteristic(name, command);
-					if(commandCharac.name != null)
-						that.service.getCharacteristic(commandCharac.name).updateValue(commandCharac.value);
+							that.log(err);
+					break;
+					case execution.END:
+						// Command executed callback
+						// Update command state characteristic
+						if(state.characteristics.status != null)
+							state.characteristics.status.updateValue(state.getStatus(false));
 			
-					// Update state characteristic
-					that.requestState(name, function(error, value) {
-						var characteristic = that.getHomekitStateCharacteristic(name,value);
-						that.service.getCharacteristic(characteristic.name).updateValue(characteristic.value);
-						var targetcharac = that.getHomekitTargetCharacteristic(name);
-						that.service.getCharacteristic(targetcharac).updateValue(characteristic.value);
-						that.log('['+that.name+'] ' + command.name + ' ' + (err == null ? 'OK' : err) + ' (' + name + '=' + characteristic.value + ')');
-					});
-				break;
-				default:
-					that.log("Bad execution state %s", status);
-				break;
-			}
-		});
+						// Update state characteristic
+						that.requestState(state.name, function(error, value) {
+							var convert = state.convert(value);
+							if(state.characteristics.main != null)
+								state.characteristics.main.updateValue(convert);
+							if(state.characteristics.target != null)
+								state.characteristics.target.updateValue(convert);
+							that.log('['+that.name+'] ' + command.name + ' ' + (err == null ? 'OK' : err) + ' (' + state.name + '=' + convert + ')');
+						});
+					break;
+					default:
+						that.log("Bad execution state %s", status);
+					break;
+				}
+			});
+		}
 	},
     
-    /*
-    	Return a converted state for Homekit
-    	'name': Overkiz name of the state to convert
-    	'value': Current value of the state
-    */
-    getHomekitStateCharacteristic: function(name, value) {
-    	switch(name) {
-			case STATE_CLOSURE:
-				return { name: Characteristic.CurrentPosition, value: 100-value };
-			break;
-			case STATE_LOCKED_UNLOCKED:
-				switch(value) {
-					case "locked": return { name: Characteristic.LockCurrentState, value: Characteristic.LockCurrentState.SECURED };
-					case "unlocked": return { name: Characteristic.LockCurrentState, value: Characteristic.LockCurrentState.UNSECURED };
-					default: return { name: Characteristic.LockCurrentState, value: Characteristic.LockCurrentState.UNSECURED };//UNKNOWN
-				}
-			break;
-			case STATE_ACTIVE_ZONES:
-				switch(value) {
-					case "": return { name: Characteristic.SecuritySystemCurrentState, value: Characteristic.SecuritySystemCurrentState.DISARMED };
-					default: return { name: Characteristic.SecuritySystemCurrentState, value: Characteristic.SecuritySystemCurrentState.AWAY_ARM };
-				}
-			break;
-			case STATE_TARGET_TEMP:
-				return { name: Characteristic.CurrentTemperature, value: value };
-			break;
-			case STATE_HEATING_ON_OFF:
-				return { name: Characteristic.CurrentHeatingCoolingState, value: value == 'off' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT };
-			break;
-			default:
-				return { name: null, value: value };
-			break;
-		}
-    },
-    
-    getHomekitTargetCharacteristic: function(name) {
-    	switch(name) {
-			case STATE_CLOSURE:
-				return Characteristic.TargetPosition;
-			break;
-		}
-    },
-    
-    /*
-    	Return a converted state for Homekit current command
-    	'name': Overkiz name of the state to convert
-    	'value': Current value of the state
-    */
-    getHomekitCommandCharacteristic: function(name, command) {
-    	switch(name) {
-			case STATE_CLOSURE:
-				var state = this.service.getCharacteristic(this.getHomekitStateCharacteristic(name, 0).name).value;
-				var target = this.service.getCharacteristic(this.getHomekitTargetCharacteristic(name)).value;
-				if(this.currentCommand == null) // Not running
-					return { name: Characteristic.PositionState, value: Characteristic.PositionState.STOPPED };
-				else if(target == 100 || target > state)
-					return { name: Characteristic.PositionState, value: Characteristic.PositionState.INCREASING };
-				else
-					return { name: Characteristic.PositionState, value: Characteristic.PositionState.DECREASING };
-			break;
-			default:
-				return { name: null, value: null };
-			break;
-		}
-    },
-    
-    /*
-    	Return an associated command and optional params to modify this state
-    	'name': Overkiz name of the state to update
-    	'value': Target value
-    */
-    getOverkizCommand: function(name, value) {
-    	var command = { type: 1, name: null, parameters: [] };
-    	switch(name) {
-			case STATE_CLOSURE:
-				command.name = 'setPosition';
-				command.parameters = [100-value];
-			break;
-			case STATE_OPEN_CLOSED:
-				command.name = value ? 'open' : 'close';
-			break;
-			case STATE_LOCKED_UNLOCKED:
-				switch(value) {
-					case Characteristic.LockCurrentState.SECURED: command.name = 'lock'; break;
-					case Characteristic.LockCurrentState.UNSECURED:
-					case Characteristic.LockCurrentState.JAMMED:
-					case Characteristic.LockCurrentState.UNKNOWN: 
-					default: command.name = 'unlock';
-					break;
-				}
-			break;
-			case STATE_ACTIVE_ZONES:
-				switch(value) {
-					case Characteristic.SecuritySystemCurrentState.STAY_ARM:
-					case Characteristic.SecuritySystemCurrentState.AWAY_ARM:
-					case Characteristic.SecuritySystemCurrentState.NIGHT_ARM:
-						 command.name = 'alarmOn';
-					break;
-					case Characteristic.SecuritySystemCurrentState.DISARMED:
-						 command.name = 'alarmOff';
-					break;
-				}
-			break;
-			case STATE_TARGET_TEMP:
-				command.name = 'setHeatingTargetTemperature';
-				command.parameters = [value];
-			break;
-			case STATE_HEATING_ON_OFF:
-				command.name = 'setHeatingOnOffState';
-				switch(value) {
-					case Characteristic.CurrentHeatingCoolingState.HEAT:
-					case Characteristic.CurrentHeatingCoolingState.COOL:
-						 command.parameters = ['on'];
-					break;
-					case Characteristic.CurrentHeatingCoolingState.OFF:
-					default:
-						 command.parameters = ['off'];
-					break;
-				}
-			break;
-			
-			default:
-				command.name = 'set'+name;
-			break;
-		}
-		return command;
-    },
 	
 	/* Overkiz helpers */
 	
@@ -509,7 +487,8 @@ OverkizAccessory.prototype = {
         var that = this;
         if(this.currentCommand != null) {
 			this.cancelCommand(this.currentCommand.id, function() {
-				that.currentCommand.execpoll.pause();
+				if(that.currentCommand != null && that.currentCommand.execpoll != null)
+					that.currentCommand.execpoll.pause();
 				that.currentCommand = null;
 				that.executeCommand(command, callback);
 			});
