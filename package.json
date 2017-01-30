@@ -1,17 +1,17 @@
 {
-  "name": "homebridge-overkiz",
+  "name": "homebridge-tahoma",
   "version": "0.0.1",
-  "description": "Sample Platform plugin for overkiz services (Somfy,Atlantic): https://github.com/dubocr/homebridge-overkiz",
+  "description": "Sample Platform plugin for TaHoma services (Somfy,Atlantic): https://github.com/dubocr/homebridge-tahoma",
   "license": "ISC",
   "keywords": [
     "homebridge-plugin"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/dubocr/homebridge-overkiz.git"
+    "url": "git://github.com/dubocr/homebridge-tahoma.git"
   },
   "bugs": {
-    "url": "http://github.com/dubocr/homebridge-overkiz/issues"
+    "url": "http://github.com/dubocr/homebridge-tahoma/issues"
   },
   "engines": {
     "node": ">=0.12.0",
@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "request": "^2.65.0",
-    "polling-to-event": ">=2.0.2"
+    "polling-to-event": ">=2.0.2",
+    "util": ">=0.0.1",
+    "path": ">=0.0.1",
+    "js": ">=0.0.1"
   }
 }
