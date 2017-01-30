@@ -3,7 +3,7 @@ var Accessory, Service, Characteristic, UUIDGen, Types;
 var OverkizService = require('./overkiz-api');
 
 module.exports = function(homebridge) {
-    console.log("homebridge-overkiz API version: " + homebridge.version);
+    console.log("homebridge-tahoma API version: " + homebridge.version);
 
     // Accessory must be created from PlatformAccessory Constructor
     Accessory = homebridge.platformAccessory;
@@ -18,10 +18,10 @@ module.exports = function(homebridge) {
 
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
-    homebridge.registerPlatform("homebridge-overkiz", "Overkiz", OverkizPlatform, false);
+    homebridge.registerPlatform("homebridge-tahoma", "Tahoma", TahomaPlatform, false);
 }
 
-function OverkizPlatform(log, config, api) {
+function TahomaPlatform(log, config, api) {
     log('Init ' + config.service + ' platform');
     this.log = log;
 
@@ -36,7 +36,7 @@ function OverkizPlatform(log, config, api) {
     this.api.setDeviceStateChangedEventListener(this);
 }
 
-OverkizPlatform.prototype = {
+TahomaPlatform.prototype = {
     getAccessory: function(deviceURL) {
         for (accessory of this.platformAccessories) {
             if (accessory.deviceURL == deviceURL)
