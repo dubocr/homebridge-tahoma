@@ -25,10 +25,6 @@ function TahomaPlatform(log, config, api) {
     log('Init ' + config.service + ' platform');
     this.log = log;
 
-    // Default values
-    config.pollingPeriod = 5;
-    config.refreshPeriod = 5;
-
     this.api = new OverkizService.Api(log, config);
 
     this.platformAccessories = [];

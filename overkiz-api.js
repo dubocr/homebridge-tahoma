@@ -1,6 +1,4 @@
-var request = require("request").defaults({
-    jar: true
-})
+var request = require("request").defaults({ jar: true })
 var pollingtoevent = require('polling-to-event');
 
 Command = function(name) {
@@ -39,6 +37,11 @@ State = {
 	STATE_OPEN_CLOSED_UNKNOWN: 'core:OpenClosedUnknownState'
 };
 
+Server = {
+	'Cozytouch': 'ha110-1.overkiz.com',
+	'TaHoma': 'tahomalink.com'
+}
+
 module.exports = {
     Command: Command,
     Execution: Execution,
@@ -48,18 +51,16 @@ module.exports = {
 }
 
 function OverkizApi(log, config) {
-    this.log = log;
-    this.user = config.user;
-    this.password = config.password;
-    switch (config.service) {
-        case "Cozytouch":
-            this.server = "ha110-1.overkiz.com";
-            break;
-        case "TaHoma":
-        default:
-            this.server = "tahomalink.com";
-            break;
-    }
+	this.log = log;
+    
+    // Default values
+    this.pollingPeriod = config['pollingPeriod'] || 5; // Poll for events every 5 seconds by default
+    this.refreshPeriod = config['refreshPeriod'] || (60 * 10); // Refresh device states every 10 minutes by default
+    this.service = config['service'] || 'TaHoma';
+    
+    this.user = config['user'];
+    this.password = config['password'];
+    this.server = Server[this.service];
 
     this.isLoggedIn = false;
     this.listenerId = null;
@@ -68,26 +69,15 @@ function OverkizApi(log, config) {
     this.stateChangedEventListener = null;
 
     var that = this;
-    var statusemitter = pollingtoevent(function(done) {
-        that.put({
-            url: that.urlForQuery("/setup/devices/states/refresh"),
-            json: true
-        }, function(error, json) {
-            done(error, json);
-        });
-    }, {
-        longpolling: true,
-        interval: (1000 * 60 * config.refreshPeriod)
-    });
-
     var eventpoll = pollingtoevent(function(done) {
         if (that.listenerId != null) {
             request.post({
                 url: that.urlForQuery("/events/" + that.listenerId + "/fetch"),
                 json: true
             }, function(error, response, data) {
-                if (error || (response != undefined && (response.statusCode < 200 || response.statusCode >= 300))) { // Reauthenticated
-                    that.listenerId = null;
+            	if (error || (response != undefined && (response.statusCode < 200 || response.statusCode >= 300))) { // Reauthenticated
+                    that.log('Suspend event polling');
+            		that.listenerId = null;
                     done(null, []);
                 } else {
                     done(null, data);
@@ -99,7 +89,7 @@ function OverkizApi(log, config) {
         }
     }, {
         longpolling: true,
-        interval: (1000 * config.pollingPeriod)
+        interval: (1000 * this.pollingPeriod)
     });
 
     eventpoll.on("longpoll", function(data) {
@@ -120,6 +110,26 @@ function OverkizApi(log, config) {
     });
 
     eventpoll.on("error", function(error) {
+        that.log(error);
+    });
+    
+    var refreshpoll = pollingtoevent(function(done) {
+    	if (that.listenerId != null) {
+			request.put({
+				url: that.urlForQuery("/setup/devices/states/refresh"),
+				json: true
+			}, function(error, response, data) {
+				done(error, data);
+			});
+		} else {
+            done(null, null);
+        }
+    }, {
+        longpolling: true,
+        interval: (1000 * this.refreshPeriod)
+    });
+    
+    refreshpoll.on("error", function(error) {
         that.log(error);
     });
 }
