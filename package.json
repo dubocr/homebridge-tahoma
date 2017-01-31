@@ -1,6 +1,6 @@
 {
   "name": "homebridge-tahoma",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Sample Platform plugin for TaHoma and Cozytouch services (Somfy,Atlantic,Thermor,Sauter): https://github.com/dubocr/homebridge-tahoma",
   "license": "ISC",
   "keywords": [
