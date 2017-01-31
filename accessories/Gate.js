@@ -42,9 +42,15 @@ Gate.prototype = {
                 case ExecutionState.INITIALIZED:
                     callback(error);
                     break;
+                case ExecutionState.IN_PROGRESS:
+                    var newValue = (value == Characteristic.TargetDoorState.OPEN) ? Characteristic.CurrentDoorState.OPENING : Characteristic.CurrentDoorState.CLOSING;
+                    that.currentState.updateValue(newValue);
+                    break;
                 case ExecutionState.COMPLETED:
+                break;
                 case ExecutionState.FAILED:
-                    that.targetState.updateValue(that.currentState.value);
+                	// Update target in case of error
+                    that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
                     break;
                 default:
                     break;
@@ -55,16 +61,26 @@ Gate.prototype = {
     onStateUpdate: function(name, value) {
         if (name == State.STATE_OPEN_CLOSED_PEDESTRIAN) {
         	var converted = null;
+        	var target = null;
             switch(value) {
 				case 'unknown':
-				case 'open' : converted = Characteristic.CurrentDoorState.OPEN; break;
-				case 'pedestrian' : converted = Characteristic.CurrentDoorState.STOPPED; break;
-				case 'closed' : converted = Characteristic.CurrentDoorState.CLOSED; break;
+				case 'open' :
+					converted = Characteristic.CurrentDoorState.OPEN;
+					target = Characteristic.TargetDoorState.OPEN;
+				break;
+				case 'pedestrian' :
+					converted = Characteristic.CurrentDoorState.STOPPED;
+					target = Characteristic.TargetDoorState.OPEN;
+				break;
+				case 'closed' :
+					converted = Characteristic.CurrentDoorState.CLOSED;
+					target = Characteristic.TargetDoorState.CLOSED;
+				break;
 			}
 
             this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
-                this.targetState.updateValue(converted);
+                this.targetState.updateValue(target);
         }
     }
 }

@@ -53,7 +53,7 @@ DoorLock.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        if (name == State.STATE_LOCKED_UNLOCKED) {
+    	if (name == State.STATE_LOCKED_UNLOCKED) {
         	var converted = value == 'locked' ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED;
             this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target

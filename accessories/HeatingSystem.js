@@ -81,8 +81,9 @@ HeatingSystem.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.COMPLETED:
+                break;
                 case ExecutionState.FAILED:
-                    that.targetState.updateValue(that.currentState.value);
+                    that.heatingTargetState.updateValue(that.heatingCurrentState.value);
                     break;
                 default:
                     break;
@@ -93,10 +94,10 @@ HeatingSystem.prototype = {
     onStateUpdate: function(name, value) {
         if (name == State.STATE_HEATING_ON_OFF) {
         	var converted = value == 'off' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT;
-        	
+        	var target = value == 'off' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT;
             this.heatingCurrentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
-                this.heatingTargetState.updateValue(converted);
+                this.heatingTargetState.updateValue(target);
         } else if (name == State.STATE_TARGET_TEMP) {
             this.currentState.updateValue(value);
             if (!this.isCommandInProgress()) // if no command running, update target

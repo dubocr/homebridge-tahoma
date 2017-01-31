@@ -54,8 +54,9 @@ Alarm.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.COMPLETED:
+                break;
                 case ExecutionState.FAILED:
-                    that.targetState.updateValue(that.currentState.value);
+                    that.targetState.updateValue(that.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED ? that.currentState.value : null);
                     break;
                 default:
                     break;
@@ -64,20 +65,21 @@ Alarm.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        if (name == State.STATE_ACTIVE_ZONES) {
+    	if (name == State.STATE_ACTIVE_ZONES) {
         	var converted = null;
+        	var target = null;
             switch(value) {
 				default:
-				case '': converted = Characteristic.SecuritySystemCurrentState.DISARMED; break;
-				case 'A,B': converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
-				case 'A,B,C': converted = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
-				case 'A': converted = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
+				case '': target = converted = Characteristic.SecuritySystemCurrentState.DISARMED; break;
+				case 'A,B': target = converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
+				case 'A,B,C': target = converted = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
+				case 'A': target = converted = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
 				case 'triggered': converted = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED; break;
 			}
 
             this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
-                this.targetState.updateValue(converted);
+                this.targetState.updateValue(target);
         }
     }
 }
