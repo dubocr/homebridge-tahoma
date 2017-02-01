@@ -65,10 +65,8 @@ RollerShutter.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        //this.log('['+this.name+'] ' + name + '=' + value+' ('+this.lastCommandFail+')');
-        if (name == State.STATE_CLOSURE) {
+    	if (name == State.STATE_CLOSURE) {
             var converted = 100 - value;
-
             this.currentPosition.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
                 this.targetPosition.updateValue(converted);

@@ -22,7 +22,6 @@ module.exports = function(homebridge) {
 }
 
 function TahomaPlatform(log, config, api) {
-    log('Init ' + config.service + ' platform');
     this.log = log;
 
     this.api = new OverkizService.Api(log, config);
@@ -43,19 +42,16 @@ TahomaPlatform.prototype = {
 
     accessories: function(callback) {
         var that = this;
-        this.log("Fetching Overkiz accessories...");
+        this.log.info("Fetching accessories...");
         if (that.platformAccessories.length == 0) {
-            this.api.get({
-                url: that.api.urlForQuery("/setup"),
-                json: true
-            }, function(error, json) {
+            this.api.getDevices(function(error, data) {
                 if (!error) {
-                    for (device of json.devices) {
+                    for (device of data) {
                     	var accessory = null;
                     	if(DeviceAccessory[device.uiClass] != null) {
                     		accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device);
                     	} else {
-                    		that.log('Device ' + device.uiClass + ' ignored');
+                    		that.log.info('Device ' + device.uiClass + ' ignored');
 						}
 						if(accessory != null) {
 							for (state of device.states) {
@@ -71,11 +67,11 @@ TahomaPlatform.prototype = {
             callback(this.platformAccessories);
         }
     },
-
-    onStateChangeEvent: function(event) {
-        accessory = this.getAccessory(event.deviceURL);
+    
+    onStatesChange: function(deviceURL, states) {
+        accessory = this.getAccessory(deviceURL);
         if (accessory != null) {
-            for (state of event.deviceStates) {
+            for (state of states) {
                 accessory.onStateUpdate(state.name, state.value);
             }
         }

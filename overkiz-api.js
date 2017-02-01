@@ -34,7 +34,8 @@ State = {
 	STATE_ACTIVE_ZONES: "core:ActiveZonesState",
 	STATE_TARGET_TEMP: "core:TargetTemperatureState",
 	STATE_HEATING_ON_OFF: "core:HeatingOnOffState",
-	STATE_OPEN_CLOSED_UNKNOWN: 'core:OpenClosedUnknownState'
+	STATE_OPEN_CLOSED_UNKNOWN: 'core:OpenClosedUnknownState',
+	STATE_RSSI: 'core:RSSILevelState'
 };
 
 Server = {
@@ -54,7 +55,7 @@ function OverkizApi(log, config) {
 	this.log = log;
     
     // Default values
-    this.pollingPeriod = config['pollingPeriod'] || 5; // Poll for events every 5 seconds by default
+    this.pollingPeriod = config['pollingPeriod'] || 2; // Poll for events every 2 seconds by default
     this.refreshPeriod = config['refreshPeriod'] || (60 * 10); // Refresh device states every 10 minutes by default
     this.service = config['service'] || 'TaHoma';
     
@@ -69,20 +70,13 @@ function OverkizApi(log, config) {
     this.stateChangedEventListener = null;
 
     var that = this;
-    var eventpoll = pollingtoevent(function(done) {
-        if (that.listenerId != null) {
-            request.post({
+    this.eventpoll = pollingtoevent(function(done) {
+    	if (that.listenerId != null) {
+        	that.post({
                 url: that.urlForQuery("/events/" + that.listenerId + "/fetch"),
                 json: true
-            }, function(error, response, data) {
-            	if (error || (response != undefined && (response.statusCode < 200 || response.statusCode >= 300))) { // Reauthenticated
-                    that.log('Suspend event polling');
-            		that.listenerId = null;
-                    done(null, []);
-                } else {
-                    done(null, data);
-                }
-
+            }, function(error, data) {
+            	done(error, data);
             });
         } else {
             done(null, []);
@@ -92,38 +86,45 @@ function OverkizApi(log, config) {
         interval: (1000 * this.pollingPeriod)
     });
 
-    eventpoll.on("longpoll", function(data) {
+    this.eventpoll.on("longpoll", function(data) {
         for (event of data) {
             if (event.name == 'DeviceStateChangedEvent') {
                 if (that.stateChangedEventListener != null)
-                    that.stateChangedEventListener.onStateChangeEvent(event);
-
+                    that.stateChangedEventListener.onStatesChange(event.deviceURL, event.deviceStates);
             } else if (event.name == 'ExecutionStateChangedEvent') {
                 var cb = that.executionCallback[event.execId];
                 if (cb != null) {
                     cb(event.newState, event.failureType == undefined ? null : event.failureType);
-                    if (event.timeToNextState == -1) // No more state expected for this execution
+                    if (event.timeToNextState == -1) { // No more state expected for this execution
                         delete that.executionCallback[event.execId];
+                        if(Object.keys(that.executionCallback).length == 0) { // Unregister listener when no more execution running
+                        	that.unregisterListener();
+                        }
+                    }
                 }
             }
         }
     });
 
-    eventpoll.on("error", function(error) {
-        that.log(error);
+    this.eventpoll.on("error", function(error) {
+    	that.listenerId = null;
     });
     
     var refreshpoll = pollingtoevent(function(done) {
-    	if (that.listenerId != null) {
-			request.put({
-				url: that.urlForQuery("/setup/devices/states/refresh"),
-				json: true
-			}, function(error, response, data) {
-				done(error, data);
-			});
-		} else {
-            done(null, null);
-        }
+    	that.refreshStates(function(error, data) {
+    		setTimeout(function() {
+    			that.getDevices(function(error, data) {
+					if (!error) {
+						for (device of data) {
+							if (that.stateChangedEventListener != null) {
+                    			that.stateChangedEventListener.onStatesChange(device.deviceURL, device.states);
+                    		}
+						}
+					}
+				});
+    		}, 10 * 1000); // Read devices states after 10s
+    		done(error, data);
+    	});
     }, {
         longpolling: true,
         interval: (1000 * this.refreshPeriod)
@@ -158,21 +159,34 @@ OverkizApi.prototype = {
         var fct = request.delete.bind(request, options);
         this.requestWithLogin(fct, callback);
     },
+    
+    getDevices(callback) {
+    	this.get({
+			url: this.urlForQuery("/setup/devices"),
+			json: true
+		}, function(error, json) {
+			callback(error, json);
+		});
+    },
 
     requestWithLogin: function(myRequest, callback) {
         var that = this;
         var authCallback = function(err, response, json) {
             if (response != undefined && response.statusCode == 401) { // Reauthenticated
                 that.isLoggedIn = false;
-                that.listenerId = null;
                 that.log(json.error);
                 that.requestWithLogin(myRequest, callback);
             } else if (err) {
                 that.log("There was a problem requesting to Overkiz : " + err);
-                callback("There was a problem requesting to Overkiz : " + err);
+                callback(err);
             } else if (response != undefined && (response.statusCode < 200 || response.statusCode >= 300)) {
-                that.log(json.errorCode + " (" + response.statusCode + ") : " + json.error);
-                callback(json.errorCode + " (" + response.statusCode + ") : " + json.error);
+            	var msg = 'Error ' + response.statusCode;
+            	if(json.error != null)
+            		msg += ' ' + json.error;
+                if(json.errorCode != null)
+            		msg += ' (' + json.errorCode + ')';
+            	that.log(msg);
+                callback(msg);
             } else {
                 callback(null, json);
             }
@@ -180,7 +194,7 @@ OverkizApi.prototype = {
         if (this.isLoggedIn) {
             myRequest(authCallback);
         } else {
-            this.log("Log in Overkiz server...");
+            this.log.debug("Log in Overkiz server...");
             var that = this;
             request.post({
                 url: this.urlForQuery("/login"),
@@ -191,15 +205,14 @@ OverkizApi.prototype = {
                 json: true
             }, function(err, response, json) {
                 if (err) {
-                    that.log("Unable to login: " + err);
+                    that.log.warn("Unable to login: " + err);
                 } else if (json.success) {
                     that.isLoggedIn = true;
                     myRequest(authCallback);
-                    that.registerListener();
                 } else if (json.error) {
-                    that.log("Loggin fail: " + json.error);
+                    that.log.warn("Loggin fail: " + json.error);
                 } else {
-                    that.log("Unable to login");
+                    that.log.error("Unable to login");
                 }
             });
         }
@@ -207,12 +220,41 @@ OverkizApi.prototype = {
 
     registerListener: function() {
         var that = this;
-        this.post({
-            url: that.urlForQuery("/events/register"),
-            json: true
-        }, function(error, data) {
-            that.listenerId = data.id;
-        });
+        if(this.listenerId == null) {
+        	this.log.debug('Register listener');
+			this.post({
+				url: that.urlForQuery("/events/register"),
+				json: true
+			}, function(error, data) {
+				if(!error) {
+					that.listenerId = data.id;
+				}
+			});
+		}
+    },
+    
+    unregisterListener: function() {
+        var that = this;
+        if(this.listenerId != null) {
+        	this.log.debug('Unregister listener');
+			this.post({
+				url: that.urlForQuery("/events/" + this.listenerId + "/unregister"),
+				json: true
+			}, function(error, data) {
+				if(!error) {
+					that.listenerId = null;
+				}
+			});
+        }
+    },
+    
+    refreshStates: function(callback) {
+    	this.put({
+			url: this.urlForQuery("/setup/devices/states/refresh"),
+			json: true
+		}, function(error, data) {
+			callback(error, data);
+		});
     },
 
     requestState: function(deviceURL, state, callback) {
@@ -220,9 +262,9 @@ OverkizApi.prototype = {
         this.get({
             url: this.urlForQuery("/setup/devices/" + encodeURIComponent(deviceURL) + "/states/" + encodeURIComponent(state)),
             json: true
-        }, function(error, json) {
-            //that.log(json);
-            callback(error, json.value);
+        }, function(error, data) {
+            //that.log(data);
+            callback(error, data.value);
         });
     },
 
@@ -254,6 +296,7 @@ OverkizApi.prototype = {
             if (error == null) {
                 callback(ExecutionState.INITIALIZED, null, json); // Init OK
                 that.executionCallback[json.execId] = callback;
+                that.registerListener();
             } else {
                 callback(ExecutionState.INITIALIZED, error);
             }

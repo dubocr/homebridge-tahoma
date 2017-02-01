@@ -76,7 +76,7 @@ AbstractAccessory.prototype = {
 				if (status == ExecutionState.INITIALIZED)
 					that.lastExecId = data.execId;
 				if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
-					that.log('[' + that.name + '] ' + command.name + ' ' + (error == null ? status : error));
+					that.log.info('[' + that.name + '] ' + command.name + ' ' + (error == null ? status : error));
             }
             callback(status, error, data);
         });
