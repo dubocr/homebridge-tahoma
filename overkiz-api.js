@@ -35,7 +35,9 @@ State = {
 	STATE_TARGET_TEMP: "core:TargetTemperatureState",
 	STATE_HEATING_ON_OFF: "core:HeatingOnOffState",
 	STATE_OPEN_CLOSED_UNKNOWN: 'core:OpenClosedUnknownState',
-	STATE_RSSI: 'core:RSSILevelState'
+	STATE_RSSI: 'core:RSSILevelState',
+	STATE_ON_OFF: 'core:OnOffState',
+	STATE_INTENSITY: 'core:IntensityState'
 };
 
 Server = {
@@ -194,7 +196,7 @@ OverkizApi.prototype = {
         if (this.isLoggedIn) {
             myRequest(authCallback);
         } else {
-            this.log.debug("Log in Overkiz server...");
+            this.log.debug("Connecting " + this.service + " server...");
             var that = this;
             request.post({
                 url: this.urlForQuery("/login"),

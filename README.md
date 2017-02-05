@@ -34,6 +34,30 @@ Configuration sample:
     }
 ```
 
+| Parameter                  | Note                                                                                                                                                                  |
+|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `user`               		 | mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
+| `password`             	 | mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
+| `service`              	 | optional, service name in [TaHoma, Cozytouch], default: TaHoma                                                                                                        |
+| `refreshPeriod`            | optional, device states refresh period in minute, default: 10                                                                                                         |
+
 # Limitation
 
-Only RollerShutter tested. Other devices not tested.
+Tested device : 
+- RollerShutter
+
+Read-only tested devices : 
+- Alarm
+- DoorLock
+- GarageDoor
+- Gate
+
+Not tested devices : 
+- HeatingSystem
+- OnOff
+- Light
+
+# Contribute
+
+You are welcome to contribute to this plugin development by adding new kind of devices by adding implementation `.js` file in `accessories` folder.
+Please have a look to `RollerShutter.js` file for example.

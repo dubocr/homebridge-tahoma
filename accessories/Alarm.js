@@ -65,7 +65,8 @@ Alarm.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == State.STATE_ACTIVE_ZONES) {
+    	//this.log.debug('['+this.name+'] ' + name + '=' + value); // For analysis
+        if (name == State.STATE_ACTIVE_ZONES) {
         	var converted = null;
         	var target = null;
             switch(value) {
