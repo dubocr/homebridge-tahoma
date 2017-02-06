@@ -56,6 +56,11 @@ Not tested devices :
 - HeatingSystem
 - OnOff
 - Light
+- ContactSensor
+- OccupancySensor
+- SmokeSensor
+
+Sensor state is only updated every 10 minutes for the moment.
 
 # Contribute
 
