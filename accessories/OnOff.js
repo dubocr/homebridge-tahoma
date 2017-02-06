@@ -17,10 +17,15 @@ module.exports = function(homebridge, abstractAccessory, api) {
  
 OnOff = function(log, api, device) {
     AbstractAccessory.call(this, log, api, device);
-    var service = new Service.Switch(device.label);
+    var service = this.device.widget == 'DimmerOnOff' ? new Service.Lightbulb(device.label) : new Service.Switch(device.label);
 
     this.onState = service.getCharacteristic(Characteristic.On);
     this.onState.on('set', this.setOn.bind(this));
+    
+    if(this.device.widget == 'DimmerOnOff') {
+    	this.brightnessState = service.addCharacteristic(Characteristic.Brightness);
+    	this.brightnessState.on('set', this.setBrightness.bind(this));
+    }
     
     this.services.push(service);
 };
@@ -53,10 +58,38 @@ OnOff.prototype = {
             }
         });
     },
+    
+    /**
+	* Triggered when Homekit try to modify the Characteristic.Brightness
+	**/
+    setBrightness: function(value, callback) {
+        var that = this;
+        
+        var command = new Command('setIntensity');
+        command.parameters = [value];
+        this.executeCommand(command, function(status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.IN_PROGRESS:
+                    break;
+                case ExecutionState.COMPLETED:
+                	break;
+                case ExecutionState.FAILED:
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
 
     onStateUpdate: function(name, value) {
         if (name == 'core:OnOffState') {
         	this.onState.updateValue(value == 'on' ? true : false);
+        } else if (name == 'core:IntensityState') {
+        	if(this.brightnessState != null)
+        		this.brightnessState.updateValue(value);
         }
     }
 }

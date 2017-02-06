@@ -64,7 +64,10 @@ function OverkizApi(log, config) {
     this.user = config['user'];
     this.password = config['password'];
     this.server = Server[this.service];
-
+    
+    if (!this.user || !this.password) throw new Error("You must provide credentials ('user'/'password')");
+    if (!this.server) throw new Error("Invalid service name '"+this.service+"'");
+    
     this.isLoggedIn = false;
     this.listenerId = null;
     this.executionCallback = [];

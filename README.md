@@ -37,7 +37,7 @@ Configuration sample:
 | Parameter                  | Note                                                                                                                                                                  |
 |----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `user`               		 | mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
-| `password`             	 | mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
+| `password`             	 | mandatory, your TaHoma/Cozytouch account password                                                                                                                     |
 | `service`              	 | optional, service name in [TaHoma, Cozytouch], default: TaHoma                                                                                                        |
 | `refreshPeriod`            | optional, device states refresh period in minute, default: 10                                                                                                         |
 

@@ -22,7 +22,7 @@ Light = function(log, api, device) {
     this.onState = service.getCharacteristic(Characteristic.On);
     this.onState.on('set', this.setOn.bind(this));
     
-    if(this._look_state(State.STATE_INTENSITY) != null) {
+    if(this.device.widget == 'DimmerLight') {
     	this.brightnessState = service.addCharacteristic(Characteristic.Brightness);
     	this.brightnessState.on('set', this.setBrightness.bind(this));
     }
@@ -85,9 +85,9 @@ Light.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        if (name == State.STATE_ON_OFF) {
+        if (name == 'core:OnOffState') {
             this.onState.updateValue(value == 'on' ? true : false);
-        } else if (name == State.STATE_INTENSITY) {
+        } else if (name == 'core:IntensityState') {
         	if(this.brightnessState != null)
         		this.brightnessState.updateValue(value);
         }
