@@ -26,9 +26,9 @@ Configuration sample:
         	{
             	"platform": "Tahoma",
             	"name": "Tahoma",
-            	"user": "[user]",
-            	"password": "[password]",
-	    		"service": "Service name (TaHoma, Cozytouch)"
+            	"user": "yourusername",
+            	"password": "yourpassword",
+	    		"service": "Service name ('TaHoma' or 'Cozytouch')"
         	}
         ]
     }
