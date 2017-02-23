@@ -86,10 +86,12 @@ AbstractAccessory.prototype = {
     	Look for current state
     */
     _look_state: function(stateName) {
-        for (state of this.device.states) {
-            if (state.name == stateName)
-                return state.value;
-        }
+    	if(this.device.states != null) {
+			for (state of this.device.states) {
+				if (state.name == stateName)
+					return state.value;
+			}
+		}
         return null;
     },
 
