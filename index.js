@@ -1,7 +1,7 @@
 var Accessory, Service, Characteristic, UUIDGen, Types;
 
 var OverkizService = require('./overkiz-api');
-
+var inherits = require('util').inherits;
 module.exports = function(homebridge) {
     console.log("homebridge-tahoma API version: " + homebridge.version);
 
@@ -54,8 +54,10 @@ TahomaPlatform.prototype = {
                     		that.log.info('Device ' + device.uiClass + ' ignored');
 						}
 						if(accessory != null) {
-							for (state of device.states) {
-								accessory.onStateUpdate(state.name, state.value);
+							if(device.states != null) {
+								for (state of device.states) {
+									accessory.onStateUpdate(state.name, state.value);
+								}
 							}
 							that.platformAccessories.push(accessory);
 						}
@@ -71,8 +73,10 @@ TahomaPlatform.prototype = {
     onStatesChange: function(deviceURL, states) {
         accessory = this.getAccessory(deviceURL);
         if (accessory != null) {
-            for (state of states) {
-                accessory.onStateUpdate(state.name, state.value);
+        	if(states != null) {
+            	for (state of states) {
+            	    accessory.onStateUpdate(state.name, state.value);
+            	}
             }
         }
     }

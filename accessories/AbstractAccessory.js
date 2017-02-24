@@ -1,9 +1,26 @@
 var Service, Characteristic;
 
-var inherits = require('util').inherits;
 var path = require('path');
 var fs = require('fs');
 var OverkizApi = require('../overkiz-api');
+
+var inherits = function (ctor, superCtor) {
+
+  if (ctor === undefined || ctor === null)
+    throw new TypeError('The constructor to "inherits" must not be ' +
+                        'null or undefined');
+
+  if (superCtor === undefined || superCtor === null)
+    throw new TypeError('The super constructor to "inherits" must not ' +
+                        'be null or undefined');
+
+  if (superCtor.prototype === undefined)
+    throw new TypeError('The super constructor to "inherits" must ' +
+                        'have a prototype');
+
+  ctor.super_ = superCtor;
+  Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+}
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
