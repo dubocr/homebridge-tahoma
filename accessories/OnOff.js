@@ -40,6 +40,11 @@ OnOff.prototype = {
     setOn: function(value, callback) {
         var that = this;
         
+        if(this.device.widget == 'DimmerOnOff' && value == 1) { // Ignore 'on' command for dimmable switch as homekit send 'on' + 'brightness'
+        	callback();
+        	return;
+        }
+        
         var command = new Command('setOnOff');
         command.parameters = value ? ['on'] : ['off'];
         this.executeCommand(command, function(status, error, data) {

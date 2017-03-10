@@ -1,7 +1,7 @@
 var Accessory, Service, Characteristic, UUIDGen, Types;
 
 var OverkizService = require('./overkiz-api');
-var inherits = require('util').inherits;
+
 module.exports = function(homebridge) {
     console.log("homebridge-tahoma API version: " + homebridge.version);
 
