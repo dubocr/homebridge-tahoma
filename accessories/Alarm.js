@@ -35,27 +35,36 @@ Alarm.prototype = {
 	**/
     setState: function(value, callback) {
         var that = this;
-        var commandName = null;
+        var command = null;
 		switch(value) {
 			default:
 			case Characteristic.SecuritySystemTargetState.STAY_ARM:
-			case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+				command = new Command('alarmZoneOn');
+				command.parameters = ['A'];
+			break;
 			case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
-				 commandName = 'alarmOn';
+				command = new Command('alarmZoneOn');
+				command.parameters = ['B'];
+			break;
+			case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+				command = new Command('alarmOn');
 			break;
 			case Characteristic.SecuritySystemTargetState.DISARM:
-				 commandName = 'alarmOff';
+				 command = new Command('alarmOff');
 			break;
 		}
-        var command = new Command(commandName);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
                     callback(error);
                     break;
                 case ExecutionState.COMPLETED:
+                	if(this.device.widget == 'StatelessAlarmController') { // If stateless alarm, update target immediately
+                		that.targetState.updateValue(value);
+                	}
                 break;
                 case ExecutionState.FAILED:
+                	// Restore current state as target
                     that.targetState.updateValue(that.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED ? that.currentState.value : null);
                     break;
                 default:
@@ -72,9 +81,9 @@ Alarm.prototype = {
             switch(value) {
 				default:
 				case '': target = converted = Characteristic.SecuritySystemCurrentState.DISARMED; break;
-				case 'A,B': target = converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
+				case 'A': target = converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
 				case 'A,B,C': target = converted = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
-				case 'A': target = converted = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
+				case 'B': target = converted = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
 				case 'triggered': converted = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED; break;
 			}
 

@@ -45,8 +45,7 @@ Light.prototype = {
         	return;
         }
         
-        var command = new Command('setOnOff');
-        command.parameters = value ? ['on'] : ['off'];
+        var command = new Command(value ? 'on' : 'off');
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:

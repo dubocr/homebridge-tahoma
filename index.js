@@ -24,6 +24,8 @@ module.exports = function(homebridge) {
 function TahomaPlatform(log, config, api) {
     this.log = log;
 
+	this.protocolExclusion = config.exclude || [];
+	this.protocolExclusion.push('internal'); // Exclude internal devices
     this.api = new OverkizService.Api(log, config);
 
     this.platformAccessories = [];
@@ -48,7 +50,8 @@ TahomaPlatform.prototype = {
                 if (!error) {
                     for (device of data) {
                     	var accessory = null;
-                    	if(DeviceAccessory[device.uiClass] != null) {
+                    	var protocol = device.controllableName.split(':').shift(); // Get device protocol name
+                    	if(DeviceAccessory[device.uiClass] != null && that.protocolExclusion.indexOf(protocol) == -1) {
                     		accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device);
                     	} else {
                     		that.log.info('Device ' + device.uiClass + ' ignored');

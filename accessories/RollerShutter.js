@@ -56,7 +56,7 @@ RollerShutter.prototype = {
                 case ExecutionState.IN_PROGRESS:
                     var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
-                    //that.log('['+that.name+'] Command in progress, state='+newValue);
+                    that.log('['+that.name+'] Command in progress, state='+newValue);
                 	break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
@@ -94,8 +94,7 @@ RollerShutter.prototype = {
                 case ExecutionState.IN_PROGRESS:
                     var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
-                    //that.log('['+that.name+'] Command in progress, state='+newValue);
-                	break;
+                    break;
                 case ExecutionState.COMPLETED:
                 	that.currentPosition.updateValue(value);
                 case ExecutionState.FAILED:

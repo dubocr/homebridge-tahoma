@@ -22,7 +22,11 @@ GarageDoor = function(log, api, device) {
     this.currentState = service.getCharacteristic(Characteristic.CurrentDoorState);
     this.targetState = service.getCharacteristic(Characteristic.TargetDoorState)
     this.targetState.on('set', this.setState.bind(this));
-    
+    if(this.device.widget == 'UpDownGarageDoor4T') {
+    	this.targetState.on('set', this.cycle.bind(this));
+    } else {
+    	this.targetState.on('set', this.setState.bind(this));
+    }
     this.services.push(service);
 };
 
@@ -51,6 +55,41 @@ GarageDoor.prototype = {
                 case ExecutionState.FAILED:
                 	// Update target in case of error
                     that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
+    
+    /**
+	* Triggered when Homekit try to modify the Characteristic.TargetDoorState for UpDownGarageDoor4T
+	**/
+    cycle: function(value, callback) {
+        var that = this;
+        
+        if(value == Characteristic.TargetDoorState.CLOSED) {
+        	callback("Can't close this device");
+        	return;
+        }
+        var command = new Command('cycle');
+        this.executeCommand(command, function(status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.IN_PROGRESS:
+                    that.currentState.updateValue(Characteristic.CurrentDoorState.OPENING);
+                    break;
+                case ExecutionState.COMPLETED:
+                	that.currentState.updateValue(Characteristic.CurrentDoorState.OPEN);
+                	setTimeout(function() {
+                		that.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
+                	}, 30000); // Simulate end of cycle after 30 seconds
+                break;
+                case ExecutionState.FAILED:
+                	// Update target in case of error
+                    that.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
                     break;
                 default:
                     break;

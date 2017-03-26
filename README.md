@@ -39,7 +39,8 @@ Configuration sample:
 | `user`               		 | mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
 | `password`             	 | mandatory, your TaHoma/Cozytouch account password                                                                                                                     |
 | `service`              	 | optional, service name in [TaHoma, Cozytouch], default: TaHoma                                                                                                        |
-| `refreshPeriod`            | optional, device states refresh period in minute, default: 10                                                                                                         |
+| `refreshPeriod`            | optional, device states refresh period in minute, default: 10 																										 |
+| `exclude`		             | optional, list of protocols (hue,enocean,zwave,io,rts) to exclude                                                                                                     |
 
 # Limitation
 
@@ -59,6 +60,8 @@ Not tested devices :
 - ContactSensor
 - OccupancySensor
 - SmokeSensor
+- LightSensor
+- TemperatureSensor
 
 Sensor state is only updated every 10 minutes for the moment.
 
