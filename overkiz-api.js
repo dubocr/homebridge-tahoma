@@ -289,9 +289,9 @@ OverkizApi.prototype = {
     	callback: Callback function executed when command sended
     	refresh: Callback function executed when command succeed
     */
-    executeCommand: function(deviceURL, command, callback) {
+    executeCommand: function(label, deviceURL, command, callback) {
         var that = this;
-        var execution = new Execution('Homekit command', deviceURL, command);
+        var execution = new Execution(label, deviceURL, command);
         //this.log(command);
         this.post({
             url: that.urlForQuery("/exec/apply"),

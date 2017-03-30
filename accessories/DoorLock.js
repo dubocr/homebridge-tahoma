@@ -15,7 +15,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "DoorLock"
  */
  
-DoorLock = function(log, api, device) {
+DoorLock = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.LockMechanism(device.label);
 

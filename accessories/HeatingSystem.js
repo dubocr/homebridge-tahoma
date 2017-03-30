@@ -15,7 +15,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "HeatingSystem"
  */
  
-HeatingSystem = function(log, api, device) {
+HeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.Thermostat(device.label);
 

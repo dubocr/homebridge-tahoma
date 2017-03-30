@@ -15,10 +15,13 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "RollerShutter"
  */
  
-RollerShutter = function(log, api, device) {
+RollerShutter = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.WindowCovering(device.label);
 
+		this.stayZones = config.STAY_ARM || 'A';
+    this.nightZones = config.NIGHT_ARM || 'B';
+    
     this.currentPosition = service.getCharacteristic(Characteristic.CurrentPosition);
     this.targetPosition = service.getCharacteristic(Characteristic.TargetPosition);
     if(this.device.widget == 'UpDownRollerShutter') {

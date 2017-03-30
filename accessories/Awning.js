@@ -15,7 +15,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "Awning"
  */
  
-Awning = function(log, api, device) {
+Awning = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.WindowCovering(device.label);
 

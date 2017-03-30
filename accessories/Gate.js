@@ -21,7 +21,11 @@ Gate = function(log, api, device) {
 
     this.currentState = service.getCharacteristic(Characteristic.CurrentDoorState);
     this.targetState = service.getCharacteristic(Characteristic.TargetDoorState)
-    this.targetState.on('set', this.setState.bind(this));
+    if(this.device.widget == 'OpenCloseGate4T') {
+    	this.targetState.on('set', this.cycle.bind(this));
+    } else {
+    	this.targetState.on('set', this.setState.bind(this));
+    }
     
     this.services.push(service);
 };
@@ -50,6 +54,34 @@ Gate.prototype = {
                 break;
                 case ExecutionState.FAILED:
                 	// Update target in case of error
+                    that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
+    
+    /**
+	* Triggered when Homekit try to modify the Characteristic.TargetDoorState for UpDownGarageDoor4T
+	**/
+    cycle: function(value, callback) {
+        var that = this;
+        
+        var command = new Command('cycle');
+        this.executeCommand(command, function(status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.IN_PROGRESS:
+                    break;
+                case ExecutionState.COMPLETED:
+                	var newValue = (value == Characteristic.TargetDoorState.OPEN) ? Characteristic.CurrentDoorState.OPEN : Characteristic.CurrentDoorState.CLOSED;
+                    that.currentState.updateValue(newValue);
+                break;
+                case ExecutionState.FAILED:
+                	// Restore target in case of error
                     that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
                     break;
                 default:

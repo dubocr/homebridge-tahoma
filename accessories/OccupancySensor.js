@@ -15,7 +15,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "OccupancySensor"
  */
  
-OccupancySensor = function(log, api, device) {
+OccupancySensor = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.OccupancySensor(device.label);
 

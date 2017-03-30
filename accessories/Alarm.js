@@ -15,8 +15,12 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "Alarm"
  */
  
-Alarm = function(log, api, device) {
+Alarm = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
+    
+    this.stayZones = config.STAY_ARM || 'A';
+    this.nightZones = config.NIGHT_ARM || 'B';
+    
     var service = new Service.SecuritySystem(device.label);
 
     this.currentState = service.getCharacteristic(Characteristic.SecuritySystemCurrentState);
@@ -40,11 +44,11 @@ Alarm.prototype = {
 			default:
 			case Characteristic.SecuritySystemTargetState.STAY_ARM:
 				command = new Command('alarmZoneOn');
-				command.parameters = ['A'];
+				command.parameters = [this.stayZones];
 			break;
 			case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
 				command = new Command('alarmZoneOn');
-				command.parameters = ['B'];
+				command.parameters = [this.nightZones];
 			break;
 			case Characteristic.SecuritySystemTargetState.AWAY_ARM:
 				command = new Command('alarmOn');
@@ -59,8 +63,8 @@ Alarm.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.COMPLETED:
-                	if(this.device.widget == 'StatelessAlarmController') { // If stateless alarm, update target immediately
-                		that.targetState.updateValue(value);
+                	if(that.device.widget == 'StatelessAlarmController') { // If stateless alarm, update target immediately
+                		that.currentState.updateValue(value);
                 	}
                 break;
                 case ExecutionState.FAILED:

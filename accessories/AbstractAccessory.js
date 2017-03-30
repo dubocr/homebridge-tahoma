@@ -87,8 +87,9 @@ AbstractAccessory.prototype = {
         if (this.isCommandInProgress()) {
             this.api.cancelCommand(this.lastExecId, function() {});
         }
-
-        this.api.executeCommand(this.device.deviceURL, command, function(status, error, data) {
+		
+		var label = command.name + ' ' + this.name;
+        this.api.executeCommand(label, this.device.deviceURL, command, function(status, error, data) {
         	if(!error) {
 				if (status == ExecutionState.INITIALIZED)
 					that.lastExecId = data.execId;

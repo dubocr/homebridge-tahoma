@@ -15,7 +15,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "LightSensor"
  */
  
-LightSensor = function(log, api, device) {
+LightSensor = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.LightSensor(device.label);
 
