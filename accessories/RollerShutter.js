@@ -19,9 +19,6 @@ RollerShutter = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.WindowCovering(device.label);
 
-		this.stayZones = config.STAY_ARM || 'A';
-    this.nightZones = config.NIGHT_ARM || 'B';
-    
     this.currentPosition = service.getCharacteristic(Characteristic.CurrentPosition);
     this.targetPosition = service.getCharacteristic(Characteristic.TargetPosition);
     if(this.device.widget == 'UpDownRollerShutter') {
@@ -59,7 +56,7 @@ RollerShutter.prototype = {
                 case ExecutionState.IN_PROGRESS:
                     var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
-                    that.log('['+that.name+'] Command in progress, state='+newValue);
+                    that.log.debug('['+that.name+'] Command in progress, state='+newValue);
                 	break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
@@ -112,7 +109,7 @@ RollerShutter.prototype = {
 
     onStateUpdate: function(name, value) {
     	if (name == State.STATE_CLOSURE) {
-            this.log('['+this.name+'] ' + name + '=' + value); // For analysis
+            this.log.debug('['+this.name+'] ' + name + '=' + value); // For analysis
             var converted = 100 - value;
             this.currentPosition.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target

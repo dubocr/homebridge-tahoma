@@ -22,6 +22,8 @@ Gate = function(log, api, device) {
     this.currentState = service.getCharacteristic(Characteristic.CurrentDoorState);
     this.targetState = service.getCharacteristic(Characteristic.TargetDoorState)
     if(this.device.widget == 'OpenCloseGate4T') {
+    	this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
+    	this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
     	this.targetState.on('set', this.cycle.bind(this));
     } else {
     	this.targetState.on('set', this.setState.bind(this));

@@ -27,7 +27,7 @@ function TahomaPlatform(log, config, api) {
 
 		this.exclusions = config.exclude || [];
 		this.exclusions.push('internal'); // Exclude internal devices
-    this.api = new OverkizService.Api(log, config);
+		this.api = new OverkizService.Api(log, config);
 
     this.platformAccessories = [];
 
@@ -48,27 +48,27 @@ TahomaPlatform.prototype = {
         this.log.info("Fetching accessories...");
         if (that.platformAccessories.length == 0) {
             this.api.getDevices(function(error, data) {
-                if (!error) {
-                    for (device of data) {
-                    	var accessory = null;
-                    	var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-                    	var accessoryConfig = that.config[device.uiClass] || {};
-                    	if(DeviceAccessory[device.uiClass] != null && that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-                    		accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device, accessoryConfig);
-                    	} else {
-                    		that.log.info('Device ' + device.uiClass + ' ignored');
-						}
-						if(accessory != null) {
-							if(device.states != null) {
-								for (state of device.states) {
-									accessory.onStateUpdate(state.name, state.value);
-								}
-							}
-							that.platformAccessories.push(accessory);
-						}
-                    }
+              if (!error) {
+								for (device of data) {
+									var accessory = null;
+									var protocol = device.controllableName.split(':').shift(); // Get device protocol name
+									var accessoryConfig = that.config[device.uiClass] || {};
+									if(DeviceAccessory[device.uiClass] != null && that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
+										accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device, accessoryConfig);
+									} else {
+										that.log.info('Device ' + device.uiClass + ' ignored');
+									}
+									if(accessory != null) {
+										if(device.states != null) {
+											for (state of device.states) {
+												accessory.onStateUpdate(state.name, state.value);
+											}
+										}
+										that.platformAccessories.push(accessory);
+									}
                 }
-                callback(that.platformAccessories);
+              }
+              callback(that.platformAccessories);
             });
         } else {
             callback(this.platformAccessories);
