@@ -12,24 +12,24 @@ Supports Overkiz platform (TaHoma, Cozytouch) on HomeBridge
 
 Minimal configuration sample:
  ```
-    {
-        "bridge": {
-            ...
-        },
-        
-        "description": "...",
+{
+	"bridge": {
+		...
+	},
 
-        "accessories": [],
+	"description": "...",
 
-        "platforms":[
-        	{
-            	"platform": "Tahoma",
-            	"name": "Tahoma",
-            	"user": "user@me.com",
-            	"password": "MyPassw0rd",
-        	}
-        ]
-    }
+	"accessories": [],
+
+	"platforms":[
+		{
+			"platform": "Tahoma",
+			"name": "Tahoma",
+			"user": "user@me.com",
+			"password": "MyPassw0rd",
+		}
+	]
+}
 ```
 
 | Parameter                  | Type			| Default		| Note                                                                                                                                                                  |
@@ -49,30 +49,30 @@ Minimal configuration sample:
 
 Full configuration example:
  ```
-    {
-        "bridge": {
-            ...
-        },
-        
-        "description": "...",
+{
+	"bridge": {
+		...
+	},
 
-        "accessories": [],
+	"description": "...",
 
-        "platforms":[
-        	{
-            	"platform": "Tahoma",
-            	"name": "Tahoma",
-            	"user": "user@me.com",
-            	"password": "MyPassw0rd",
-							"service": "TaHoma",
-							"exclude": ["hue","rts","Garage Door"],
-							"Alarm": {
-								"STAY_ARM": "A,C",
-								"NIGHT_ARM": "B"
-							}
-        	}
-        ]
-    }
+	"accessories": [],
+
+	"platforms":[
+		{
+			"platform": "Tahoma",
+			"name": "Tahoma",
+			"user": "user@me.com",
+			"password": "MyPassw0rd",
+			"service": "TaHoma",
+			"exclude": ["hue","rts","Garage Door"],
+			"Alarm": {
+				"STAY_ARM": "A,C",
+				"NIGHT_ARM": "B"
+			}
+		}
+	]
+}
 ```
 
 # Limitation

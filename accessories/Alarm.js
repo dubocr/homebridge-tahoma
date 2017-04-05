@@ -70,7 +70,7 @@ Alarm.prototype = {
                     break;
                 case ExecutionState.COMPLETED:
                 if(that.device.widget == 'StatelessAlarmController') {
-                	this.currentState.updateValue(value);
+                	that.currentState.updateValue(value);
                 }
                 break;
                 case ExecutionState.FAILED:
