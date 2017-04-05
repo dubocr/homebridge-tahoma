@@ -167,11 +167,20 @@ OverkizApi.prototype = {
     
     getDevices(callback) {
     	this.get({
-			url: this.urlForQuery("/setup/devices"),
-			json: true
-		}, function(error, json) {
-			callback(error, json);
-		});
+				url: this.urlForQuery("/setup/devices"),
+				json: true
+			}, function(error, json) {
+				callback(error, json);
+			});
+    },
+    
+    getActionGroups(callback) {
+    	this.get({
+				url: this.urlForQuery("/actionGroups"),
+				json: true
+			}, function(error, json) {
+				callback(error, json);
+			});
     },
 
     requestWithLogin: function(myRequest, callback) {
@@ -289,12 +298,20 @@ OverkizApi.prototype = {
     	callback: Callback function executed when command sended
     	refresh: Callback function executed when command succeed
     */
-    executeCommand: function(label, deviceURL, command, callback) {
+    executeCommand: function(execution, callback) {
+        this.execute('apply', execution, callback);
+    },
+    
+    /*
+    	oid: The command OID or 'apply' if immediate execution
+    	execution: Body parameters
+    	callback: Callback function executed when command sended
+    */
+    execute: function(oid, execution, callback) {
         var that = this;
-        var execution = new Execution(label, deviceURL, command);
         //this.log(command);
         this.post({
-            url: that.urlForQuery("/exec/apply"),
+            url: that.urlForQuery('/exec/'+oid),
             body: execution,
             json: true
         }, function(error, json) {

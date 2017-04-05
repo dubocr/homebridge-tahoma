@@ -55,23 +55,23 @@ function AbstractAccessory(log, api, device) {
     
     var informationService = new Service.AccessoryInformation();
 
-	var manufacturer = this._look_state(OverkizApi.State.STATE_MANUFACTURER);
-	if (manufacturer != null)
-		informationService.setCharacteristic(Characteristic.Manufacturer, manufacturer)
+		var manufacturer = this._look_state(OverkizApi.State.STATE_MANUFACTURER);
+		if (manufacturer != null)
+			informationService.setCharacteristic(Characteristic.Manufacturer, manufacturer)
 
-	var model = this._look_state(OverkizApi.State.STATE_MODEL);
-	if (model != null)
-		informationService.setCharacteristic(Characteristic.Model, model)
+		var model = this._look_state(OverkizApi.State.STATE_MODEL);
+		if (model != null)
+			informationService.setCharacteristic(Characteristic.Model, model)
 
-	var parts = this.deviceURL.split("/");
-	var serial = parts[parts.length-1];
-	informationService.setCharacteristic(Characteristic.SerialNumber, serial);
+		var parts = this.deviceURL.split("/");
+		var serial = parts[parts.length-1];
+		informationService.setCharacteristic(Characteristic.SerialNumber, serial);
     this.services.push(informationService); 
 }
 
 AbstractAccessory.prototype = {
     getServices: function() {
-		return this.services;
+			return this.services;
     },
     
     onStateUpdate: function(name, value) {
@@ -88,15 +88,17 @@ AbstractAccessory.prototype = {
             this.api.cancelCommand(this.lastExecId, function() {});
         }
 		
-		var label = command.name + ' ' + this.name;
-        this.api.executeCommand(label, this.device.deviceURL, command, function(status, error, data) {
+				var label = command.name + ' ' + this.name;
+				var execution = new Execution(label, this.device.deviceURL, command);
+        
+        this.api.executeCommand(execution, function(status, error, data) {
         	if(!error) {
-				if (status == ExecutionState.INITIALIZED)
-					that.lastExecId = data.execId;
-				if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
-					that.log.info('[' + that.name + '] ' + command.name + ' ' + (error == null ? status : error));
-            }
-            callback(status, error, data);
+						if (status == ExecutionState.INITIALIZED)
+							that.lastExecId = data.execId;
+						if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
+							that.log.info('[' + that.name + '] ' + command.name + ' ' + (error == null ? status : error));
+          }
+          callback(status, error, data);
         });
     },
 

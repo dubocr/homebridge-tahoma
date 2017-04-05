@@ -25,6 +25,7 @@ function TahomaPlatform(log, config, api) {
     this.log = log;
     this.config = config;
 
+		this.exposeScenarios = config.exposeScenarios || false;
 		this.exclusions = config.exclude || [];
 		this.exclusions.push('internal'); // Exclude internal devices
 		this.api = new OverkizService.Api(log, config);
@@ -47,32 +48,58 @@ TahomaPlatform.prototype = {
         var that = this;
         this.log.info("Fetching accessories...");
         if (that.platformAccessories.length == 0) {
-            this.api.getDevices(function(error, data) {
-              if (!error) {
-								for (device of data) {
-									var accessory = null;
-									var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-									var accessoryConfig = that.config[device.uiClass] || {};
-									if(DeviceAccessory[device.uiClass] != null && that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-										accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device, accessoryConfig);
-									} else {
-										that.log.info('Device ' + device.uiClass + ' ignored');
-									}
-									if(accessory != null) {
-										if(device.states != null) {
-											for (state of device.states) {
-												accessory.onStateUpdate(state.name, state.value);
-											}
-										}
-										that.platformAccessories.push(accessory);
-									}
-                }
+            that.loadDevices(function() {
+            	if(that.exposeScenarios) {
+              	that.loadScenarios(function() {
+              		callback(that.platformAccessories);
+              	});
+              } else {
+              	callback(that.platformAccessories);
               }
-              callback(that.platformAccessories);
             });
         } else {
             callback(this.platformAccessories);
         }
+    },
+    
+    loadDevices: function(callback) {
+    	var that = this;
+    	this.api.getDevices(function(error, data) {
+				if (!error) {
+					for (device of data) {
+						var accessory = null;
+						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
+						var accessoryConfig = that.config[device.uiClass] || {};
+						if(DeviceAccessory[device.uiClass] != null && that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
+							accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device, accessoryConfig);
+						} else {
+							that.log.info('Device ' + device.uiClass + ' ignored');
+						}
+						if(accessory != null) {
+							if(device.states != null) {
+								for (state of device.states) {
+									accessory.onStateUpdate(state.name, state.value);
+								}
+							}
+							that.platformAccessories.push(accessory);
+						}
+					}
+				}
+				callback();
+			});
+    },
+    
+    loadScenarios: function(callback) {
+    	var that = this;
+    	this.api.getActionGroups(function(error, data) {
+				if (!error) {
+					for (scenario of data) {
+						var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.log, that.api);
+						that.platformAccessories.push(scenarioAccessory);
+					}
+				}
+				callback();
+			});
     },
     
     onStatesChange: function(deviceURL, states) {
@@ -84,5 +111,50 @@ TahomaPlatform.prototype = {
             	}
             }
         }
+    }
+}
+
+function ScenarioAccessory(name, oid, log, api) {
+    this.log = log;
+    this.api = api;
+    this.name = name;
+    this.oid = oid;
+
+    this.services = [];
+		var service = new Service.Switch(name);
+		this.state = service.getCharacteristic(Characteristic.On);
+    this.state.on('set', this.executeScenario.bind(this));
+    
+    this.services.push(service); 
+}
+
+ScenarioAccessory.prototype = {
+    getServices: function() {
+			return this.services;
+    },
+    
+    executeScenario: function(value, callback) {
+    	var that = this;
+			if (this.isCommandInProgress()) {
+					this.api.cancelCommand(this.lastExecId, function() {});
+			}
+			
+			if(value) {
+				this.api.execute(this.oid, null, function(status, error, data) {
+					if(!error) {
+						if (status == ExecutionState.INITIALIZED)
+							that.lastExecId = data.execId;
+						if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
+							that.log.info('[Scenario] ' + that.name + ' ' + (error == null ? status : error));
+							that.state.updateValue(0);
+						}
+					}
+				});
+			}
+			callback();
+    },
+    
+    isCommandInProgress: function() {
+        return (this.lastExecId in this.api.executionCallback);
     }
 }

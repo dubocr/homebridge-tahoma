@@ -10,8 +10,7 @@ Supports Overkiz platform (TaHoma, Cozytouch) on HomeBridge
 
 # Configuration
 
-Configuration sample:
-
+Minimal configuration sample:
  ```
     {
         "bridge": {
@@ -26,25 +25,27 @@ Configuration sample:
         	{
             	"platform": "Tahoma",
             	"name": "Tahoma",
-            	"user": "yourusername",
-            	"password": "yourpassword",
-	    		"service": "Service name ('TaHoma' or 'Cozytouch')"
+            	"user": "user@me.com",
+            	"password": "MyPassw0rd",
         	}
         ]
     }
 ```
 
-| Parameter                  | Note                                                                                                                                                                  |
-|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `user`               		 | mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
-| `password`             	 | mandatory, your TaHoma/Cozytouch account password                                                                                                                     |
-| `service`              	 | optional, service name in [TaHoma, Cozytouch], default: TaHoma                                                                                                        |
-| `refreshPeriod`            | optional, device states refresh period in minute, default: 10 																										 |
-| `exclude`		             | optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude                                                                                    |
-| `Alarm`		             | optional, Alarm configuration object																																	 |
-|							 | | `STAY_ARM`| list of zones (A,B,C) to activate in "STAY" mode 																										 |                                                                              												     |
-|							 | | `AWAY_ARM`| list of zones (A,B,C) to activate in "NIGHT" mode  																									 |                                                                              												     |
-                                                                                												     																 |
+| Parameter                  | Type			| Default		| Note                                                                                                                                                                  |
+|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `user`               		   | String		| null			| mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
+| `password`             	   | String		| null			| mandatory, your TaHoma/Cozytouch account password                                                                                                                     |
+| `service`              	   | String		| 'TaHoma'	| optional, service name ('TaHoma' or 'Cozytouch')																																																											|
+| `refreshPeriod`            | Integer	| 600				| optional, device states refresh period in seconds							 																										 																										|
+| `exclude`		               | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
+| `exposeScenarios`	         | Boolean	| false			| optional, expose TaHoma/Cozytouch scenarios as HomeKit switches																																	 																			|
+| `Alarm`		                 | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
+                                                                     												     																 																																		 
+| Alarm parameters           | Type			| Default		| Note                                                                                                                                                                  |
+|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `STAY_ARM`               	 | String		| 'A'				| optional, active zones (A,B,C) in 'Stay' mode                                                                             																						|
+| `NIGHT_ARM`             	 | String		| 'B'				| optional, active zones (A,B,C) in 'Night' mode                                                                          																							|
 
 Full configuration example:
  ```
@@ -61,14 +62,14 @@ Full configuration example:
         	{
             	"platform": "Tahoma",
             	"name": "Tahoma",
-            	"user": "yourusername",
-            	"password": "yourpassword",
-	    		"service": "TaHoma",
-	    		"exclude": ["hue","rts","Garage Door"],
-	    		"Alarm": {
-	    			"STAY_ARM": "A,C",
-	    			"NIGHT_ARM": "B"
-	    		}
+            	"user": "user@me.com",
+            	"password": "MyPassw0rd",
+							"service": "TaHoma",
+							"exclude": ["hue","rts","Garage Door"],
+							"Alarm": {
+								"STAY_ARM": "A,C",
+								"NIGHT_ARM": "B"
+							}
         	}
         ]
     }
@@ -78,24 +79,21 @@ Full configuration example:
 
 Tested device : 
 - RollerShutter
-
-Read-only tested devices : 
 - Alarm
 - DoorLock
 - GarageDoor
 - Gate
+- Light
+- ContactSensor
+- OccupancySensor
+- ElectricitySensor
+- LightSensor
+- TemperatureSensor
 
 Not tested devices : 
 - HeatingSystem
 - OnOff
-- Light
-- ContactSensor
-- OccupancySensor
 - SmokeSensor
-- LightSensor
-- TemperatureSensor
-
-Sensor state is only updated every 10 minutes for the moment.
 
 # Contribute
 
