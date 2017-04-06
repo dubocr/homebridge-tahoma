@@ -11,7 +11,7 @@ Supports Overkiz platform (TaHoma, Cozytouch) on HomeBridge
 # Configuration
 
 Minimal configuration sample:
- ```
+```
 {
 	"bridge": {
 		...
@@ -32,6 +32,8 @@ Minimal configuration sample:
 }
 ```
 
+Configuration parameters:
+
 | Parameter                  | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `user`               		   | String		| null			| mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
@@ -39,7 +41,7 @@ Minimal configuration sample:
 | `service`              	   | String		| 'TaHoma'	| optional, service name ('TaHoma' or 'Cozytouch')																																																											|
 | `refreshPeriod`            | Integer	| 600				| optional, device states refresh period in seconds							 																										 																										|
 | `exclude`		               | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
-| `exposeScenarios`	         | Boolean	| false			| optional, expose TaHoma/Cozytouch scenarios as HomeKit switches																																	 																			|
+| `exposeScenarios`	         | Boolean	| false			| optional, expose TaHoma/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `Alarm`		                 | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
                                                                      												     																 																																		 
 | Alarm parameters           | Type			| Default		| Note                                                                                                                                                                  |
@@ -47,8 +49,9 @@ Minimal configuration sample:
 | `STAY_ARM`               	 | String		| 'A'				| optional, active zones (A,B,C) in 'Stay' mode                                                                             																						|
 | `NIGHT_ARM`             	 | String		| 'B'				| optional, active zones (A,B,C) in 'Night' mode                                                                          																							|
 
+
 Full configuration example:
- ```
+```
 {
 	"bridge": {
 		...

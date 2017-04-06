@@ -46,7 +46,6 @@ TahomaPlatform.prototype = {
 
     accessories: function(callback) {
         var that = this;
-        this.log.info("Fetching accessories...");
         if (that.platformAccessories.length == 0) {
             that.loadDevices(function() {
             	if(that.exposeScenarios) {
@@ -94,8 +93,10 @@ TahomaPlatform.prototype = {
     	this.api.getActionGroups(function(error, data) {
 				if (!error) {
 					for (scenario of data) {
-						var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.log, that.api);
-						that.platformAccessories.push(scenarioAccessory);
+						if(!Array.isArray(that.exposeScenarios) || that.exposeScenarios.indexOf(scenario.label) != -1) {
+							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.log, that.api);
+							that.platformAccessories.push(scenarioAccessory);
+						}
 					}
 				}
 				callback();

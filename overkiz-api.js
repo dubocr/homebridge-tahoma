@@ -188,7 +188,7 @@ OverkizApi.prototype = {
         var authCallback = function(err, response, json) {
             if (response != undefined && response.statusCode == 401) { // Reauthenticated
                 that.isLoggedIn = false;
-                that.log(json.error);
+                //that.log(json.error);
                 that.requestWithLogin(myRequest, callback);
             } else if (err) {
                 that.log("There was a problem requesting to Overkiz : " + err);
