@@ -8,15 +8,15 @@ module.exports = function(homebridge, abstractAccessory, api) {
     ExecutionState = api.ExecutionState;
     State = api.State;
 
-    return HeatingSystem;
+    return WaterHeatingSystem;
 }
 
 /**
- * Accessory "HeatingSystem"
+ * Accessory "WaterHeatingSystem"
  */
  
-  // TODO : Not tested
-HeatingSystem = function(log, api, device, config) {
+ // TODO : Not implemented
+WaterHeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.Thermostat(device.label);
 
@@ -31,9 +31,9 @@ HeatingSystem = function(log, api, device, config) {
     this.services.push(service);
 };
 
-HeatingSystem.UUID = 'HeatingSystem';
+WaterHeatingSystem.UUID = 'WaterHeatingSystem';
 
-HeatingSystem.prototype = {
+WaterHeatingSystem.prototype = {
 
 	/**
 	* Triggered when Homekit try to modify the Characteristic.TargetTemperature
