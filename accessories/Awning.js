@@ -79,7 +79,7 @@ Awning.prototype = {
         if (this.lastExecId in this.api.executionCallback) {
             this.api.cancelCommand(this.lastExecId, function() {});
         }
-
+				that.log.debug('['+that.name+'] setDeployment, value='+value);
         var command = new Command('setDeployment');
         command.parameters = [value];
         this.executeCommand(command, function(status, error, data) {
@@ -91,12 +91,13 @@ Awning.prototype = {
                 case ExecutionState.IN_PROGRESS:
                     var newValue = (value == 0 || value < that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
-                    that.log('['+that.name+'] Command in progress, state='+newValue);
+                    that.log.debug('['+that.name+'] Command in progress, state='+newValue);
                 	break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
                     that.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
+                    that.log.debug('['+that.name+'] Command ended, position='+that.currentPosition.value);
                     break;
                 default:
                     break;
