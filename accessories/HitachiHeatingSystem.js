@@ -15,7 +15,6 @@ module.exports = function(homebridge, abstractAccessory, api) {
  * Accessory "HitachiHeatingSystem"
  */
  
-  // TODO : Not tested
 HitachiHeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.Thermostat(device.label);
@@ -26,7 +25,7 @@ HitachiHeatingSystem = function(log, api, device, config) {
     
     this.currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature);
     this.targetTemperature = service.getCharacteristic(Characteristic.TargetTemperature);
-		this.targetTemperature.on('set', this.setTemperature.bind(this));
+	this.targetTemperature.on('set', this.setTemperature.bind(this));
 		
     this.services.push(service);
 };
@@ -65,25 +64,28 @@ HitachiHeatingSystem.prototype = {
         this.progMode = "manu";
         
         var command = new Command('globalControl');
-				switch(value) {
-					case Characteristic.TargetHeatingCoolingState.OFF:
-						command = new Command('setMainOperation');
-						command.parameters = ["off"];
-					break;
-					case Characteristic.TargetHeatingCoolingState.HEAT:
-						command.parameters = ["on",this.targetTemperature.value,this.fanMode,"heating",this.progMode];
-					break;
-					case Characteristic.TargetHeatingCoolingState.COOL:
-						 command.parameters = ["on",this.targetTemperature.value,this.fanMode,"cooling",this.progMode];
-					break;
-					case Characteristic.TargetHeatingCoolingState.AUTO:
-					default:
-						 var diff = this.targetTemperature.value - this.currentTemperature.value;
-						 if (diff < -5) diff = -5;
-						 if (diff > 5) diff = 5;
-						 command.parameters = ["on",diff,this.fanMode,"auto",this.progMode];
-					break;
-				}
+		switch(value) {
+			case Characteristic.TargetHeatingCoolingState.OFF:
+				command = new Command('setMainOperation');
+				command.parameters = ["off"];
+			break;
+			case Characteristic.TargetHeatingCoolingState.HEAT:
+				command.parameters = ["on",this.targetTemperature.value,this.fanMode,"heating",this.progMode];
+			break;
+			case Characteristic.TargetHeatingCoolingState.COOL:
+				 command.parameters = ["on",this.targetTemperature.value,this.fanMode,"cooling",this.progMode];
+			break;
+			case Characteristic.TargetHeatingCoolingState.AUTO:
+			default:
+				 var diff = this.targetTemperature.value - this.currentTemperature.value;
+				 if (diff < -5) diff = -5;
+				 if (diff > 5) diff = 5;
+				 command.parameters = ["on",diff,this.fanMode,"auto",this.progMode];
+			break;
+		}
+
+		that.targetState.updateValue(value);
+
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -147,11 +149,9 @@ HitachiHeatingSystem.prototype = {
 
 
     onStateUpdate: function(name, value) {
-
         if (name == "ovp:ModeChangeState") {
-
         		if (this.currentState.value != Characteristic.CurrentHeatingCoolingState.OFF) {
-
+		
 					var converted, convertedTarget;
 					switch(value.toLowerCase()) {
 						case "auto cooling":
@@ -177,7 +177,7 @@ HitachiHeatingSystem.prototype = {
 				
             }
         } else if (name == "ovp:MainOperationState") {
-        	var converted = value == "Off" ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.COOL;	
+       		var converted = value == "Off" ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.COOL;
             this.currentState.updateValue(converted);
         } else if (name == "ovp:RoomTemperatureState") {
         	this.currentTemperature.updateValue(value.substring(0,value.length-3));
@@ -185,7 +185,8 @@ HitachiHeatingSystem.prototype = {
         	var converted = value.substring(0,value.length-3);
         	if (+converted < 6) 
         		converted = +converted + +this.currentTemperature.value;
-        	this.targetTemperature.updateValue(converted);
+        	if (this.targetTemperature.value == "10") //Default Homekit Target Value at launch
+	        	this.targetTemperature.updateValue(converted);
         }
     }
 }
