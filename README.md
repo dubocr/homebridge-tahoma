@@ -80,25 +80,11 @@ Full configuration example:
 
 # Limitation
 
-Tested device : 
-- RollerShutter
-- Alarm
-- DoorLock
-- GarageDoor
-- Gate
-- Light
-- ContactSensor
-- OccupancySensor
-- ElectricitySensor
-- LightSensor
-- TemperatureSensor
-
-Not tested devices : 
-- HeatingSystem
-- OnOff
-- SmokeSensor
+Some devices or configurations could not operate properly due to limited tests. Don't hesitate to open an issue if your device doesn't work properly.
 
 # Contribute
 
-You are welcome to contribute to this plugin development by adding new kind of devices by adding implementation `.js` file in `accessories` folder.
-Please have a look to `RollerShutter.js` file for example.
+You are welcome to contribute to this plugin development by adding new kind of devices by adding implementation `.js` file in `accessories` folder or improving existing 'js' file.
+These documentations could help you developing plugin :
+[Obtaining my config](http://home.dubocr.fr/tools/setup)
+[HomeKit services and characteristics](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js)

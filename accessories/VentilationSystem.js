@@ -37,7 +37,7 @@ VentilationSystem.prototype = {
     setStatus: function(value, callback) {
         var that = this;
         
-        var command = new OverkizCommand('setAirDemandMode');
+        var command = new Command('setAirDemandMode');
 		switch(value) {
 			case Characteristic.TargetHeaterCoolerState.AUTO:
 				command.parameters = ['auto'];

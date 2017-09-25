@@ -82,24 +82,39 @@ AbstractAccessory.prototype = {
         **/
     },
     
-    executeCommand: function(command, callback) {
-        var that = this;
-        if (this.isCommandInProgress()) {
-            this.api.cancelCommand(this.lastExecId, function() {});
-        }
-		
-				var label = command.name + ' ' + this.name;
-				var execution = new Execution(label, this.device.deviceURL, command);
-        
-        this.api.executeCommand(execution, function(status, error, data) {
-        	if(!error) {
-						if (status == ExecutionState.INITIALIZED)
-							that.lastExecId = data.execId;
-						if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
-							that.log.info('[' + that.name + '] ' + command.name + ' ' + (error == null ? status : error));
-          }
-          callback(status, error, data);
-        });
+    executeCommand: function(commands, callback) {
+			var that = this;
+			var cmdName = '';
+			if(Array.isArray(commands)) {
+				cmdName = "Bulk commands";
+			} else {
+				commands = [commands];
+				cmdName = commands.name;
+			}
+			
+			if (this.isCommandInProgress()) {
+					this.api.cancelCommand(this.lastExecId, function() {});
+			}
+	
+			var label = cmdName + ' ' + this.name;
+			var execution = new Execution(label, this.device.deviceURL, commands);
+			
+			this.api.executeCommand(execution, function(status, error, data) {
+				if(!error) {
+					if (status == ExecutionState.INITIALIZED)
+						that.lastExecId = data.execId;
+					if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
+						that.log.info('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+				}
+				callback(status, error, data);
+			});
+    },
+    
+    /*
+    	Merge with another device
+    */
+    merge: function(device) {
+    
     },
 
     /*

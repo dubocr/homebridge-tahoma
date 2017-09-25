@@ -1,18 +1,19 @@
 var request = require("request").defaults({ jar: true })
 var pollingtoevent = require('polling-to-event');
 
-Command = function(name) {
+Command = function(name, parameters) {
     this.type = 1;
     this.name = name;
-    this.parameters = [];
+    if (typeof(parameters)==='undefined') parameters = [];
+    this.parameters = parameters;
 }
 
-Execution = function(name, deviceURL, command) {
+Execution = function(name, deviceURL, commands) {
     this.label = name;
     this.metadata = null;
     this.actions = [{
         deviceURL: deviceURL,
-        commands: [command]
+        commands: commands
     }];
 }
 
