@@ -108,12 +108,12 @@ RollerShutter.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == State.STATE_CLOSURE) {
-            this.log.debug('['+this.name+'] ' + name + '=' + value); // For analysis
-            var converted = 100 - value;
-            this.currentPosition.updateValue(converted);
-            if (!this.isCommandInProgress()) // if no command running, update target
-                this.targetPosition.updateValue(converted);
-        }
+    	if (name == State.STATE_CLOSURE || name == 'core:TargetClosureState') {
+          //this.log('['+this.name+'] ' + name + '=' + value); // For analysis
+          var converted = 100 - value;
+          this.currentPosition.updateValue(converted);
+          if (!this.isCommandInProgress()) // if no command running, update target
+              this.targetPosition.updateValue(converted);
+      }
     }
 }
