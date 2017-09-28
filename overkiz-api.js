@@ -317,7 +317,7 @@ OverkizApi.prototype = {
             json: true
         }, function(error, json) {
             if (error == null) {
-                callback(ExecutionState.INITIALIZED, null, json); // Init OK
+                callback(ExecutionState.INITIALIZED, error, json); // Init OK
                 that.executionCallback[json.execId] = callback;
                 that.registerListener();
             } else {

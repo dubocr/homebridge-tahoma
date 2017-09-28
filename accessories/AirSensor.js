@@ -19,8 +19,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
 AirSensor = function(log, api, device) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.AirQualitySensor(device.label);
-		
-		service.addCharacteristic(Characteristic.CarbonDioxideLevel);
+	service.addCharacteristic(Characteristic.CarbonDioxideLevel);
     this.co2State = service.getCharacteristic(Characteristic.CarbonDioxideLevel);
     
     this.services.push(service);

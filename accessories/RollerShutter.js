@@ -23,6 +23,8 @@ RollerShutter = function(log, api, device, config) {
     this.targetPosition = service.getCharacteristic(Characteristic.TargetPosition);
     if(this.device.widget == 'UpDownRollerShutter') {
     	this.targetPosition.on('set', this.upDownCommand.bind(this));
+    	this.currentPosition.updateValue(50);
+    	this.targetPosition.updateValue(50);
     } else {
     	this.targetPosition.on('set', this.setPosition.bind(this));
     }
@@ -40,33 +42,27 @@ RollerShutter.prototype = {
 	* Triggered when Homekit try to modify the Characteristic.TargetPosition
 	**/
     setPosition: function(value, callback) {
-        var that = this;
-        if (this.lastExecId in this.api.executionCallback) {
-            this.api.cancelCommand(this.lastExecId, function() {});
-        }
+		var that = this;
 
-        var command = new Command('setPosition');
-        command.parameters = [100 - value];
-        this.executeCommand(command, function(status, error, data) {
-            //that.log('['+that.name+'] ' + command.name + ' ' + status);
-            switch (status) {
-                case ExecutionState.INITIALIZED:
-                    callback(error);
-                    break;
-                case ExecutionState.IN_PROGRESS:
-                    var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
-                    that.positionState.updateValue(newValue);
-                    that.log.debug('['+that.name+'] Command in progress, state='+newValue);
-                	break;
-                case ExecutionState.COMPLETED:
-                case ExecutionState.FAILED:
-                    that.positionState.updateValue(Characteristic.PositionState.STOPPED);
-                    that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
-                    break;
-                default:
-                    break;
-            }
-        });
+		var command = new Command('setPosition', [100 - value]);
+		this.executeCommand(command, function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+					break;
+				case ExecutionState.IN_PROGRESS:
+					var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					that.positionState.updateValue(newValue);
+					break;
+				case ExecutionState.COMPLETED:
+				case ExecutionState.FAILED:
+					that.positionState.updateValue(Characteristic.PositionState.STOPPED);
+					that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
+					break;
+				default:
+					break;
+			}
+		});
     },
     
     /**
@@ -74,42 +70,36 @@ RollerShutter.prototype = {
 	**/
     upDownCommand: function(value, callback) {
     	var that = this;
-        if (this.lastExecId in this.api.executionCallback) {
-            this.api.cancelCommand(this.lastExecId, function() {});
-        }
-		
-		var cmd;
+
+		var command;
 		switch(value) {
-			case 100: cmd = 'up'; break;
-			case 0: cmd = 'down'; break;
-			default: cmd = 'my'; break;
+			case 100: command = new Command('up'); break;
+			case 0: command = new Command('down'); break;
+			default: command = new Command('my'); break;
 		}
-        var command = new Command(cmd);
-        this.executeCommand(command, function(status, error, data) {
-            //that.log('['+that.name+'] ' + command.name + ' ' + status);
-            switch (status) {
-                case ExecutionState.INITIALIZED:
-                    callback(error);
-                    break;
-                case ExecutionState.IN_PROGRESS:
-                    var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
-                    that.positionState.updateValue(newValue);
-                    break;
-                case ExecutionState.COMPLETED:
-                	that.currentPosition.updateValue(value);
-                case ExecutionState.FAILED:
-                    that.positionState.updateValue(Characteristic.PositionState.STOPPED);
-                    that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
-                    break;
-                default:
-                    break;
-            }
-        });
+		this.executeCommand(command, function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+					break;
+				case ExecutionState.IN_PROGRESS:
+					var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					that.positionState.updateValue(newValue);
+					break;
+				case ExecutionState.COMPLETED:
+					that.currentPosition.updateValue(value);
+				case ExecutionState.FAILED:
+					that.positionState.updateValue(Characteristic.PositionState.STOPPED);
+					that.targetPosition.updateValue(that.currentPosition.value);
+					break;
+				default:
+					break;
+			}
+		});
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == State.STATE_CLOSURE || name == 'core:TargetClosureState') {
-          //this.log('['+this.name+'] ' + name + '=' + value); // For analysis
+    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
           var converted = 100 - value;
           this.currentPosition.updateValue(converted);
           if (!this.isCommandInProgress()) // if no command running, update target

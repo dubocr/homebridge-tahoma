@@ -41,9 +41,8 @@ WaterHeatingSystem.prototype = {
     setTemperature: function(value, callback) {
         var that = this;
         
-        var command = new Command('setHeatingTargetTemperature');
-		command.parameters = [value];
-        this.executeCommand(command, function(status, error, data) {
+        var command = new Command('setHeatingTargetTemperature', [value]);
+		this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
                     callback(error);

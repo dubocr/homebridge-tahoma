@@ -69,8 +69,7 @@ OnOff.prototype = {
     setBrightness: function(value, callback) {
         var that = this;
         
-        var command = new Command('setIntensity');
-        command.parameters = [value];
+        var command = new Command('setIntensity', [value]);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:

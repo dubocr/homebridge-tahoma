@@ -25,10 +25,10 @@ function TahomaPlatform(log, config, api) {
     this.log = log;
     this.config = config;
 
-		this.exposeScenarios = config.exposeScenarios || false;
-		this.exclusions = config.exclude || [];
-		this.exclusions.push('internal'); // Exclude internal devices
-		this.api = new OverkizService.Api(log, config);
+	this.exposeScenarios = config.exposeScenarios || false;
+	this.exclusions = config.exclude || [];
+	this.exclusions.push('internal'); // Exclude internal devices
+	this.api = new OverkizService.Api(log, config);
 
     this.platformAccessories = [];
 
@@ -38,8 +38,8 @@ function TahomaPlatform(log, config, api) {
 TahomaPlatform.prototype = {
     getAccessory: function(deviceURL) {
         for (accessory of this.platformAccessories) {
-            if (accessory.deviceURL == deviceURL)
-                return accessory;
+        	if (accessory.deviceURL == deviceURL)
+				return accessory;
         }
         
         var i1 = deviceURL.indexOf("#");
@@ -47,9 +47,9 @@ TahomaPlatform.prototype = {
         	baseURL = deviceURL.substring(0, i1);
 					//this.log.info('Search extended : ' + baseURL);
         	for (accessory of this.platformAccessories) {
-							if (accessory.deviceURL.startsWith(baseURL))
-									return accessory;
-					}
+				if (accessory.deviceURL.startsWith(baseURL))
+				return accessory;
+			}
         }
         return null;
     },
@@ -57,7 +57,7 @@ TahomaPlatform.prototype = {
     accessories: function(callback) {
         var that = this;
         if (that.platformAccessories.length == 0) {
-            that.loadDevices(function() {
+        	that.loadDevices(function() {
             	if(that.exposeScenarios) {
               	that.loadScenarios(function() {
               		callback(that.platformAccessories);

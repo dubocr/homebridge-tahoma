@@ -21,20 +21,18 @@ HeatingSystem = function(log, api, device, config) {
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
 
-			this.onState = service.getCharacteristic(Characteristic.On);
-			this.onState.on('set', this.setHeatingLevel.bind(this));
-			
+		this.onState = service.getCharacteristic(Characteristic.On);
+		this.onState.on('set', this.setHeatingLevel.bind(this));	
     } else {
-    
-			var service = new Service.Thermostat(device.label);
-
-			this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
-			this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
-			this.targetState.on('set', this.setTemperature.bind(this));
+		var service = new Service.Thermostat(device.label);
 		
-			this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
-			this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
-			this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
+		this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
+		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
+		this.targetState.on('set', this.setTemperature.bind(this));
+		
+		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
+		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
+		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
     }
     
     this.services.push(service);
@@ -57,15 +55,15 @@ HeatingSystem.prototype = {
         			command = new Command('setComfortTemperature', [value]);
         		else
         			command = new Command('setEcoTemperature', [value]);
-        	break;
+        		break;
         	
         	case 'SomfyPilotWireHeatingInterface':
         		callback("Bad command");
-        	break;
+        		break;
         	
         	default:
         		command = new Command('setHeatingTargetTemperature', [value]);
-        	break;
+        		break;
         }
         
         this.executeCommand(command, function(status, error, data) {
@@ -93,83 +91,83 @@ HeatingSystem.prototype = {
         switch(this.device.widget) {
         	case 'SomfyHeatingTemperatureInterface':
         		switch(value) {
-							case Characteristic.TargetHeatingCoolingState.AUTO:
-								if(this.onOff == 'off')
-									commands.push(new Command('setOnOff', ['on']));
-								commands.push(new Command('setActiveMode', ['auto']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.HEAT:
-								if(this.onOff == 'off')
-									commands.push(new Command('setOnOff', ['on']));
-								commands.push(new Command('setManuAndSetPointModes', ['comfort']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.COOL:
-								if(this.onOff == 'off')
-									commands.push(new Command('setOnOff', ['on']));
-								commands.push(new Command('setManuAndSetPointModes', ['eco']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.OFF:
-								commands.push(new Command('setOnOff', ['off']));
-							break;
-							
-							default:
-								callback("Bad command");
-							break;
-						}
-        	break;
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+						if(this.onOff == 'off')
+							commands.push(new Command('setOnOff', ['on']));
+						commands.push(new Command('setActiveMode', ['auto']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+						if(this.onOff == 'off')
+							commands.push(new Command('setOnOff', ['on']));
+						commands.push(new Command('setManuAndSetPointModes', ['comfort']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						if(this.onOff == 'off')
+							commands.push(new Command('setOnOff', ['on']));
+						commands.push(new Command('setManuAndSetPointModes', ['eco']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						commands.push(new Command('setOnOff', ['off']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
         	
         	case 'SomfyPilotWireHeatingInterface':
         		switch(value) {
-							case Characteristic.TargetHeatingCoolingState.AUTO:
-								if(this.onOff == 'off')
-									commands.push(new Command('setOnOff', ['on']));
-								commands.push(new Command('setActiveMode', ['auto']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.HEAT:
-								if(this.onOff == 'off')
-									commands.push(new Command('setOnOff', ['on']));
-								//commands.push(new Command('setActiveMode', ['manu']));
-								commands.push(new Command('setSetPointMode', ['comfort']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.COOL:
-								if(this.onOff == 'off')
-									commands.push(new Command('setOnOff', ['on']));
-								//commands.push(new Command('setActiveMode', ['manu']));
-								commands.push(new Command('setSetPointMode', ['eco']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.OFF:
-								commands.push(new Command('setOnOff', ['off']));
-							break;
-							
-							default:
-								callback("Bad command");
-							break;
-						}
-        	break;
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+						if(this.onOff == 'off')
+							commands.push(new Command('setOnOff', ['on']));
+						commands.push(new Command('setActiveMode', ['auto']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+						if(this.onOff == 'off')
+							commands.push(new Command('setOnOff', ['on']));
+						//commands.push(new Command('setActiveMode', ['manu']));
+						commands.push(new Command('setSetPointMode', ['comfort']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						if(this.onOff == 'off')
+							commands.push(new Command('setOnOff', ['on']));
+						//commands.push(new Command('setActiveMode', ['manu']));
+						commands.push(new Command('setSetPointMode', ['eco']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						commands.push(new Command('setOnOff', ['off']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
         	
         	default:
         		switch(value) {
-							case Characteristic.TargetHeatingCoolingState.AUTO:
-							case Characteristic.TargetHeatingCoolingState.HEAT:
-							case Characteristic.TargetHeatingCoolingState.COOL:
-								 commands.push(new Command('setHeatingOnOffState', ['on']));
-							break;
-							
-							case Characteristic.TargetHeatingCoolingState.OFF:
-								 commands.push(new Command('setHeatingOnOffState', ['off']));
-							break;
-							
-							default:
-								callback("Bad command");
-							break;
-						}
-        	break;
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						 commands.push(new Command('setHeatingOnOffState', ['on']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						 commands.push(new Command('setHeatingOnOffState', ['off']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
         }
 
         this.executeCommand(commands, function(status, error, data) {
@@ -178,7 +176,7 @@ HeatingSystem.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.COMPLETED:
-                break;
+                	break;
                 case ExecutionState.FAILED:
                     that.heatingTargetState.updateValue(that.heatingCurrentState.value);
                     break;
@@ -194,8 +192,7 @@ HeatingSystem.prototype = {
     setHeatingLevel: function(value, callback) {
         var that = this;
         
-        var command = new Command('setHeatingLevel');
-				command.parameters = [value ? 'comfort' : 'eco'];
+        var command = new Command('setHeatingLevel', [value ? 'comfort' : 'eco']);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -216,8 +213,7 @@ HeatingSystem.prototype = {
     setOnOff: function(value, callback) {
         var that = this;
         
-        var command = new Command('setOnOff');
-				command.parameters = [value ? 'on' : 'off'];
+        var command = new Command('setOnOff', [value ? 'on' : 'off']);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -234,46 +230,46 @@ HeatingSystem.prototype = {
     
     onStateUpdate: function(name, value) {
     	if(this.onState != null) {
-				if (name == State.STATE_ON_OFF) {
-					this.onState.updateValue(value == 'on' ? true : false);
+			if (name == State.STATE_ON_OFF) {
+				this.onState.updateValue(value == 'on' ? true : false);
+			}
+		} else {
+        	if (name == 'core:TemperatureState') { // From merged TemperatureSensor
+				var converted = value > 273.15 ? (value - 273.15) : value;
+				this.currentState.updateValue(converted);
+			} else if (name == 'core:TargetTemperatureState') {
+				this.targetState.updateValue(value);
+			} else if(this.heatingCurrentState != null && this.heatingTargetState != null) {
+				var valueChange = false;
+				if (name == State.STATE_ON_OFF || name == State.STATE_HEATING_ON_OFF) {
+					this.onOff = value;
+					valueChange = true;
+				} else if (name == 'ovp:HeatingTemperatureInterfaceActiveModeState') {
+					this.activeMode = value;
+					valueChange = true;
+				} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState') {
+					this.setPointMode = value;
+					valueChange = true;
 				}
-			} else {
-        if (name == 'core:TemperatureState') { // From merged TemperatureSensor
-					var converted = value > 273.15 ? (value - 273.15) : value;
-					this.currentState.updateValue(converted);
-				} else if (name == 'core:TargetTemperatureState') {
-					this.targetState.updateValue(value);
-				} else if(this.heatingCurrentState != null && this.heatingTargetState != null) {
-					var valueChange = false;
-					if (name == State.STATE_ON_OFF || name == State.STATE_HEATING_ON_OFF) {
-						this.onOff = value;
-						valueChange = true;
-					} else if (name == 'ovp:HeatingTemperatureInterfaceActiveModeState') {
-						this.activeMode = value;
-						valueChange = true;
-					} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState') {
-						this.setPointMode = value;
-						valueChange = true;
+			
+				if(valueChange) {
+					var converted = Characteristic.CurrentHeatingCoolingState.OFF;
+					var target = Characteristic.TargetHeatingCoolingState.OFF;
+					
+					if(this.onOff == 'on') {
+						converted = this.setPointMode == 'comfort' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+						if(this.activeMode == 'auto') {
+							target = Characteristic.TargetHeatingCoolingState.AUTO;
+						} else {
+							target = this.setPointMode == 'comfort' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
+						}
 					}
 				
-					if(valueChange) {
-						var converted = Characteristic.CurrentHeatingCoolingState.OFF;
-						var target = Characteristic.TargetHeatingCoolingState.OFF;
-						
-						if(this.onOff == 'on') {
-							converted = this.setPointMode == 'comfort' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
-							if(this.activeMode == 'auto') {
-								target = Characteristic.TargetHeatingCoolingState.AUTO;
-							} else {
-								target = this.setPointMode == 'comfort' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
-							}
-						}
-					
-						this.heatingCurrentState.updateValue(converted);
-						if (!this.isCommandInProgress())
-							this.heatingTargetState.updateValue(target);
-					}
+					this.heatingCurrentState.updateValue(converted);
+					if (!this.isCommandInProgress())
+						this.heatingTargetState.updateValue(target);
 				}
-      }
+			}
+    	}
     }
 }

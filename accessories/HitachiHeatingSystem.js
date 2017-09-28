@@ -29,7 +29,7 @@ HitachiHeatingSystem = function(log, api, device, config) {
     
     this.currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature);
     this.targetTemperature = service.getCharacteristic(Characteristic.TargetTemperature);
-		this.targetTemperature.on('set', this.setTemperature.bind(this));
+	this.targetTemperature.on('set', this.setTemperature.bind(this));
 		
     this.services.push(service);
 };
@@ -63,126 +63,122 @@ HitachiHeatingSystem.prototype = {
 		* Triggered when Homekit try to modify the Characteristic.TargetHeaterCoolerState
 		**/
     setHeatingCoolingState: function(value, callback) {
-			var that = this;
-			this.sendGlobalControl(function(status, error, data) {
-					switch (status) {
-							case ExecutionState.INITIALIZED:
-									callback(error);
-									break;
-							case ExecutionState.COMPLETED:
-							break;
-							case ExecutionState.FAILED:
-									that.targetState.updateValue(that.currentState.value); // Restore current state if command failed
-									break;
-							default:
-									break;
-					}
-			});
+		var that = this;
+		this.sendGlobalControl(function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+					break;
+				case ExecutionState.COMPLETED:
+					break;
+				case ExecutionState.FAILED:
+					that.targetState.updateValue(that.currentState.value); // Restore current state if command failed
+					break;
+				default:
+					break;
+			}
+		});
     },
     
     /**
 		* Triggered when Homekit try to modify the Characteristic.TargetTemperature
 		**/
     setTemperature: function(value, callback) {
-			var that = this;
-			this.sendGlobalControl(function(status, error, data) {
-					switch (status) {
-							case ExecutionState.INITIALIZED:
-									callback(error);
-							break;
-							case ExecutionState.COMPLETED:
-							break;
-							case ExecutionState.FAILED:
-								that.targetTemperature.updateValue(that.currentTemperature.value); // Restore current temp if command failed
-							break;
-							default:
-							break;
-					}
-			});
+		var that = this;
+		this.sendGlobalControl(function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+					break;
+				case ExecutionState.COMPLETED:
+					break;
+				case ExecutionState.FAILED:
+					that.targetTemperature.updateValue(that.currentTemperature.value); // Restore current temp if command failed
+					break;
+				default:
+					break;
+			}
+		});
     },
     
     sendGlobalControl: function(callback) {
-      var onOff = "on";
-      var fanMode = "auto";
-      var progMode = "manu";
-      var heatMode = "auto";
-      var temperature = this.targetTemperature.value;
-    	
-			switch(this.targetState.value) {
-				
-				case Characteristic.TargetHeatingCoolingState.OFF:
-					onOff = "off";
-					switch(this.currentState.value) {
-						case Characteristic.CurrentHeatingCoolingState.AUTO:
-							heatMode = "auto";
+		var onOff = "on";
+		var fanMode = "auto";
+		var progMode = "manu";
+		var heatMode = "auto";
+		var temperature = this.targetTemperature.value;
+
+		switch(this.targetState.value) {
+	
+			case Characteristic.TargetHeatingCoolingState.OFF:
+				onOff = "off";
+				switch(this.currentState.value) {
+					case Characteristic.CurrentHeatingCoolingState.AUTO:
+						heatMode = "auto";
 						break;
-						case Characteristic.CurrentHeatingCoolingState.HEAT:
-							heatMode = "heating";
+					case Characteristic.CurrentHeatingCoolingState.HEAT:
+						heatMode = "heating";
 						break;
-						case Characteristic.CurrentHeatingCoolingState.COOL:
-							heatMode = "cooling";
+					case Characteristic.CurrentHeatingCoolingState.COOL:
+						heatMode = "cooling";
 						break;
-					}
-					
+				}
 				break;
-				
-				case Characteristic.TargetHeatingCoolingState.HEAT:
-					heatMode = "heating";
+	
+			case Characteristic.TargetHeatingCoolingState.HEAT:
+				heatMode = "heating";
 				break;
-				
-				case Characteristic.TargetHeatingCoolingState.COOL:
-					 heatMode = "cooling";
+	
+			case Characteristic.TargetHeatingCoolingState.COOL:
+				 heatMode = "cooling";
 				break;
-				
-				case Characteristic.TargetHeatingCoolingState.AUTO:
-					heatMode = "auto";
-					temperature = temperature - this.currentTemperature.value;
-					temperature = Math.max(Math.min(temperature, 5), -5);
+	
+			case Characteristic.TargetHeatingCoolingState.AUTO:
+				heatMode = "auto";
+				temperature = temperature - this.currentTemperature.value;
+				temperature = Math.max(Math.min(temperature, 5), -5);
 				break;
-				
-				default:
+	
+			default:
 				break;
-			}
+		}
 			
-			var command = new Command('globalControl');
-			command.parameters = [onOff, temperature, fanMode, heatMode, progMode];
-			
-			this.executeCommand(command, callback);
+		var command = new Command('globalControl', [onOff, temperature, fanMode, heatMode, progMode]);
+		this.executeCommand(command, callback);
     },
     
     onStateUpdate: function(name, value) {
       	if (name == "ovp:ModeChangeState") {
-
-					switch(value.toLowerCase()) {
-						case "auto cooling":
-							this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.COOL;
-							this.lastTargetMode = Characteristic.TargetHeatingCoolingState.AUTO;
-						break;
-						case "auto heating":
-							this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.HEAT;
-							this.lastTargetMode = Characteristic.TargetHeatingCoolingState.AUTO;
-						break;
-						case "cooling":
-							this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.COOL;
-							this.lastTargetMode = Characteristic.TargetHeatingCoolingState.COOL;
-						break;
-						case "heating":
-							this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.HEAT;
-							this.lastTargetMode = Characteristic.TargetHeatingCoolingState.HEAT;
-						break;
-					}
+			switch(value.toLowerCase()) {
+				case "auto cooling":
+					this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.COOL;
+					this.lastTargetMode = Characteristic.TargetHeatingCoolingState.AUTO;
+					break;
+				case "auto heating":
+					this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.HEAT;
+					this.lastTargetMode = Characteristic.TargetHeatingCoolingState.AUTO;
+					break;
+				case "cooling":
+					this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.COOL;
+					this.lastTargetMode = Characteristic.TargetHeatingCoolingState.COOL;
+					break;
+				case "heating":
+					this.lastCurrentMode = Characteristic.CurrentHeatingCoolingState.HEAT;
+					this.lastTargetMode = Characteristic.TargetHeatingCoolingState.HEAT;
+					break;
+			}
 					
         	if (this.currentState.value != Characteristic.CurrentHeatingCoolingState.OFF) {
-						this.currentState.updateValue(this.lastCurrentMode);
-						if (!this.isCommandInProgress()) // if no command running, update target
-							this.targetState.updateValue(this.lastTargetMode);
+				this.currentState.updateValue(this.lastCurrentMode);
+				if (!this.isCommandInProgress()) // if no command running, update target
+					this.targetState.updateValue(this.lastTargetMode);
         	}
         } else if (name == "ovp:MainOperationState") {
-       		var converted = value.toLowerCase() == "off" ? Characteristic.CurrentHeatingCoolingState.OFF : this.lastCurrentMode;
-          var targetConverted = value.toLowerCase() == "off" ? Characteristic.TargetHeatingCoolingState.OFF : this.lastTargetMode;
-          this.currentState.updateValue(converted);
-          if (!this.isCommandInProgress()) // if no command running, update target
-          	this.targetState.updateValue(targetConverted);
+        	var converted = value.toLowerCase() == "off" ? Characteristic.CurrentHeatingCoolingState.OFF : this.lastCurrentMode;
+			var targetConverted = value.toLowerCase() == "off" ? Characteristic.TargetHeatingCoolingState.OFF : this.lastTargetMode;
+			this.currentState.updateValue(converted);
+			if (!this.isCommandInProgress()) // if no command running, update target
+          		this.targetState.updateValue(targetConverted);
         } else if (name == "ovp:RoomTemperatureState") {
         	var converted = value.substring(0,value.length-3)
         	this.currentTemperature.updateValue(converted);

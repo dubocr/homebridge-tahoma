@@ -1,6 +1,6 @@
 # homebridge-tahoma
 
-Supports Overkiz platform (TaHoma, Cozytouch) on HomeBridge
+Supports TaHoma (Somfy) and Cozytouch (Atlantic,Thermor,Sauter) platforms on HomeBridge
 
 # Installation
 
@@ -86,5 +86,5 @@ Some devices or configurations could not operate properly due to limited tests. 
 
 You are welcome to contribute to this plugin development by adding new kind of devices by adding implementation `.js` file in `accessories` folder or improving existing 'js' file.
 These documentations could help you developing plugin :
-[Obtaining my config](http://home.dubocr.fr/tools/setup)
+[Obtaining my config](http://home.dubocr.fr/tools/setup),
 [HomeKit services and characteristics](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js)

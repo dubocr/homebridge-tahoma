@@ -88,8 +88,9 @@ AbstractAccessory.prototype = {
 			if(Array.isArray(commands)) {
 				cmdName = "Bulk commands";
 			} else {
-				commands = [commands];
+				that.log('['+that.name+'] ' + commands.name +JSON.stringify(commands.parameters));
 				cmdName = commands.name;
+				commands = [commands];
 			}
 			
 			if (this.isCommandInProgress()) {
@@ -103,9 +104,12 @@ AbstractAccessory.prototype = {
 				if(!error) {
 					if (status == ExecutionState.INITIALIZED)
 						that.lastExecId = data.execId;
-					if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
-						that.log.info('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+					
 				}
+				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
+					that.log('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+				else
+					that.log.debug('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
 				callback(status, error, data);
 			});
     },

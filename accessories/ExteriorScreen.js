@@ -37,14 +37,9 @@ ExteriorScreen.prototype = {
 	**/
     setPosition: function(value, callback) {
         var that = this;
-        if (this.lastExecId in this.api.executionCallback) {
-            this.api.cancelCommand(this.lastExecId, function() {});
-        }
 
-        var command = new Command('setPosition');
-        command.parameters = [100 - value];
+        var command = new Command('setPosition', [100 - value]);
         this.executeCommand(command, function(status, error, data) {
-            //that.log('['+that.name+'] ' + command.name + ' ' + status);
             switch (status) {
                 case ExecutionState.INITIALIZED:
                     callback(error);
@@ -52,8 +47,7 @@ ExteriorScreen.prototype = {
                 case ExecutionState.IN_PROGRESS:
                     var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
-                    that.log('['+that.name+'] Command in progress, state='+newValue);
-                	break;
+                    break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
                     that.positionState.updateValue(Characteristic.PositionState.STOPPED);
@@ -66,12 +60,11 @@ ExteriorScreen.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == State.STATE_CLOSURE) {
-					this.log('['+this.name+'] ' + name + '=' + value); // For analysis
-					var converted = 100 - value;
-					this.currentPosition.updateValue(converted);
-					if (!this.isCommandInProgress()) // if no command running, update target
-							this.targetPosition.updateValue(converted);
-			}
+    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
+			var converted = 100 - value;
+			this.currentPosition.updateValue(converted);
+			if (!this.isCommandInProgress()) // if no command running, update target
+				this.targetPosition.updateValue(converted);
+		}
     }
 }

@@ -52,7 +52,7 @@ GarageDoor.prototype = {
                     that.currentState.updateValue(newValue);
                     break;
                 case ExecutionState.COMPLETED:
-                break;
+                	break;
                 case ExecutionState.FAILED:
                 	// Update target in case of error
                     that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
@@ -80,7 +80,7 @@ GarageDoor.prototype = {
                 case ExecutionState.COMPLETED:
                 	var newValue = (value == Characteristic.TargetDoorState.OPEN) ? Characteristic.CurrentDoorState.OPEN : Characteristic.CurrentDoorState.CLOSED;
                     that.currentState.updateValue(newValue);
-                break;
+                	break;
                 case ExecutionState.FAILED:
                 	// Restore target in case of error
                     that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
@@ -96,16 +96,16 @@ GarageDoor.prototype = {
         	var converted = null;
         	var target = null;
             switch(value) {
-							case 'unknown':
-							case 'open' :
-								converted = Characteristic.CurrentDoorState.OPEN;
-								target = Characteristic.TargetDoorState.OPEN;
-							break;
-							case 'closed' :
-								converted = Characteristic.CurrentDoorState.CLOSED;
-								target = Characteristic.TargetDoorState.CLOSED;
-							break;
-						}
+				case 'unknown':
+				case 'open' :
+					converted = Characteristic.CurrentDoorState.OPEN;
+					target = Characteristic.TargetDoorState.OPEN;
+					break;
+				case 'closed' :
+					converted = Characteristic.CurrentDoorState.CLOSED;
+					target = Characteristic.TargetDoorState.CLOSED;
+					break;
+			}
 
             this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target

@@ -81,7 +81,7 @@ Gate.prototype = {
                 case ExecutionState.COMPLETED:
                 	var newValue = (value == Characteristic.TargetDoorState.OPEN) ? Characteristic.CurrentDoorState.OPEN : Characteristic.CurrentDoorState.CLOSED;
                     that.currentState.updateValue(newValue);
-                break;
+                	break;
                 case ExecutionState.FAILED:
                 	// Restore target in case of error
                     that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
@@ -101,15 +101,15 @@ Gate.prototype = {
 				case 'open' :
 					converted = Characteristic.CurrentDoorState.OPEN;
 					target = Characteristic.TargetDoorState.OPEN;
-				break;
+					break;
 				case 'pedestrian' :
 					converted = Characteristic.CurrentDoorState.STOPPED;
 					target = Characteristic.TargetDoorState.OPEN;
-				break;
+					break;
 				case 'closed' :
 					converted = Characteristic.CurrentDoorState.CLOSED;
 					target = Characteristic.TargetDoorState.CLOSED;
-				break;
+					break;
 			}
 
             this.currentState.updateValue(converted);

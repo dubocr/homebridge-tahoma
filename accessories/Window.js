@@ -23,6 +23,8 @@ Window = function(log, api, device, config) {
     this.targetPosition = service.getCharacteristic(Characteristic.TargetPosition);
     if(this.device.widget == 'UpDownWindow') {
     	this.targetPosition.on('set', this.upDownCommand.bind(this));
+    	this.currentPosition.updateValue(50);
+    	this.targetPosition.updateValue(50);
     } else {
     	this.targetPosition.on('set', this.setClosure.bind(this));
     }
@@ -41,14 +43,9 @@ Window.prototype = {
 	**/
     setClosure: function(value, callback) {
         var that = this;
-        if (this.lastExecId in this.api.executionCallback) {
-            this.api.cancelCommand(this.lastExecId, function() {});
-        }
 
-        var command = new Command('setClosure');
-        command.parameters = [100 - value];
+        var command = new Command('setClosure', [100 - value]);
         this.executeCommand(command, function(status, error, data) {
-            //that.log('['+that.name+'] ' + command.name + ' ' + status);
             switch (status) {
                 case ExecutionState.INITIALIZED:
                     callback(error);
@@ -56,8 +53,7 @@ Window.prototype = {
                 case ExecutionState.IN_PROGRESS:
                     var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
-                    that.log.debug('['+that.name+'] Command in progress, state='+newValue);
-                	break;
+                    break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
                     that.positionState.updateValue(Characteristic.PositionState.STOPPED);
@@ -74,19 +70,13 @@ Window.prototype = {
 	**/
     upDownCommand: function(value, callback) {
     	var that = this;
-        if (this.lastExecId in this.api.executionCallback) {
-            this.api.cancelCommand(this.lastExecId, function() {});
-        }
-		
-		var cmd;
+		var command;
 		switch(value) {
-			case 100: cmd = 'up'; break;
-			case 0: cmd = 'down'; break;
-			default: cmd = 'my'; break;
+			case 100: command = new Command('up'); break;
+			case 0: command = new Command('down'); break;
+			default: command = new Command('my'); break;
 		}
-        var command = new Command(cmd);
         this.executeCommand(command, function(status, error, data) {
-            //that.log('['+that.name+'] ' + command.name + ' ' + status);
             switch (status) {
                 case ExecutionState.INITIALIZED:
                     callback(error);
@@ -108,10 +98,9 @@ Window.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == State.STATE_CLOSURE) {
-            this.log.debug('['+this.name+'] ' + name + '=' + value); // For analysis
-            var converted = 100 - value;
-            this.currentPosition.updateValue(converted);
+    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
+        	var converted = 100 - value;
+        	this.currentPosition.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
                 this.targetPosition.updateValue(converted);
         }

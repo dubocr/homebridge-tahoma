@@ -28,7 +28,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
     ExecutionState = api.ExecutionState;
     State = api.State;
 		
-		makeCharacteristics();
+	makeCharacteristics();
 		
     return ElectricitySensor;
 }
@@ -40,8 +40,8 @@ module.exports = function(homebridge, abstractAccessory, api) {
 ElectricitySensor = function(log, api, device) {
     AbstractAccessory.call(this, log, api, device);
     var service = new Service.Outlet(device.label);
-		service.addCharacteristic(EnergyConsumption);
-		service.addCharacteristic(PowerConsumption);
+	service.addCharacteristic(EnergyConsumption);
+	service.addCharacteristic(PowerConsumption);
 		
     this.energyState = service.getCharacteristic(EnergyConsumption);
     this.powerState = service.getCharacteristic(PowerConsumption);
