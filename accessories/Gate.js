@@ -21,7 +21,7 @@ Gate = function(log, api, device) {
 
     this.currentState = service.getCharacteristic(Characteristic.CurrentDoorState);
     this.targetState = service.getCharacteristic(Characteristic.TargetDoorState)
-    if(this.device.widget == 'OpenCloseGate4T') {
+    if(this.device.widget.startsWith('OpenClose') || this.device.widget.startsWith('UpDown')) {
     	this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
     	this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
     	this.targetState.on('set', this.cycle.bind(this));
@@ -93,7 +93,7 @@ Gate.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        if (name == State.STATE_OPEN_CLOSED_PEDESTRIAN) {
+        if (name == State.STATE_OPEN_CLOSED_PEDESTRIAN || name == State.STATE_OPEN_CLOSED_UNKNOWN) {
         	var converted = null;
         	var target = null;
             switch(value) {

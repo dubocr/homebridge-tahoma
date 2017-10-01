@@ -28,8 +28,10 @@ HitachiHeatingSystem = function(log, api, device, config) {
     this.targetState.on('set', this.setHeatingCoolingState.bind(this));
     
     this.currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature);
+    this.currentTemperature.on('get', this.getTemperature.bind(this, "ovp:RoomTemperatureState"));
     this.targetTemperature = service.getCharacteristic(Characteristic.TargetTemperature);
 	this.targetTemperature.on('set', this.setTemperature.bind(this));
+	this.targetTemperature.on('get', this.getTemperature.bind(this, "ovp:TemperatureChangeState"));
 		
     this.services.push(service);
 };
@@ -107,6 +109,7 @@ HitachiHeatingSystem.prototype = {
 		var progMode = "manu";
 		var heatMode = "auto";
 		var temperature = this.targetTemperature.value;
+		var autoTemp = Math.max(Math.min(temperature - this.currentTemperature.value, 5), -5);
 
 		switch(this.targetState.value) {
 	
@@ -115,6 +118,7 @@ HitachiHeatingSystem.prototype = {
 				switch(this.currentState.value) {
 					case Characteristic.CurrentHeatingCoolingState.AUTO:
 						heatMode = "auto";
+						temperature = autoTemp;
 						break;
 					case Characteristic.CurrentHeatingCoolingState.HEAT:
 						heatMode = "heating";
@@ -135,8 +139,7 @@ HitachiHeatingSystem.prototype = {
 	
 			case Characteristic.TargetHeatingCoolingState.AUTO:
 				heatMode = "auto";
-				temperature = temperature - this.currentTemperature.value;
-				temperature = Math.max(Math.min(temperature, 5), -5);
+				temperature = autoTemp;
 				break;
 	
 			default:
@@ -145,6 +148,18 @@ HitachiHeatingSystem.prototype = {
 			
 		var command = new Command('globalControl', [onOff, temperature, fanMode, heatMode, progMode]);
 		this.executeCommand(command, callback);
+    },
+    
+    getTemperature : function(state, callback) {
+    	var that = this;
+    	this.api.requestState(this.device.deviceURL, state, function(error, data) {
+    		if(!error) {
+    			that.log("GET " + state + " => " + data);
+    			callback(null, data);
+    		} else {
+    			callback(error);
+    		}
+    	});
     },
     
     onStateUpdate: function(name, value) {
