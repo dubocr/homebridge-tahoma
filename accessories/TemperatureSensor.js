@@ -30,8 +30,9 @@ TemperatureSensor.prototype = {
 
     onStateUpdate: function(name, value) {
         if (name == 'core:TemperatureState') {
-        	var val = value - 273.15;
-        	this.temperatureState.updateValue(val);
+        	if(value > 200)
+        		value -= 273.15;
+        	this.temperatureState.updateValue(value);
         }
     }
 }

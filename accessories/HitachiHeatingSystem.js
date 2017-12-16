@@ -66,7 +66,7 @@ HitachiHeatingSystem.prototype = {
 		**/
     setHeatingCoolingState: function(value, callback) {
 		var that = this;
-		this.sendGlobalControl(function(status, error, data) {
+		this.sendGlobalControl(value, this.targetTemperature.value, function(status, error, data) {
 			switch (status) {
 				case ExecutionState.INITIALIZED:
 					callback(error);
@@ -87,7 +87,7 @@ HitachiHeatingSystem.prototype = {
 		**/
     setTemperature: function(value, callback) {
 		var that = this;
-		this.sendGlobalControl(function(status, error, data) {
+		this.sendGlobalControl(this.targetState.value, value, function(status, error, data) {
 			switch (status) {
 				case ExecutionState.INITIALIZED:
 					callback(error);
@@ -95,7 +95,6 @@ HitachiHeatingSystem.prototype = {
 				case ExecutionState.COMPLETED:
 					break;
 				case ExecutionState.FAILED:
-					that.targetTemperature.updateValue(that.currentTemperature.value); // Restore current temp if command failed
 					break;
 				default:
 					break;
@@ -103,15 +102,14 @@ HitachiHeatingSystem.prototype = {
 		});
     },
     
-    sendGlobalControl: function(callback) {
+    sendGlobalControl: function(state, temperature, callback) {
 		var onOff = "on";
 		var fanMode = "auto";
 		var progMode = "manu";
 		var heatMode = "auto";
-		var temperature = this.targetTemperature.value;
 		var autoTemp = Math.max(Math.min(temperature - this.currentTemperature.value, 5), -5);
 
-		switch(this.targetState.value) {
+		switch(state) {
 	
 			case Characteristic.TargetHeatingCoolingState.OFF:
 				onOff = "off";
@@ -125,6 +123,9 @@ HitachiHeatingSystem.prototype = {
 						break;
 					case Characteristic.CurrentHeatingCoolingState.COOL:
 						heatMode = "cooling";
+						break;
+					default:
+						temperature = autoTemp;
 						break;
 				}
 				break;
@@ -143,9 +144,12 @@ HitachiHeatingSystem.prototype = {
 				break;
 	
 			default:
+				temperature = autoTemp;
 				break;
 		}
-			
+		
+		this.log("FROM " + this.currentState.value + '/' + this.currentTemperature.value + ' TO ' + state + '/' + temperature);
+
 		var command = new Command('globalControl', [onOff, temperature, fanMode, heatMode, progMode]);
 		this.executeCommand(command, callback);
     },
@@ -154,8 +158,12 @@ HitachiHeatingSystem.prototype = {
     	var that = this;
     	this.api.requestState(this.device.deviceURL, state, function(error, data) {
     		if(!error) {
-    			that.log("GET " + state + " => " + data);
-    			callback(null, data);
+    			var converted = parseInt(data.substring(0,data.length-3));
+    			if (state == "ovp:TemperatureChangeState" && converted <= 5) {
+        			converted = converted + that.currentTemperature.value;
+        		}
+    			that.log("GET " + state + " => " + converted);
+    			callback(null, converted);
     		} else {
     			callback(error);
     		}
@@ -198,9 +206,10 @@ HitachiHeatingSystem.prototype = {
         	var converted = value.substring(0,value.length-3)
         	this.currentTemperature.updateValue(converted);
         } else if (name == "ovp:TemperatureChangeState") {
-        	var converted = value.substring(0,value.length-3);
+        	var converted = parseInt(value.substring(0,value.length-3));
         	if(converted <= 5) 
         		converted = converted + this.currentTemperature.value;
+        	this.log("ovp:TemperatureChangeState => " + converted);
         	this.targetTemperature.updateValue(converted);
         }
     }
