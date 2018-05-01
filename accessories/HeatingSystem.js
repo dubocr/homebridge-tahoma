@@ -60,6 +60,10 @@ HeatingSystem.prototype = {
         	case 'SomfyPilotWireHeatingInterface':
         		callback("Bad command");
         		break;
+        		
+        	case 'ProgrammableAndProtectableThermostatSetPoint':
+        		command = new Command('setTargetTemperature', [value]);
+        		break;
         	
         	default:
         		command = new Command('setHeatingTargetTemperature', [value]);

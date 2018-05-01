@@ -136,5 +136,14 @@ AbstractAccessory.prototype = {
 
     isCommandInProgress: function() {
         return (this.lastExecId in this.api.executionCallback);
+    },
+    
+    postpone: function(todo, value, callback) {
+    	var that = this;
+        if(this.timeout != null) {
+        	clearTimeout(this.timeout);
+        }
+        this.timeout = setTimeout(function() { todo(value, function(err) { }); }, 2000);
+        callback();
     }
 }

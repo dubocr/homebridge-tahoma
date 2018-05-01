@@ -20,6 +20,7 @@ TemperatureSensor = function(log, api, device) {
     var service = new Service.TemperatureSensor(device.label);
 
     this.temperatureState = service.getCharacteristic(Characteristic.CurrentTemperature);
+    this.temperatureState.setProps({ minValue: -100, maxValue: 100 });
     
     this.services.push(service);
 };

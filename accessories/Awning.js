@@ -28,7 +28,7 @@ Awning = function(log, api, device, config) {
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
     } else {
-    	this.targetPosition.on('set', this.setClosure.bind(this));
+    	this.targetPosition.on('set', this.postpone.bind(this, this.setClosure.bind(this)));
     }
     this.positionState = service.getCharacteristic(Characteristic.PositionState);
     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
@@ -55,24 +55,24 @@ Awning.prototype = {
     setClosure: function(value, callback) {
         var that = this;
         var command = new Command('setClosure', [100 - value]);
-        this.executeCommand(command, function(status, error, data) {
-            switch (status) {
-                case ExecutionState.INITIALIZED:
-                    callback(error);
-                    break;
-                case ExecutionState.IN_PROGRESS:
-                    var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
-                    that.positionState.updateValue(newValue);
-                    break;
-                case ExecutionState.COMPLETED:
-                case ExecutionState.FAILED:
-                    that.positionState.updateValue(Characteristic.PositionState.STOPPED);
-                    that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
-                    break;
-                default:
-                    break;
-            }
-        });
+		this.executeCommand(command, function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+					break;
+				case ExecutionState.IN_PROGRESS:
+					var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					that.positionState.updateValue(newValue);
+					break;
+				case ExecutionState.COMPLETED:
+				case ExecutionState.FAILED:
+					that.positionState.updateValue(Characteristic.PositionState.STOPPED);
+					that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
+					break;
+				default:
+					break;
+			}
+		});
     },
     
     /**

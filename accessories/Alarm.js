@@ -34,6 +34,13 @@ Alarm = function(log, api, device, config) {
 		this.targetState.updateValue(Characteristic.SecuritySystemTargetState.DISARM);
 	}
 	this.services.push(service);
+	
+	
+	if(this.device.widget == 'MyFoxAlarmController') {
+		var service2 = new Service.OccupancySensor(device.label);
+    	this.occupancyState = service2.getCharacteristic(Characteristic.OccupancyDetected);
+    	this.services.push(service2);
+	}
 };
 
 Alarm.UUID = 'Alarm';
@@ -46,20 +53,38 @@ Alarm.prototype = {
     setState: function(value, callback) {
         var that = this;
         var command = null;
-		switch(value) {
-			default:
-			case Characteristic.SecuritySystemTargetState.STAY_ARM:
-				command = new Command('alarmZoneOn', [this.stayZones]);
-			break;
-			case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
-				command = new Command('alarmZoneOn', [this.nightZones]);
-			break;
-			case Characteristic.SecuritySystemTargetState.AWAY_ARM:
-				command = new Command('alarmOn');
-			break;
-			case Characteristic.SecuritySystemTargetState.DISARM:
-				 command = new Command('alarmOff');
-			break;
+        if(this.device.widget == 'MyFoxAlarmController') {
+        	switch(value) {
+				default:
+				case Characteristic.SecuritySystemTargetState.STAY_ARM:
+					command = new Command('partial');
+				break;
+				case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+					command = new Command('partial');
+				break;
+				case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+					command = new Command('arm');
+				break;
+				case Characteristic.SecuritySystemTargetState.DISARM:
+					 command = new Command('disarm');
+				break;
+			}
+        } else {
+			switch(value) {
+				default:
+				case Characteristic.SecuritySystemTargetState.STAY_ARM:
+					command = new Command('alarmZoneOn', [this.stayZones]);
+				break;
+				case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+					command = new Command('alarmZoneOn', [this.nightZones]);
+				break;
+				case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+					command = new Command('alarmOn');
+				break;
+				case Characteristic.SecuritySystemTargetState.DISARM:
+					 command = new Command('alarmOff');
+				break;
+			}
 		}
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
@@ -117,6 +142,20 @@ Alarm.prototype = {
 				case 'partial2': converted = Characteristic.SecuritySystemTargetState.NIGHT_ARM; break;
 			}
 			this.targetState.updateValue(converted);
+        } else if (name == 'myfox:AlarmStatusState') {
+        	var converted = null;
+        	var target = null;
+            switch(value) {
+				default:
+				case 'disarmed': target = converted = Characteristic.SecuritySystemTargetState.DISARM; break;
+				case 'partial': target = converted = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
+				case 'armed': target = converted = Characteristic.SecuritySystemTargetState.AWAY_ARM; break;
+			}
+			this.currentState.updateValue(converted);
+            if (!this.isCommandInProgress()) // if no command running, update target
+                this.targetState.updateValue(target);
+        } else if (name == 'core:IntrusionState' && this.occupancyState != null) {
+        	this.occupancyState.updateValue(value == 'detected' ? Characteristic.OccupancyDetected.OCCUPANCY_DETECTED : Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED);
         }
     }
 }
