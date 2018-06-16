@@ -47,7 +47,7 @@ TahomaPlatform.prototype = {
         	baseURL = deviceURL.substring(0, i1);
 					//this.log.info('Search extended : ' + baseURL);
         	for (accessory of this.platformAccessories) {
-				if (accessory.deviceURL.startsWith(baseURL))
+				if (accessory.deviceURL != null && accessory.deviceURL.startsWith(baseURL))
 				return accessory;
 			}
         }
