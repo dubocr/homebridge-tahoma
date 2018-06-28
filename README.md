@@ -1,6 +1,6 @@
 # homebridge-tahoma
 
-Supports TaHoma (Somfy) and Cozytouch (Atlantic,Thermor,Sauter) platforms on HomeBridge
+Supports TaHoma (Somfy), Connexoon (Somfy) and Cozytouch (Atlantic,Thermor,Sauter) platforms on HomeBridge
 
 # Installation
 
@@ -36,8 +36,8 @@ Configuration parameters:
 
 | Parameter                  | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `user`               		   | String		| null			| mandatory, your TaHoma/Cozytouch account username                                                                                                                     |
-| `password`             	   | String		| null			| mandatory, your TaHoma/Cozytouch account password                                                                                                                     |
+| `user`               		   | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account username                                                                                                                     |
+| `password`             	   | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account password                                                                                                                     |
 | `service`              	   | String		| 'TaHoma'	| optional, service name ('TaHoma' or 'Cozytouch')																																																											|
 | `refreshPeriod`            | Integer	| 600				| optional, device states refresh period in seconds							 																										 																										|
 | `exclude`		               | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
