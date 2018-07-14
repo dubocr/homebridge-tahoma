@@ -81,6 +81,7 @@ TahomaPlatform.prototype = {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
 						var accessoryConfig = that.config[device.uiClass] || {};
 						if(DeviceAccessory[device.uiClass] != null) {
+							that.log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 							if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
 								accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device, accessoryConfig);
 								if(device.states != null) {
