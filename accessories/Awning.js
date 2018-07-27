@@ -115,7 +115,7 @@ Awning.prototype = {
     upDownCommand: function(value, callback) {
     	var that = this;
 		var command;
-		value = this.device.uiClass == 'Screen' ? (100-value) : value; // Reverse Screen devices
+		value = ['Screen', 'Awning'].includes(this.device.uiClass) ? (100-value) : value; // Reverse Screen devices
 		switch(value) {
 			case 100: command = new Command('up'); break;
 			case 0: command = new Command('down'); break;
