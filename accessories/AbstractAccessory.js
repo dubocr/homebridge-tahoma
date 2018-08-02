@@ -48,8 +48,6 @@ function AbstractAccessory(log, api, device) {
 
     this.name = device.label;
     this.deviceURL = device.deviceURL;
-    this.manufacturer = "Somfy"
-    this.model = "Tahoma"
 
     this.device = device;
     
@@ -60,16 +58,16 @@ function AbstractAccessory(log, api, device) {
     // manufacturer
     var manufacturer = this._look_state(OverkizApi.State.STATE_MANUFACTURER);
     if (manufacturer != null)
-        informationService.setCharacteristic(Characteristic.Manufacturer, manufacturer)
+        informationService.setCharacteristic(Characteristic.Manufacturer, manufacturer);
     else
-        informationService.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
+        informationService.setCharacteristic(Characteristic.Manufacturer, "Somfy");
     
     // model
     var model = this._look_state(OverkizApi.State.STATE_MODEL);
     if (model != null)
-        informationService.setCharacteristic(Characteristic.Model, model)
+        informationService.setCharacteristic(Characteristic.Model, model);
     else
-        informationService.setCharacteristic(Characteristic.Model, this.model)
+        informationService.setCharacteristic(Characteristic.Model, device.uiClass); // or device.widget or api.service
     
     // parts
     var parts = this.deviceURL.split("/");

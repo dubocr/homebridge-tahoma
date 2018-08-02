@@ -25,7 +25,7 @@ ExecutionState = {
 };
 
 State = {
-	STATE_MANUFACTURER: "core:ManufacturerState",
+	STATE_MANUFACTURER: "core:ManufacturerNameState",
 	STATE_MODEL: "core:ModelState",
 	STATE_CLOSURE: "core:ClosureState",
 	STATE_OPEN_CLOSED: "core:OpenClosedState",
@@ -43,7 +43,8 @@ State = {
 
 Server = {
 	'Cozytouch': 'ha110-1.overkiz.com',
-	'TaHoma': 'tahomalink.com'
+	'TaHoma': 'tahomalink.com',
+	'Connexoon': 'tahomalink.com'
 }
 
 module.exports = {
