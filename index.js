@@ -24,6 +24,7 @@ module.exports = function(homebridge) {
 function TahomaPlatform(log, config, api) {
     this.log = log;
     this.config = config;
+    this.hapapi = api;
 
 	this.exposeScenarios = config.exposeScenarios || false;
 	this.exclusions = config.exclude || [];
@@ -90,6 +91,7 @@ TahomaPlatform.prototype = {
 									}
 								}
 								that.platformAccessories.push(accessory);
+								//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
 							} else {
 								ignoredDevices.push(device);
 							}
@@ -125,6 +127,7 @@ TahomaPlatform.prototype = {
 						if(!Array.isArray(that.exposeScenarios) || that.exposeScenarios.indexOf(scenario.label) != -1) {
 							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.log, that.api);
 							that.platformAccessories.push(scenarioAccessory);
+							//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [scenarioAccessory]);
 						}
 					}
 				}

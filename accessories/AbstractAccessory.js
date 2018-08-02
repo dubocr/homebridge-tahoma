@@ -25,6 +25,10 @@ var inherits = function (ctor, superCtor) {
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
+	Accessory = homebridge.platformAccessory;
+	UUIDGen = homebridge.hap.uuid;
+	
+	inherits(AbstractAccessory, Accessory);
 
     // load up all accessories
     var accessoriesDir = __dirname;
@@ -75,7 +79,10 @@ function AbstractAccessory(log, api, device) {
     //serial
     var serial = parts[parts.length-1];
     informationService.setCharacteristic(Characteristic.SerialNumber, serial);
-    this.services.push(informationService); 
+    this.services.push(informationService);
+    
+    this.UUID = UUIDGen.generate(serial);
+    this.displayName = device.label;
 }
 
 AbstractAccessory.prototype = {
@@ -110,15 +117,20 @@ AbstractAccessory.prototype = {
             var execution = new Execution(label, this.device.deviceURL, commands);
             
             this.api.executeCommand(execution, function(status, error, data) {
-                if(!error) {
-                    if (status == ExecutionState.INITIALIZED)
-                        that.lastExecId = data.execId;
-                    
+                if (status == ExecutionState.INITIALIZED) {
+                    if(error) {
+                    	// API Error
+                    	that.updateReachability(false);
+                	} else {
+                		that.lastExecId = data.execId;
+                    }
                 }
+                
                 if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
                     that.log('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
                 else
                     that.log.debug('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+
                 callback(status, error, data);
             });
     },
@@ -152,7 +164,9 @@ AbstractAccessory.prototype = {
         if(this.timeout != null) {
             clearTimeout(this.timeout);
         }
-        this.timeout = setTimeout(function() { todo(value, function(err) { }); }, 2000);
+        this.timeout = setTimeout(function() {
+        	todo(value, function(err) { });
+        }, 2000);
         callback();
     }
 }

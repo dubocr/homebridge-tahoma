@@ -28,7 +28,7 @@ Awning = function(log, api, device, config) {
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
     } else if(this.device.widget.startsWith('PositionableHorizontal')) {
-    	this.targetPosition.on('set', this.setDeployment.bind(this));
+    	this.targetPosition.on('set', this.postpone.bind(this, this.setDeployment.bind(this)));
     	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);
     } else if(this.device.widget.startsWith('UpDown') || this.device.widget.startsWith('RTS')) {
     	this.targetPosition.on('set', this.upDownCommand.bind(this));
