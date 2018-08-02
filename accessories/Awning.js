@@ -23,11 +23,14 @@ Awning = function(log, api, device, config) {
 	
     this.currentPosition = service.getCharacteristic(Characteristic.CurrentPosition);
     this.targetPosition = service.getCharacteristic(Characteristic.TargetPosition);
-    if(this.device.widget.startsWith('UpDown')) {
-    	this.targetPosition.on('set', this.openCloseCommand.bind(this));
+    if(this.device.widget.startsWith('UpDownHorizontal')) {
+    	this.targetPosition.on('set', this.deployUndeployCommand.bind(this));
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
-    } else if(this.device.widget.startsWith('RTS')) {
+    } else if(this.device.widget.startsWith('PositionableHorizontal')) {
+    	this.targetPosition.on('set', this.setDeployment.bind(this));
+    	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);
+    } else if(this.device.widget.startsWith('UpDown') || this.device.widget.startsWith('RTS')) {
     	this.targetPosition.on('set', this.upDownCommand.bind(this));
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
@@ -53,9 +56,11 @@ Awning = function(log, api, device, config) {
 Awning.UUID = 'Awning';
 
 Awning.prototype = {
-
+    
 	/**
 	* Triggered when Homekit try to modify the Characteristic.TargetPosition
+	* HomeKit '0' => Close (100% Closure)
+	* HomeKit '100' => Open (0% Closure)
 	**/
     setClosure: function(value, callback) {
         var that = this;
@@ -84,7 +89,9 @@ Awning.prototype = {
     },
     
     /**
-	* Triggered when Homekit try to modify the Characteristic.TargetPosition for PositionableHorizontalAwning
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition
+	* HomeKit '0' => Close (0% Deployment)
+	* HomeKit '100' => Open (100% Deployment)
 	**/
     setDeployment: function(value, callback) {
         var that = this;
@@ -95,7 +102,38 @@ Awning.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.IN_PROGRESS:
-                    var newValue = (value == 0 || value < that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+                    var newValue = (value == 100 || value < that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+                    that.positionState.updateValue(newValue);
+                    break;
+                case ExecutionState.COMPLETED:
+                case ExecutionState.FAILED:
+                    that.positionState.updateValue(Characteristic.PositionState.STOPPED);
+                    that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
+
+    /**
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition for UpDownHorizontalAwning
+	**/
+    deployUndeployCommand: function(value, callback) {
+        var that = this;
+        var command;
+        switch(value) {
+			case 100: command = new Command('deploy'); break;
+			case 0: command = new Command('undeploy'); break;
+			default: command = new Command('my'); break;
+		}
+        this.executeCommand(command, function(status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.IN_PROGRESS:
+                    var newValue = (value == 100 || value < that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
                     that.positionState.updateValue(newValue);
                     break;
                 case ExecutionState.COMPLETED:
@@ -115,7 +153,6 @@ Awning.prototype = {
     upDownCommand: function(value, callback) {
     	var that = this;
 		var command;
-		value = ['Screen', 'Awning'].includes(this.device.uiClass) ? (100-value) : value; // Reverse Screen devices
 		switch(value) {
 			case 100: command = new Command('up'); break;
 			case 0: command = new Command('down'); break;
