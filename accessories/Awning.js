@@ -59,8 +59,8 @@ Awning.prototype = {
     
 	/**
 	* Triggered when Homekit try to modify the Characteristic.TargetPosition
-	* HomeKit '0' => Close (100% Closure)
-	* HomeKit '100' => Open (0% Closure)
+	* HomeKit '0' (Close) => 100% Closure
+	* HomeKit '100' (Open) => 0% Closure
 	**/
     setClosure: function(value, callback) {
         var that = this;
@@ -90,8 +90,8 @@ Awning.prototype = {
     
     /**
 	* Triggered when Homekit try to modify the Characteristic.TargetPosition
-	* HomeKit '0' => Close (0% Deployment)
-	* HomeKit '100' => Open (100% Deployment)
+	* HomeKit '0' (Close) => 0% Deployment
+	* HomeKit '100' (Open) => 100% Deployment
 	**/
     setDeployment: function(value, callback) {
         var that = this;
@@ -102,8 +102,8 @@ Awning.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.IN_PROGRESS:
-                    var newValue = (value == 100 || value < that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
-                    that.positionState.updateValue(newValue);
+                    var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					that.positionState.updateValue(newValue);
                     break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
@@ -117,7 +117,9 @@ Awning.prototype = {
     },
 
     /**
-	* Triggered when Homekit try to modify the Characteristic.TargetPosition for UpDownHorizontalAwning
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition for UpDownHorizontal Awning
+	* HomeKit '0' (Close) => undeploy
+	* HomeKit '100' (Open) => deploy
 	**/
     deployUndeployCommand: function(value, callback) {
         var that = this;
@@ -133,10 +135,11 @@ Awning.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.IN_PROGRESS:
-                    var newValue = (value == 100 || value < that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
-                    that.positionState.updateValue(newValue);
+                    var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					that.positionState.updateValue(newValue);
                     break;
                 case ExecutionState.COMPLETED:
+					that.currentPosition.updateValue(value);
                 case ExecutionState.FAILED:
                     that.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
@@ -148,7 +151,9 @@ Awning.prototype = {
     },
     
     /**
-	* Triggered when Homekit try to modify the Characteristic.TargetPosition for RTS RollerShutter
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition for UpDown and RTS RollerShutter
+	* HomeKit '0' (Close) => down
+	* HomeKit '100' (Open) => up
 	**/
     upDownCommand: function(value, callback) {
     	var that = this;
@@ -180,7 +185,9 @@ Awning.prototype = {
     },
     
     /**
-	* Triggered when Homekit try to modify the Characteristic.TargetPosition for UpDownRollerShutter
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition
+	* HomeKit '0' (Close) => close
+	* HomeKit '100' (Open) => open
 	**/
     openCloseCommand: function(value, callback) {
     	var that = this;
