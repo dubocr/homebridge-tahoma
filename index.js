@@ -34,6 +34,13 @@ function TahomaPlatform(log, config, api) {
     this.platformAccessories = [];
 
     this.api.setDeviceStateChangedEventListener(this);
+    
+    var that = this;
+    this.loadDevices(function() {
+    	if(that.exposeScenarios) {
+            that.loadScenarios(function() {});
+        }
+    });
 }
 
 TahomaPlatform.prototype = {
@@ -71,7 +78,12 @@ TahomaPlatform.prototype = {
             callback(this.platformAccessories);
         }
     },
-    
+ 
+ /*
+	configureAccessory: function(accessory) {
+	  this.log(accessory.displayName, "Configure Accessory");
+	},
+*/
     loadDevices: function(callback) {
     	var that = this;
     	this.api.getDevices(function(error, data) {

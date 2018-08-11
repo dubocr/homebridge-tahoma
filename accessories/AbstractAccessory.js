@@ -81,8 +81,8 @@ function AbstractAccessory(log, api, device) {
     informationService.setCharacteristic(Characteristic.SerialNumber, serial);
     this.services.push(informationService);
     
-    this.UUID = UUIDGen.generate(serial);
     this.displayName = device.label;
+    this.UUID = UUIDGen.generate(this.displayName); // serial
 }
 
 AbstractAccessory.prototype = {
@@ -96,6 +96,10 @@ AbstractAccessory.prototype = {
         *    You might then update corresponding Homekit Characteristic as follow :
         *    this.service.getCharacteristic(Characteristic.TargetPosition).updateValue(value);
         **/
+    },
+    
+    getState: function(state, callback) {
+        this.api.requestState(this.device.deviceURL, state, callback);
     },
     
     executeCommand: function(commands, callback) {
@@ -117,7 +121,7 @@ AbstractAccessory.prototype = {
             var execution = new Execution(label, this.device.deviceURL, commands);
             
             this.api.executeCommand(execution, function(status, error, data) {
-                if (status == ExecutionState.INITIALIZED) {
+            	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
                     	// API Error
                     	that.updateReachability(false);
