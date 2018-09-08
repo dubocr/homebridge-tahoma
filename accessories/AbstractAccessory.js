@@ -83,6 +83,7 @@ function AbstractAccessory(log, api, device) {
     
     this.displayName = device.label;
     this.UUID = UUIDGen.generate(this.displayName); // serial
+    //this.log('New Device : ' + this.displayName + ' ID:' + serial);
 }
 
 AbstractAccessory.prototype = {

@@ -34,13 +34,6 @@ function TahomaPlatform(log, config, api) {
     this.platformAccessories = [];
 
     this.api.setDeviceStateChangedEventListener(this);
-    
-    var that = this;
-    this.loadDevices(function() {
-    	if(that.exposeScenarios) {
-            that.loadScenarios(function() {});
-        }
-    });
 }
 
 TahomaPlatform.prototype = {
@@ -86,7 +79,9 @@ TahomaPlatform.prototype = {
 */
     loadDevices: function(callback) {
     	var that = this;
+    	this.platformAccessories = [];
     	this.api.getDevices(function(error, data) {
+    			that.log.debug('Device found: ' + data.length);
 				if (!error) {
 					var ignoredDevices = [];
 					for (device of data) {
