@@ -241,14 +241,13 @@ Awning.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
-			var converted = 100 - value;
-			if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
-				converted = value;
-			}
-			this.currentPosition.updateValue(converted);
-			if (!this.isCommandInProgress()) // if no command running, update target
-				this.targetPosition.updateValue(converted);
+        if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
+            if (value == 99) // Workaround for io:RollerShutterVeluxIOComponent  remains 1% opened
+                value = 100;
+            var converted = 100 - value;
+            this.currentPosition.updateValue(converted);
+            if (!this.isCommandInProgress()) // if no command running, update target
+                this.targetPosition.updateValue(converted);
 		} else if (name == 'core:DeploymentState') {
 			this.currentPosition.updateValue(value);
 			if (!this.isCommandInProgress()) // if no command running, update target
