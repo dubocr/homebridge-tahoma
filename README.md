@@ -87,7 +87,7 @@ Some devices or configurations could not operate properly due to limited tests. 
 
 You are welcome to contribute to this plugin development by adding new kind of devices by adding implementation `.js` file in `accessories` folder or improving existing 'js' file.
 These documentations could help you developing plugin :
-[Obtaining my config](http://home.dubocr.fr/tools/setup),
+[Obtaining my config](https://home.duboc.pro/tools/setup),
 [HomeKit services and characteristics](https://github.com/KhaosT/HAP-NodeJS/blob/master/lib/gen/HomeKitTypes.js)
 
 I do not expect any reward concerning this plugin, however, some users ask me for a [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L4X489MG7FUCN) button as sign of contribution. Feel free to use it.
