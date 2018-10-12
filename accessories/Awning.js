@@ -27,9 +27,9 @@ Awning = function(log, api, device, config) {
     	this.targetPosition.on('set', this.deployUndeployCommand.bind(this));
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
-    } else if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') { // PositionableHorizontal, PositionableScreen
+    /*} else if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') { // PositionableHorizontal, PositionableScreen
     	this.targetPosition.on('set', this.postpone.bind(this, this.setDeployment.bind(this)));
-    	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);
+    	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);*/
     } else if(this.device.widget.startsWith('UpDown') || this.device.widget.startsWith('RTS')) {
     	this.targetPosition.on('set', this.upDownCommand.bind(this));
     	this.currentPosition.updateValue(def);
@@ -243,9 +243,9 @@ Awning.prototype = {
     onStateUpdate: function(name, value) {
     	if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
 			var converted = 100 - value;
-			if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
+			/*if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
 				converted = value;
-			}
+			}*/
 			this.currentPosition.updateValue(converted);
 			if (!this.isCommandInProgress()) // if no command running, update target
 				this.targetPosition.updateValue(converted);
