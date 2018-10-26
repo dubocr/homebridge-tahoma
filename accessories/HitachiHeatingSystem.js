@@ -158,7 +158,7 @@ HitachiHeatingSystem.prototype = {
     	var that = this;
     	this.api.requestState(this.device.deviceURL, state, function(error, data) {
     		if(!error) {
-    			var converted = parseInt(data.substring(0,data.length-3));
+    			var converted = parseInt(data.replace(" °C").replace(" °F"););
     			if (state == "ovp:TemperatureChangeState" && converted <= 5) {
         			converted = converted + that.currentTemperature.value;
         		}
@@ -203,7 +203,7 @@ HitachiHeatingSystem.prototype = {
 			if (!this.isCommandInProgress()) // if no command running, update target
           		this.targetState.updateValue(targetConverted);
         } else if (name == "ovp:RoomTemperatureState") {
-        	var converted = value.replace(" °C").replace(" °F");
+        	var converted = parseInt(value.replace(" °C").replace(" °F"));
         	this.currentTemperature.updateValue(converted);
         } else if (name == "ovp:TemperatureChangeState") {
         	var converted = parseInt(value.replace(" °C").replace(" °F"));
