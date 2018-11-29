@@ -158,7 +158,7 @@ HitachiHeatingSystem.prototype = {
     	var that = this;
     	this.api.requestState(this.device.deviceURL, state, function(error, data) {
     		if(!error) {
-    			var converted = parseInt(data.replace(" °C").replace(" °F"););
+    			var converted = parseInt(data.replace(" °C").replace(" °F"));
     			if (state == "ovp:TemperatureChangeState" && converted <= 5) {
         			converted = converted + that.currentTemperature.value;
         		}
