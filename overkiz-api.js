@@ -223,6 +223,7 @@ OverkizApi.prototype = {
             }, function(err, response, json) {
                 if (err) {
                     that.log.warn("Unable to login: " + err);
+					callback(err);
                 } else if (json.success) {
                     that.isLoggedIn = true;
                     myRequest(authCallback);
@@ -230,8 +231,10 @@ OverkizApi.prototype = {
                 		that.registerListener();
                 } else if (json.error) {
                     that.log.warn("Loggin fail: " + json.error);
+					callback(err);
                 } else {
                     that.log.error("Unable to login");
+					callback("Unable to login");
                 }
             });
         }

@@ -18,6 +18,8 @@ module.exports = function(homebridge, abstractAccessory, api) {
   // TODO : Not tested
 HeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
+	this.currentHumidity = null;
+	
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
 
@@ -35,6 +37,7 @@ HeatingSystem = function(log, api, device, config) {
 		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
     }
     
+	this.service = service;
     this.services.push(service);
 };
 
@@ -42,6 +45,12 @@ HeatingSystem.UUID = 'HeatingSystem';
 
 HeatingSystem.prototype = {
 
+	merge: function(device) {
+		if(this.currentHumidity == null && device.UUID == 'HumiditySensor') {
+			this.currentHumidity = this.service.addCharacteristic(Characteristic.CurrentRelativeHumidity);
+		}
+    },
+	
 	/**
 	* Triggered when Homekit try to modify the Characteristic.TargetTemperature
 	**/
@@ -63,6 +72,10 @@ HeatingSystem.prototype = {
         		
         	case 'ProgrammableAndProtectableThermostatSetPoint':
         		command = new Command('setTargetTemperature', [value]);
+        		break;
+				
+			case 'SomfyThermostat':
+        		command = new Command('setDerogation', [value, 'further_notice']);
         		break;
         	
         	default:
@@ -147,6 +160,30 @@ HeatingSystem.prototype = {
 					
 					case Characteristic.TargetHeatingCoolingState.OFF:
 						commands.push(new Command('setOnOff', ['off']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
+				
+			case 'SomfyThermostat':
+        		switch(value) {
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+						commands.push(new Command('exitDerogation'));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+						commands.push(new Command('setDerogation', ['atHomeMode', 'further_notice']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						commands.push(new Command('setDerogation', ['sleepingMode', 'further_notice']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						commands.push(new Command('setDerogation', ['awayMode', 'further_notice']));
 						break;
 					
 					default:
@@ -241,8 +278,35 @@ HeatingSystem.prototype = {
         	if (name == 'core:TemperatureState') { // From merged TemperatureSensor
 				var converted = value > 273.15 ? (value - 273.15) : value;
 				this.currentState.updateValue(converted);
+				
+			} else if (name == 'core:RelativeHumidityState') { // From merged HumiditySensor
+				var converted = value;
+				if(this.currentHumidity != null) {
+					this.currentHumidity.updateValue(converted);
+				}
 			} else if (name == 'core:TargetTemperatureState') {
 				this.targetState.updateValue(value);
+			} else if (name == 'somfythermostat:DerogationHeatingModeState') {
+				var converted = Characteristic.CurrentHeatingCoolingState.OFF;
+				switch(value) {
+					case'atHomeMode':
+					case'geofencingMode':
+					case'manualMode':
+						converted = Characteristic.CurrentHeatingCoolingState.HEAT;
+					break;
+					case'sleepingMode':
+					case'suddenDropMode':
+						converted = Characteristic.CurrentHeatingCoolingState.COOL;
+					break;
+					case'awayMode':
+					case'freezeMode':
+					default:
+						converted = Characteristic.CurrentHeatingCoolingState.OFF;
+					break;
+				}
+				
+				this.heatingCurrentState.updateValue(converted);
+				
 			} else if(this.heatingCurrentState != null && this.heatingTargetState != null) {
 				var valueChange = false;
 				if (name == State.STATE_ON_OFF || name == State.STATE_HEATING_ON_OFF) {
