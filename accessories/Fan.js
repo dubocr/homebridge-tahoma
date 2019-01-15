@@ -8,31 +8,31 @@ module.exports = function(homebridge, abstractAccessory, api) {
     ExecutionState = api.ExecutionState;
     State = api.State;
 
-    return Light;
+    return Fan;
 }
 
 /**
- * Accessory "Light"
+ * Accessory "Fan"
  */
  
-Light = function(log, api, device, config) {
+Fan = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
-    var service = new Service.Lightbulb(device.label);
+    var service = new Service.Fan(device.label);
 
     this.onState = service.getCharacteristic(Characteristic.On);
     this.onState.on('set', this.setOn.bind(this));
     
     if(this.device.widget == 'DimmerLight') {
-    	this.brightnessState = service.addCharacteristic(Characteristic.Brightness);
-    	this.brightnessState.on('set', this.setBrightness.bind(this));
+    	this.speedState = service.addCharacteristic(Characteristic.RotationSpeed);
+    	this.speedState.on('set', this.setSpeed.bind(this));
     }
     
     this.services.push(service);
 };
 
-Light.UUID = 'Light';
+Fan.UUID = 'Fan';
 
-Light.prototype = {
+Fan.prototype = {
 
 	/**
 	* Triggered when Homekit try to modify the Characteristic.On
@@ -64,9 +64,9 @@ Light.prototype = {
     },
     
     /**
-	* Triggered when Homekit try to modify the Characteristic.Brightness
+	* Triggered when Homekit try to modify the Characteristic.RotationSpeed
 	**/
-    setBrightness: function(value, callback) {
+    setSpeed: function(value, callback) {
         var that = this;
         
         var command = new Command('setIntensity');

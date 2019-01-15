@@ -31,6 +31,7 @@ HeatingSystem = function(log, api, device, config) {
 		this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
 		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
 		this.targetState.on('set', this.setTemperature.bind(this));
+		this.targetState.setProps({ minValue: 15, maxValue: 26 });
 		
 		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
 		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
@@ -75,7 +76,8 @@ HeatingSystem.prototype = {
         		break;
 				
 			case 'SomfyThermostat':
-        		command = new Command('setDerogation', [value, 'further_notice']);
+					command = new Command('setModeTemperature', [this.activeMode, value]);
+					//command = new Command('setDerogation', [value, 'further_notice']);
         		break;
         	
         	default:
@@ -287,6 +289,7 @@ HeatingSystem.prototype = {
 			} else if (name == 'core:TargetTemperatureState') {
 				this.targetState.updateValue(value);
 			} else if (name == 'somfythermostat:DerogationHeatingModeState') {
+				this.activeMode = value;
 				var converted = Characteristic.CurrentHeatingCoolingState.OFF;
 				switch(value) {
 					case'atHomeMode':
