@@ -92,8 +92,8 @@ Fan.prototype = {
         if (name == 'core:OnOffState') {
             this.onState.updateValue(value == 'on' ? true : false);
         } else if (name == 'core:IntensityState' || name == 'core:LightIntensityState') {
-        	if(this.brightnessState != null)
-        		this.brightnessState.updateValue(value);
+        	if(this.speedState != null)
+        		this.speedState.updateValue(value);
         }
     }
 }

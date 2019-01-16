@@ -76,8 +76,8 @@ HeatingSystem.prototype = {
         		break;
 				
 			case 'SomfyThermostat':
-					command = new Command('setModeTemperature', [this.activeMode, value]);
-					//command = new Command('setDerogation', [value, 'further_notice']);
+					//command = new Command('setModeTemperature', [this.activeMode, value]);
+					command = new Command('setDerogation', [value, 'further_notice']);
         		break;
         	
         	default:
