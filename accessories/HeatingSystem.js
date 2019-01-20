@@ -32,6 +32,8 @@ HeatingSystem = function(log, api, device, config) {
 		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
 		this.targetState.on('set', this.setTemperature.bind(this));
 		this.targetState.setProps({ minValue: 15, maxValue: 26 });
+		this.currentState.updateValue(19);
+    	this.targetState.updateValue(19);
 		
 		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
 		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
@@ -79,7 +81,14 @@ HeatingSystem.prototype = {
 					//command = new Command('setModeTemperature', [this.activeMode, value]);
 					command = new Command('setDerogation', [value, 'further_notice']);
         		break;
-        	
+        		
+        	case 'AtlanticElectricalHeater':
+        		if(value >= this.currentState.value)
+        			command = new Command('setHeatingLevel', ['comfort']);
+        		else
+        			command = new Command('setHeatingLevel', ['eco']);
+        		break;
+        		
         	default:
         		command = new Command('setHeatingTargetTemperature', [value]);
         		break;
@@ -186,6 +195,30 @@ HeatingSystem.prototype = {
 					
 					case Characteristic.TargetHeatingCoolingState.OFF:
 						commands.push(new Command('setDerogation', ['awayMode', 'further_notice']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
+        		
+        	case 'AtlanticElectricalHeater':
+        		switch(value) {
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+						commands = new Command('setHeatingLevel', ['comfort']);
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+						commands = new Command('setHeatingLevel', ['eco']);
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						commands = new Command('setHeatingLevel', ['frostprotection']);
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						commands = new Command('setHeatingLevel', ['off']);
 						break;
 					
 					default:
@@ -318,7 +351,7 @@ HeatingSystem.prototype = {
 				} else if (name == 'ovp:HeatingTemperatureInterfaceActiveModeState') {
 					this.activeMode = value;
 					valueChange = true;
-				} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState') {
+				} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState' || name == 'io:TargetHeatingLevelState') {
 					this.setPointMode = value;
 					valueChange = true;
 				}

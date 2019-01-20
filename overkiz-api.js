@@ -76,6 +76,7 @@ function OverkizApi(log, config) {
     this.executionCallback = [];
     this.platformAccessories = [];
     this.stateChangedEventListener = null;
+    this.networkRetries = 0;
 
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
@@ -194,7 +195,7 @@ OverkizApi.prototype = {
                 //that.log(json.error);
                 that.requestWithLogin(myRequest, callback);
             } else if (err) {
-                that.log("There was a problem requesting to Overkiz : " + err);
+                that.log("Unable to request : " + err);
                 callback(err);
             } else if (response != undefined && (response.statusCode < 200 || response.statusCode >= 300)) {
             	var msg = 'Error ' + response.statusCode;
@@ -223,15 +224,22 @@ OverkizApi.prototype = {
             }, function(err, response, json) {
                 if (err) {
                     that.log.warn("Unable to login: " + err);
-					callback(err);
+                    if(that.networkRetries < 3) {
+                    	that.networkRetries++;
+                    	setTimeout(myRequest, 1000, authCallback);
+                    	that.log.warn("Retry " + that.networkRetries + '/' + 3);
+                    } else {
+                    	that.networkRetries = 0;
+						callback(err);
+					}
                 } else if (json.success) {
                     that.isLoggedIn = true;
                     myRequest(authCallback);
                     if(that.alwaysPoll)
                 		that.registerListener();
                 } else if (json.error) {
-                    that.log.warn("Loggin fail: " + json.error);
-					callback(err);
+                    that.log.warn("Login fail: " + json.error);
+					callback(json.error);
                 } else {
                     that.log.error("Unable to login");
 					callback("Unable to login");

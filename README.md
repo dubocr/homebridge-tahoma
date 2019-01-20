@@ -43,6 +43,7 @@ Configuration parameters:
 | `exclude`		               | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `defaultPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
+| `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
 | `Alarm`		                 | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
                                                                      												     																 																																		 
 | Alarm parameters           | Type			| Default		| Note                                                                                                                                                                  |
@@ -70,6 +71,7 @@ Full configuration example:
 			"password": "MyPassw0rd",
 			"service": "TaHoma",
 			"exclude": ["hue","rts","Garage Door"],
+			"forceType": {"Beedrom Fan": "Fan"}
 			"Alarm": {
 				"STAY_ARM": "A,C",
 				"NIGHT_ARM": "B"

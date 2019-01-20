@@ -61,12 +61,12 @@ TahomaPlatform.prototype = {
         if (that.platformAccessories.length == 0) {
         	that.loadDevices(function() {
             	if(that.exposeScenarios) {
-              	that.loadScenarios(function() {
+              		that.loadScenarios(function() {
+              			callback(that.platformAccessories);
+              		});
+              	} else {
               		callback(that.platformAccessories);
-              	});
-              } else {
-              	callback(that.platformAccessories);
-              }
+              	}
             });
         } else {
             callback(this.platformAccessories);
