@@ -22,7 +22,7 @@ Fan = function(log, api, device, config) {
     this.onState = service.getCharacteristic(Characteristic.On);
     this.onState.on('set', this.setOn.bind(this));
     
-    if(this.device.widget == 'DimmerLight') {
+    if(this.device.widget.includes('Dimmer')) {
     	this.speedState = service.addCharacteristic(Characteristic.RotationSpeed);
     	this.speedState.on('set', this.setSpeed.bind(this));
     }
