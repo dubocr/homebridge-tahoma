@@ -31,13 +31,15 @@ HeatingSystem = function(log, api, device, config) {
 		this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
 		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
 		this.targetState.on('set', this.setTemperature.bind(this));
-		this.targetState.setProps({ minValue: 15, maxValue: 26 });
-		this.currentState.updateValue(19);
-    	this.targetState.updateValue(19);
 		
 		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
 		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
 		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
+			
+		if(this.device.widget == 'SomfyThermostat')
+			this.targetState.setProps({ minValue: 15, maxValue: 26 });
+		else
+			this.targetState.setProps({ minValue: 7, maxValue: 30 });
     }
     
 	this.service = service;
@@ -210,11 +212,11 @@ HeatingSystem.prototype = {
 						break;
 					
 					case Characteristic.TargetHeatingCoolingState.HEAT:
-						commands = new Command('setHeatingLevel', ['eco']);
+						commands = new Command('setHeatingLevel', ['comfort']);
 						break;
 					
 					case Characteristic.TargetHeatingCoolingState.COOL:
-						commands = new Command('setHeatingLevel', ['frostprotection']);
+						commands = new Command('setHeatingLevel', ['eco']);
 						break;
 					
 					case Characteristic.TargetHeatingCoolingState.OFF:
@@ -321,28 +323,6 @@ HeatingSystem.prototype = {
 				}
 			} else if (name == 'core:TargetTemperatureState') {
 				this.targetState.updateValue(value);
-			} else if (name == 'somfythermostat:DerogationHeatingModeState') {
-				this.activeMode = value;
-				var converted = Characteristic.CurrentHeatingCoolingState.OFF;
-				switch(value) {
-					case'atHomeMode':
-					case'geofencingMode':
-					case'manualMode':
-						converted = Characteristic.CurrentHeatingCoolingState.HEAT;
-					break;
-					case'sleepingMode':
-					case'suddenDropMode':
-						converted = Characteristic.CurrentHeatingCoolingState.COOL;
-					break;
-					case'awayMode':
-					case'freezeMode':
-					default:
-						converted = Characteristic.CurrentHeatingCoolingState.OFF;
-					break;
-				}
-				
-				this.heatingCurrentState.updateValue(converted);
-				
 			} else if(this.heatingCurrentState != null && this.heatingTargetState != null) {
 				var valueChange = false;
 				if (name == State.STATE_ON_OFF || name == State.STATE_HEATING_ON_OFF) {
@@ -351,8 +331,55 @@ HeatingSystem.prototype = {
 				} else if (name == 'ovp:HeatingTemperatureInterfaceActiveModeState') {
 					this.activeMode = value;
 					valueChange = true;
-				} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState' || name == 'io:TargetHeatingLevelState') {
+				} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState') {
 					this.setPointMode = value;
+					valueChange = true;
+				} else if (name == 'core:DerogationActivationState') { // SomfyThermostat
+					this.activeMode = value == 'inactive' ? 'auto' : 'manual';
+					valueChange = true;
+				} else if (name == 'somfythermostat:DerogationHeatingModeState') { // SomfyThermostat
+					switch(value) {
+						case'atHomeMode':
+						case'geofencingMode':
+						case'manualMode':
+							this.onOff = 'on';
+							this.setPointMode = 'comfort';
+						break;
+						case'sleepingMode':
+						case'suddenDropMode':
+							this.onOff = 'on';
+							this.setPointMode = 'eco';
+						break;
+						case'awayMode':
+						case'freezeMode':
+						default:
+							this.onOff = 'off';
+						break;
+					}
+					valueChange = true;
+				} else if (name == 'io:TargetHeatingLevelState') { // AtlanticHeatingInterface
+					this.setPointMode = value;
+					this.activeMode = null;
+					switch(value) {
+						case 'boost':
+						case 'comfort':
+						case 'comfort-1':
+						case 'comfort-2':
+							this.targetState.updateValue(19);
+							this.currentState.updateValue(19);
+						break;
+						case 'eco':
+							this.targetState.updateValue(17);
+							this.currentState.updateValue(17);
+						break;
+						case 'frostprotection':
+							this.targetState.updateValue(7);
+							this.currentState.updateValue(7);
+						break;
+						default:
+							this.currentState.updateValue(7);
+						break;
+					}
 					valueChange = true;
 				}
 			

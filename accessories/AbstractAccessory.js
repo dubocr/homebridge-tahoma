@@ -107,7 +107,10 @@ AbstractAccessory.prototype = {
             var that = this;
             var cmdName = '';
             if(Array.isArray(commands)) {
-                cmdName = "Bulk commands";
+            	if(commands.length > 1)
+                	cmdName = commands[0].name + " +" + (commands.length-1) + " others";
+                else
+                	cmdName = commands[0].name;
             } else {
                 that.log('['+that.name+'] ' + commands.name +JSON.stringify(commands.parameters));
                 cmdName = commands.name;
