@@ -19,9 +19,9 @@ module.exports = function(homebridge, abstractAccessory, api) {
 HeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
 	this.currentHumidity = null;
-	config.temperature = config.temperature || {};
-	this.tempComfort = config.temperature.comfort || 19;
-	this.tempEco = config.temperature.eco || 17;
+	this.temperature = config[this.name] || {};
+	this.tempComfort = this.temperature.comfort || 19;
+	this.tempEco = this.temperature.eco || 17;
 	
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
