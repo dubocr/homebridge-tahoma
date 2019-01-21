@@ -28,7 +28,7 @@ Gate = function(log, api, device) {
     } else if(this.device.widget.startsWith('OpenClose') || this.device.widget.startsWith('UpDown')) {
     	this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
     	this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
-    	this.targetState.on('set', this.setState.bind(this));
+    	this.targetState.on('set', this.openClose.bind(this));
     } else {
     	this.targetState.on('set', this.setState.bind(this));
     }
@@ -57,6 +57,35 @@ Gate.prototype = {
                     that.currentState.updateValue(newValue);
                     break;
                 case ExecutionState.COMPLETED:
+                break;
+                case ExecutionState.FAILED:
+                	// Update target in case of error
+                    that.targetState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN);
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
+    
+    /**
+	* Triggered when Homekit try to modify the Characteristic.TargetDoorState
+	**/
+    openClose: function(value, callback) {
+        var that = this;
+        
+        var command = new Command(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close');
+        this.executeCommand(command, function(status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.IN_PROGRESS:
+                    var newValue = (value == Characteristic.TargetDoorState.OPEN) ? Characteristic.CurrentDoorState.OPENING : Characteristic.CurrentDoorState.CLOSING;
+                    that.currentState.updateValue(newValue);
+                    break;
+                case ExecutionState.COMPLETED:
+                	that.currentState.updateValue(value == Characteristic.TargetDoorState.OPEN ? Characteristic.CurrentDoorState.OPEN : Characteristic.CurrentDoorState.CLOSED);
                 break;
                 case ExecutionState.FAILED:
                 	// Update target in case of error

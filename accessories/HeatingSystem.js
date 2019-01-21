@@ -19,6 +19,8 @@ module.exports = function(homebridge, abstractAccessory, api) {
 HeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
 	this.currentHumidity = null;
+	this.temperature.comfort = config.temperature.comfort || 19;
+	this.temperature.eco = config.temperature.comfort || 17;
 	
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
@@ -39,7 +41,7 @@ HeatingSystem = function(log, api, device, config) {
 		if(this.device.widget == 'SomfyThermostat')
 			this.targetState.setProps({ minValue: 15, maxValue: 26 });
 		else
-			this.targetState.setProps({ minValue: 7, maxValue: 30 });
+			this.targetState.setProps({ minValue: 0, maxValue: 30 });
     }
     
 	this.service = service;
@@ -365,19 +367,20 @@ HeatingSystem.prototype = {
 						case 'comfort':
 						case 'comfort-1':
 						case 'comfort-2':
-							this.targetState.updateValue(19);
-							this.currentState.updateValue(19);
+							this.targetState.updateValue(this.temperature.comfort;
+							this.currentState.updateValue(this.temperature.comfort);
 						break;
 						case 'eco':
-							this.targetState.updateValue(17);
-							this.currentState.updateValue(17);
+							this.targetState.updateValue(this.temperature.eco);
+							this.currentState.updateValue(this.temperature.eco);
 						break;
 						case 'frostprotection':
 							this.targetState.updateValue(7);
 							this.currentState.updateValue(7);
 						break;
 						default:
-							this.currentState.updateValue(7);
+							this.targetState.updateValue(0);
+							this.currentState.updateValue(0);
 						break;
 					}
 					valueChange = true;
