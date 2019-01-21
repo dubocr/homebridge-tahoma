@@ -88,12 +88,12 @@ TahomaPlatform.prototype = {
 					for (device of data) {
 						var accessory = null;
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						var accessoryConfig = that.config[device.uiClass] || {};
 						var uiClass = device.uiClass;
 						if(that.forceType.hasOwnProperty(device.label)) {
 							uiClass = that.forceType[device.label];
 							that.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
 						}
+						var accessoryConfig = that.config[uiClass] || {};
 						if(DeviceAccessory[uiClass] != null) {
 							that.log.info('[' + device.label + ']' + ' device type: ' + uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 							if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {

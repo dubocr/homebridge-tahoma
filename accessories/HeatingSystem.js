@@ -19,9 +19,9 @@ module.exports = function(homebridge, abstractAccessory, api) {
 HeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
 	this.currentHumidity = null;
-	this.temperature = {};
-	this.temperature.comfort = config.temperature.comfort || 19;
-	this.temperature.eco = config.temperature.eco || 17;
+	config.temperature = config.temperature || {};
+	this.tempComfort = config.temperature.comfort || 19;
+	this.tempEco = config.temperature.eco || 17;
 	
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
@@ -368,12 +368,12 @@ HeatingSystem.prototype = {
 						case 'comfort':
 						case 'comfort-1':
 						case 'comfort-2':
-							this.targetState.updateValue(this.temperature.comfort);
-							this.currentState.updateValue(this.temperature.comfort);
+							this.targetState.updateValue(this.tempComfort);
+							this.currentState.updateValue(this.tempComfort);
 						break;
 						case 'eco':
-							this.targetState.updateValue(this.temperature.eco);
-							this.currentState.updateValue(this.temperature.eco);
+							this.targetState.updateValue(this.tempEco);
+							this.currentState.updateValue(this.tempEco);
 						break;
 						case 'frostprotection':
 							this.targetState.updateValue(7);
