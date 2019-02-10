@@ -61,7 +61,7 @@ function OverkizApi(log, config) {
     // Default values
     this.alwaysPoll = config['alwaysPoll'] || false;
     this.pollingPeriod = config['pollingPeriod'] || 2; // Poll for events every 2 seconds by default
-    this.refreshPeriod = config['refreshPeriod'] || (60 * 10); // Refresh device states every 10 minutes by default
+    this.refreshPeriod = config['refreshPeriod'] || (60 * 30); // Refresh device states every 30 minutes by default
     this.service = config['service'] || 'TaHoma';
     
     this.user = config['user'];

@@ -203,10 +203,14 @@ HitachiHeatingSystem.prototype = {
 			if (!this.isCommandInProgress()) // if no command running, update target
           		this.targetState.updateValue(targetConverted);
         } else if (name == "ovp:RoomTemperatureState") {
-        	var converted = parseInt(value.replace(" °C").replace(" °F"));
+        	var converted = value;
+        	if(typeof value === 'string')
+        		parseInt(value.replace(" °C").replace(" °F"));
         	this.currentTemperature.updateValue(converted);
         } else if (name == "ovp:TemperatureChangeState") {
-        	var converted = parseInt(value.replace(" °C").replace(" °F"));
+        	var converted = value;
+        	if(typeof value === 'string')
+        		parseInt(value.replace(" °C").replace(" °F"));
         	if(converted <= 5) 
         		converted = converted + this.currentTemperature.value;
         	this.log("ovp:TemperatureChangeState => " + converted);
