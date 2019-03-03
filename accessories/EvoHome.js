@@ -8,21 +8,17 @@ module.exports = function(homebridge, abstractAccessory, api) {
     ExecutionState = api.ExecutionState;
     State = api.State;
 
-    return HeatingSystem;
+    return EvoHome;
 }
 
 /**
- * Accessory "HeatingSystem"
+ * Accessory "EvoHome"
  */
  
   // TODO : Not tested
 EvoHome = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
-	this.currentHumidity = null;
-	this.temperature = config[this.name] || {};
-	this.tempComfort = this.temperature.comfort || 19;
-	this.tempEco = this.temperature.eco || 17;
-	
+
     if(this.device.widget == 'HeatingSetPoint') {
 		var service = new Service.Thermostat(device.label);
 		
@@ -33,10 +29,11 @@ EvoHome = function(log, api, device, config) {
 		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
 		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
 		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
+		
+		this.service = service;
+    	this.services.push(service);
     }
     
-	this.service = service;
-    this.services.push(service);
 };
 
 EvoHome.UUID = 'EvoHome';
