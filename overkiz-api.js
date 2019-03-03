@@ -59,6 +59,7 @@ function OverkizApi(log, config) {
 	this.log = log;
     
     // Default values
+    this.debugUrl = config['debugUrl'] || false;
     this.alwaysPoll = config['alwaysPoll'] || false;
     this.pollingPeriod = config['pollingPeriod'] || 2; // Poll for events every 2 seconds by default
     this.refreshPeriod = config['refreshPeriod'] || (60 * 30); // Refresh device states every 30 minutes by default
@@ -146,7 +147,11 @@ function OverkizApi(log, config) {
 
 OverkizApi.prototype = {
     urlForQuery: function(query) {
-        return "https://" + this.server + "/enduser-mobile-web/enduserAPI" + query;
+    	if(this.debugUrl) {
+    		return this.debugUrl + "&query=" + query;
+    	} else {
+        	return "https://" + this.server + "/enduser-mobile-web/enduserAPI" + query;
+        }
     },
 
     post: function(options, callback) {
