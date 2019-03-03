@@ -79,6 +79,7 @@ HeatingSystem.prototype = {
         		break;
         		
         	case 'ProgrammableAndProtectableThermostatSetPoint':
+        	case 'HeatingSetPoint':
         		command = new Command('setTargetTemperature', [value]);
         		break;
 				
@@ -122,6 +123,30 @@ HeatingSystem.prototype = {
         var commands = [];
         
         switch(this.device.widget) {
+        	case 'HeatingSetPoint':
+        		switch(value) {
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+						commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+						commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
+        		
         	case 'SomfyHeatingTemperatureInterface':
         		switch(value) {
 					case Characteristic.TargetHeatingCoolingState.AUTO:
