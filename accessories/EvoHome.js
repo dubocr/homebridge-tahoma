@@ -27,10 +27,25 @@ EvoHome = function(log, api, device, config) {
 		this.targetState.on('set', this.setTemperature.bind(this));
 		
 		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
+		this.heatingCurrentState.updateValue(Characteristic.CurrentHeatingCoolingState.HEAT);
+		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState);
+		this.heatingTargetState.updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
+		//this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
+		
+    	this.services.push(service);
+    } else if(this.device.widget == 'EvoHomeController') {
+		var service = new Service.Thermostat(device.label);
+		
+		this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
+		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature);
+		this.currentState.updateValue(0);
+		this.targetState.updateValue(0);
+		//this.targetState.on('set', this.setTemperature.bind(this));
+		
+		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
 		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
 		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
 		
-		this.service = service;
     	this.services.push(service);
     }
     
@@ -71,32 +86,28 @@ EvoHome.prototype = {
 	**/
     setHeatingCooling: function(value, callback) {
         var that = this;
-        
-        var commands = [];
+        var command = null;
         
 		switch(value) {
 			case Characteristic.TargetHeatingCoolingState.AUTO:
-				commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
-				break;
-			
 			case Characteristic.TargetHeatingCoolingState.HEAT:
-				commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
-				break;
-			
 			case Characteristic.TargetHeatingCoolingState.COOL:
-				commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
+				command = new Command('setOperatingMode', ['auto']);
 				break;
-			
+
 			case Characteristic.TargetHeatingCoolingState.OFF:
-				commands.push(new Command('setSetpointOverride', ['auto', 'auto', 'auto']));
+				command = new Command('setOperatingMode', ['off']);
 				break;
 			
 			default:
 				callback("Bad command");
 				break;
 		}
-
-        this.executeCommand(commands, function(status, error, data) {
+		if(command == null) {
+			return;
+		}
+        
+        this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
                     callback(error);
@@ -118,6 +129,33 @@ EvoHome.prototype = {
 			this.currentState.updateValue(converted);
 		} else if (name == 'core:TargetTemperatureState') {
 			this.targetState.updateValue(value);
+		} else if (name == 'ramses:RAMSESOperatingModeState') {
+			switch(value) {
+				case 'auto':
+					this.heatingCurrentState.updateValue(Characteristic.CurrentHeatingCoolingState.HEAT);
+				break;
+				case 'eco':
+					this.heatingCurrentState.updateValue(Characteristic.CurrentHeatingCoolingState.COOL);
+				break;
+				case 'holidays':
+				case 'off':
+				default:
+					this.heatingCurrentState.updateValue(Characteristic.CurrentHeatingCoolingState.OFF);
+				break;
+			}
+			if(!this.isCommandInProgress()) {
+				switch(value) {
+					case 'auto':
+					case 'eco':
+						this.heatingTargetState.updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
+					break;
+					case 'holidays':
+					case 'off':
+					default:
+						this.heatingTargetState.updateValue(Characteristic.TargetHeatingCoolingState.OFF);
+					break;
+				}
+			}
 		}
     }
 }
