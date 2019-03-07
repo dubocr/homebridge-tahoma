@@ -36,20 +36,25 @@ Configuration parameters:
 
 | Parameter                  | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `user`               		   | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account username                                                                                                                     |
-| `password`             	   | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account password                                                                                                                     |
-| `service`              	   | String		| 'TaHoma'	| optional, service name ('TaHoma', 'Connexoon' or 'Cozytouch')																																																											|
+| `user`               		 | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account username                                                                                                                     |
+| `password`             	 | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account password                                                                                                                     |
+| `service`              	 | String		| 'TaHoma'	| optional, service name ('TaHoma', 'Connexoon' or 'Cozytouch')																																																											|
 | `refreshPeriod`            | Integer	| 600				| optional, device states refresh period in seconds							 																										 																										|
-| `exclude`		               | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
+| `exclude`		             | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
-| `defaultPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
-| `Alarm`		                 | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
+| `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
+| `RollerShutter`		     | Object		| {}				| optional, RollerShutter configuration object (see below)																											 																																|
                                                                      												     																 																																		 
 | Alarm parameters           | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `STAY_ARM`               	 | String		| 'A'				| optional, active zones (A,B,C) in 'Stay' mode                                                                             																						|
 | `NIGHT_ARM`             	 | String		| 'B'				| optional, active zones (A,B,C) in 'Night' mode                                                                          																							|
+
+| RollerShutter parameters   | Type			| Default		| Note                                                                                                                                                                  |
+|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `defaultPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
+| `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
 
 
 Full configuration example:
