@@ -53,6 +53,7 @@ Alarm.prototype = {
     setState: function(value, callback) {
         var that = this;
         var command = null;
+        
         if(this.device.widget == 'MyFoxAlarmController') {
         	switch(value) {
 				default:
@@ -154,8 +155,11 @@ Alarm.prototype = {
 			this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
                 this.targetState.updateValue(target);
-        } else if (name == 'core:IntrusionState' && this.occupancyState != null) {
+        } else if ((name == 'core:IntrusionState' || name == 'core:IntrusionDetectedState') && this.occupancyState != null) {
         	this.occupancyState.updateValue(value == 'detected' ? Characteristic.OccupancyDetected.OCCUPANCY_DETECTED : Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED);
+        	if(value == 'detected') {
+        		this.currentState.updateValue(Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED);
+        	}
         }
     }
 }
