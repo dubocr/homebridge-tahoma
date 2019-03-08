@@ -243,6 +243,8 @@ Awning.prototype = {
 
     onStateUpdate: function(name, value) {
     	if (name == 'core:ClosureState' || name == 'core:TargetClosureState' || name == 'core:DeploymentState') {
+        if (value == 99) // Workaround for io:RollerShutterVeluxIOComponent  remains 1% opened
+          value = 100;
 			var converted = this.reverse ? value : (100 - value);
 			/*if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
 				converted = value;
