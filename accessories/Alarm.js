@@ -22,6 +22,7 @@ Alarm = function(log, api, device, config) {
     
     this.stayZones = config.STAY_ARM || 'A';
     this.nightZones = config.NIGHT_ARM || 'B';
+    this.occupancySensor = config.occupancySensor || false;
     
 	var service = new Service.SecuritySystem(device.label);
 	this.currentState = service.getCharacteristic(Characteristic.SecuritySystemCurrentState);
@@ -37,9 +38,11 @@ Alarm = function(log, api, device, config) {
 	
 	
 	if(this.device.widget == 'MyFoxAlarmController') {
-		var service2 = new Service.OccupancySensor(device.label);
-    	this.occupancyState = service2.getCharacteristic(Characteristic.OccupancyDetected);
-    	this.services.push(service2);
+		if(this.occupancySensor) {
+			var service2 = new Service.OccupancySensor(device.label);
+    		this.occupancyState = service2.getCharacteristic(Characteristic.OccupancyDetected);
+    		this.services.push(service2);
+    	}
 	}
 };
 
@@ -155,8 +158,10 @@ Alarm.prototype = {
 			this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
                 this.targetState.updateValue(target);
-        } else if ((name == 'core:IntrusionState' || name == 'core:IntrusionDetectedState') && this.occupancyState != null) {
-        	this.occupancyState.updateValue(value == 'detected' ? Characteristic.OccupancyDetected.OCCUPANCY_DETECTED : Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED);
+        } else if (name == 'core:IntrusionState' || name == 'core:IntrusionDetectedState') {
+        	if(this.occupancyState != null) {
+        		this.occupancyState.updateValue(value == 'detected' ? Characteristic.OccupancyDetected.OCCUPANCY_DETECTED : Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED);
+        	}
         	if(value == 'detected') {
         		this.currentState.updateValue(Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED);
         	}
