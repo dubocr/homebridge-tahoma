@@ -29,6 +29,7 @@ function TahomaPlatform(log, config, api) {
 	this.exposeScenarios = config.exposeScenarios || false;
 	this.exclusions = config.exclude || [];
 	this.exclusions.push('internal'); // Exclude internal devices
+	this.forceType = config.forceType || {};
 	this.api = new OverkizService.Api(log, config);
 
     this.platformAccessories = [];
@@ -60,12 +61,12 @@ TahomaPlatform.prototype = {
         if (that.platformAccessories.length == 0) {
         	that.loadDevices(function() {
             	if(that.exposeScenarios) {
-              	that.loadScenarios(function() {
+              		that.loadScenarios(function() {
+              			callback(that.platformAccessories);
+              		});
+              	} else {
               		callback(that.platformAccessories);
-              	});
-              } else {
-              	callback(that.platformAccessories);
-              }
+              	}
             });
         } else {
             callback(this.platformAccessories);
@@ -81,17 +82,22 @@ TahomaPlatform.prototype = {
     	var that = this;
     	this.platformAccessories = [];
     	this.api.getDevices(function(error, data) {
-    			that.log.debug('Device found: ' + data.length);
-				if (!error) {
+    			if (!error) {
+					that.log.debug('Device found: ' + data.length);
 					var ignoredDevices = [];
 					for (device of data) {
 						var accessory = null;
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						var accessoryConfig = that.config[device.uiClass] || {};
-						if(DeviceAccessory[device.uiClass] != null) {
-							that.log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						var uiClass = device.uiClass;
+						if(that.forceType.hasOwnProperty(device.label)) {
+							uiClass = that.forceType[device.label];
+							that.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
+						}
+						var accessoryConfig = that.config[uiClass] || {};
+						if(DeviceAccessory[uiClass] != null) {
+							that.log.info('[' + device.label + ']' + ' device type: ' + uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 							if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-								accessory = new DeviceAccessory[device.uiClass](that.log, that.api, device, accessoryConfig);
+								accessory = new DeviceAccessory[uiClass](that.log, that.api, device, accessoryConfig);
 								if(device.states != null) {
 									for (state of device.states) {
 										accessory.onStateUpdate(state.name, state.value);
@@ -103,7 +109,7 @@ TahomaPlatform.prototype = {
 								ignoredDevices.push(device);
 							}
 						} else {
-							that.log.info('Device type ' + device.uiClass + ' unknown');
+							that.log.info('Device type ' + uiClass + ' unknown');
 						}
 					}
 					
@@ -122,7 +128,7 @@ TahomaPlatform.prototype = {
 						}
 					}
 				}
-				callback();
+				callback(error);
 			});
     },
     
@@ -138,7 +144,7 @@ TahomaPlatform.prototype = {
 						}
 					}
 				}
-				callback();
+				callback(error);
 			});
     },
     
