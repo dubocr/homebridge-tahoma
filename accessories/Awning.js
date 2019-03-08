@@ -18,6 +18,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
 Awning = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var def = config['defaultPosition'] || 50;
+    this.reverse = config['reverse'] || false;
     
     var service = this.device.uiClass == 'Window' ? new Service.Window(device.label) : new Service.WindowCovering(device.label);
 	
@@ -64,7 +65,7 @@ Awning.prototype = {
 	**/
     setClosure: function(value, callback) {
         var that = this;
-        var command = new Command('setClosure', [100 - value]);
+        var command = new Command('setClosure', this.reverse ? value : [100 - value]);
 		this.executeCommand(command, function(status, error, data) {
 			switch (status) {
 				case ExecutionState.INITIALIZED:
@@ -95,7 +96,7 @@ Awning.prototype = {
 	**/
     setDeployment: function(value, callback) {
         var that = this;
-        var command = new Command('setDeployment', [value]);
+        var command = new Command('setDeployment', this.reverse ? value : [100 - value]);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -241,18 +242,14 @@ Awning.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState') {
-			var converted = 100 - value;
+    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState' || name == 'core:DeploymentState') {
+			var converted = this.reverse ? value : (100 - value);
 			/*if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
 				converted = value;
 			}*/
 			this.currentPosition.updateValue(converted);
 			if (!this.isCommandInProgress()) // if no command running, update target
 				this.targetPosition.updateValue(converted);
-		} else if (name == 'core:DeploymentState') {
-			this.currentPosition.updateValue(value);
-			if (!this.isCommandInProgress()) // if no command running, update target
-				this.targetPosition.updateValue(value);
 		} else if (name == 'core:SlateOrientationState') {
 			var converted = Math.round(value * 1.8 - 90);
 			if(this.currentAngle)
