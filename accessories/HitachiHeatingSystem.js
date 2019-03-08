@@ -105,7 +105,7 @@ HitachiHeatingSystem.prototype = {
 		var fanMode = "auto";
 		var progMode = "manu";
 		var heatMode = "auto";
-		var autoTemp = Math.max(Math.min(temperature - this.currentTemperature.value, 5), -5);
+		var autoTemp = Math.trunc(Math.max(Math.min(temperature - this.currentTemperature.value, 5), -5));
 
 		switch(state) {
 	
@@ -156,8 +156,8 @@ HitachiHeatingSystem.prototype = {
     	var that = this;
     	this.api.requestState(this.device.deviceURL, state, function(error, data) {
     		if(!error) {
+    			var converted = parseInt(data);
     			that.log("GET " + state + " => " + data);
-    			var converted = parseInt(data.replace(" °C").replace(" °F"));
     			if (state == "ovp:TemperatureChangeState" && converted <= 5) {
         			converted = converted + that.currentTemperature.value;
         		}
@@ -204,15 +204,18 @@ HitachiHeatingSystem.prototype = {
         } else if (name == "ovp:RoomTemperatureState") {
         	var converted = value;
         	if(typeof value === 'string')
-        		parseInt(value.replace(" °C").replace(" °F"));
+        		value = parseInt(value.replace(" °C").replace(" °F"));
+          else
+            value = parseInt(value);
         	this.currentTemperature.updateValue(converted);
         } else if (name == "ovp:TemperatureChangeState") {
         	var converted = value;
         	if(typeof value === 'string')
-        		parseInt(value.replace(" °C").replace(" °F"));
+        		value = parseInt(value.replace(" °C").replace(" °F"));
+          else
+            value = parseInt(value);
         	if(converted <= 5) 
         		converted = converted + this.currentTemperature.value;
-        	this.log("ovp:TemperatureChangeState => " + converted);
         	this.targetTemperature.updateValue(converted);
         }
     }
