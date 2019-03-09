@@ -1,0 +1,48 @@
+{
+  "bridge": {
+    "name": "Homebridge",
+    "username": "CD:22:3D:E3:CE:30",
+    "port": 51826,
+    "pin": "031-45-154"
+  },
+
+  "description": "This is an example configuration for the tahoma homebridge plugin",
+  "platforms": [
+	{
+		"platform": "Tahoma",
+		"name": "Tahoma",
+		"user": "user@me.com",
+		"password": "MyPassw0rd",
+		"service": "TaHoma",
+		"exposeScenarios": false,
+		"exclude": ["hue","rts","Garage Door"],
+		"forceType": {
+			"Device name 1": "HeatingSystem",
+			"Device name 2": "RollerShutter"
+		},
+		"Alarm": {
+			"STAY_ARM": "A,C",
+			"NIGHT_ARM": "B"
+		},
+		"RollerShutter": {
+			"reverse": true
+		},
+		"ExteriorScreen": {
+			"reverse": true
+		},
+		"HeatingSystem": {
+			"Device name 1": {
+				"comfort":20,
+				"eco":17
+			},
+			"Device name 2": {
+				"comfort":19,
+				"eco":18
+			}
+		}
+	}
+  ],
+
+  "accessories": [
+  ]
+}

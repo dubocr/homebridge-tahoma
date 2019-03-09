@@ -13,13 +13,7 @@
 		"name": "Tahoma",
 		"user": "user@me.com",
 		"password": "MyPassw0rd",
-		"service": "TaHoma",
-		"exposeScenarios": "false",
-		"exclude": ["hue","rts","Garage Door"],
-		"Alarm": {
-			"STAY_ARM": "A,C",
-			"NIGHT_ARM": "B"
-		}
+		"service": "TaHoma"
 	}
   ],
 
