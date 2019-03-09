@@ -45,6 +45,7 @@ Configuration parameters:
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
 | `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
 | `RollerShutter`		     | Object		| {}				| optional, RollerShutter configuration object (see below)																											 																																|
+| `ExteriorScreen`		     | Object		| {}				| optional, ExteriorScreen configuration object (see below)																											 																																|
                                                                      												     																 																																		 
 | Alarm parameters           | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -52,7 +53,7 @@ Configuration parameters:
 | `NIGHT_ARM`             	 | String		| 'B'				| optional, active zones (A,B,C) in 'Night' mode                                                                          																							|
 | `occupancySensor`        	 | Boolean		| false				| optional, add an occupancy widget linked to the alarm                                                                          																							|
 
-| RollerShutter parameters   | Type			| Default		| Note                                                                                                                                                                  |
+| RollerShutter / ExteriorScreen parameters   | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `defaultPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
 | `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|

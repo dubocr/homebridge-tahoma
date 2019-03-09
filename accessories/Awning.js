@@ -28,9 +28,9 @@ Awning = function(log, api, device, config) {
     	this.targetPosition.on('set', this.deployUndeployCommand.bind(this));
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
-    /*} else if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') { // PositionableHorizontal, PositionableScreen
+    } else if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') { // PositionableHorizontal, PositionableScreen
     	this.targetPosition.on('set', this.postpone.bind(this, this.setDeployment.bind(this)));
-    	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);*/
+    	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);
     } else if(this.device.widget.startsWith('UpDown') || this.device.widget.startsWith('RTS')) {
     	this.targetPosition.on('set', this.upDownCommand.bind(this));
     	this.currentPosition.updateValue(def);
@@ -96,7 +96,7 @@ Awning.prototype = {
 	**/
     setDeployment: function(value, callback) {
         var that = this;
-        var command = new Command('setDeployment', this.reverse ? value : [100 - value]);
+        var command = new Command('setDeployment', this.reverse ?  [100 - value]: value);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -243,12 +243,14 @@ Awning.prototype = {
 
     onStateUpdate: function(name, value) {
     	if (name == 'core:ClosureState' || name == 'core:TargetClosureState' || name == 'core:DeploymentState') {
-        if (value == 99) // Workaround for io:RollerShutterVeluxIOComponent  remains 1% opened
-          value = 100;
-			var converted = this.reverse ? value : (100 - value);
-			/*if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
-				converted = value;
-			}*/
+        	if (value == 99) // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
+          		value = 100;
+			var converted = null;
+			if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
+				converted = this.reverse ? (100 - value) : value;
+			} else {
+				converted = this.reverse ? value : (100 - value);
+			}
 			this.currentPosition.updateValue(converted);
 			if (!this.isCommandInProgress()) // if no command running, update target
 				this.targetPosition.updateValue(converted);
