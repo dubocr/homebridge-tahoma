@@ -65,7 +65,8 @@ Awning.prototype = {
 	**/
     setClosure: function(value, callback) {
         var that = this;
-        var command = new Command('setClosure', this.reverse ? value : [100 - value]);
+        var param = this.reverse ? value : (100 - value);
+        var command = new Command('setClosure', [param]);
 		this.executeCommand(command, function(status, error, data) {
 			switch (status) {
 				case ExecutionState.INITIALIZED:
@@ -96,7 +97,8 @@ Awning.prototype = {
 	**/
     setDeployment: function(value, callback) {
         var that = this;
-        var command = new Command('setDeployment', this.reverse ?  [100 - value]: value);
+        var param = this.reverse ?  (100 - value) : value;
+        var command = new Command('setDeployment', [param]);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
