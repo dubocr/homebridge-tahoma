@@ -146,6 +146,7 @@ HitachiHeatingSystem.prototype = {
 				break;
 		}
 		
+		temperature = Math.round(temperature);
 		this.log("FROM " + this.currentState.value + '/' + this.currentTemperature.value + ' TO ' + state + '/' + temperature);
 
 		var command = new Command('globalControl', [onOff, temperature, fanMode, heatMode, progMode]);
