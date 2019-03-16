@@ -44,7 +44,8 @@ State = {
 Server = {
 	'Cozytouch': 'ha110-1.overkiz.com',
 	'TaHoma': 'tahomalink.com',
-	'Connexoon': 'tahomalink.com'
+	'Connexoon': 'tahomalink.com',
+	'Connexoon RTS': 'ha201-1.overkiz.com'
 }
 
 module.exports = {

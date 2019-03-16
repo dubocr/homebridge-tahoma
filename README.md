@@ -38,7 +38,7 @@ Configuration parameters:
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `user`               		 | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account username                                                                                                                     |
 | `password`             	 | String		| null			| mandatory, your TaHoma/Connexoon/Cozytouch account password                                                                                                                     |
-| `service`              	 | String		| 'TaHoma'	| optional, service name ('TaHoma', 'Connexoon' or 'Cozytouch')																																																											|
+| `service`              	 | String		| 'TaHoma'	| optional, service name ('TaHoma', 'Connexoon', 'Connexoon RTS' or 'Cozytouch')																																																											|
 | `refreshPeriod`            | Integer	| 600				| optional, device states refresh period in seconds							 																										 																										|
 | `exclude`		             | String[]	| []				| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
