@@ -17,7 +17,7 @@ module.exports = function(homebridge, abstractAccessory, api) {
  
 Awning = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
-    var def = config['defaultPosition'] || 50;
+    var def = config['defaultPosition'] !== undefined ? config['defaultPosition'] : 50;
     this.reverse = config['reverse'] || false;
     
     var service = this.device.uiClass == 'Window' ? new Service.Window(device.label) : new Service.WindowCovering(device.label);
