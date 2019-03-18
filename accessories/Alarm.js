@@ -102,7 +102,8 @@ Alarm.prototype = {
                 	break;
                 case ExecutionState.FAILED:
                 	// Restore current state as target
-                    that.targetState.updateValue(that.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED ? that.currentState.value : null);
+                	if(that.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED)
+                    	that.targetState.updateValue(that.currentState.value);
                     break;
                 default:
                     break;
@@ -115,12 +116,12 @@ Alarm.prototype = {
         	var converted = null;
         	var target = null;
             switch(value) {
-				default:
 				case '': target = converted = Characteristic.SecuritySystemCurrentState.DISARMED; break;
 				case this.stayZones: target = converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
 				case 'A,B,C': target = converted = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
 				case this.nightZones: target = converted = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
 				case 'triggered': converted = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED; break;
+				default: break;
 			}
 
             this.currentState.updateValue(converted);
@@ -129,33 +130,36 @@ Alarm.prototype = {
         } else if (name == 'internal:CurrentAlarmModeState') {
         	var converted = null;
             switch(value) {
-				default:
 				case 'off': converted = Characteristic.SecuritySystemCurrentState.DISARMED; break;
 				case 'partial1': converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
 				case 'total': converted = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
 				case 'partial2': converted = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
+				default: break;
 			}
-			this.currentState.updateValue(converted);
+			if(this.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED || target == Characteristic.SecuritySystemCurrentState.DISARMED)
+				this.currentState.updateValue(converted);
         } else if (name == 'internal:TargetAlarmModeState') {
         	var converted = null;
             switch(value) {
-				default:
 				case 'off': converted = Characteristic.SecuritySystemTargetState.DISARM; break;
 				case 'partial1': converted = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
 				case 'total': converted = Characteristic.SecuritySystemTargetState.AWAY_ARM; break;
 				case 'partial2': converted = Characteristic.SecuritySystemTargetState.NIGHT_ARM; break;
+				default: break;
 			}
-			this.targetState.updateValue(converted);
+			if(this.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED || target == Characteristic.SecuritySystemCurrentState.DISARMED)
+				this.targetState.updateValue(converted);
         } else if (name == 'myfox:AlarmStatusState') {
         	var converted = null;
         	var target = null;
             switch(value) {
-				default:
-				case 'disarmed': target = converted = Characteristic.SecuritySystemTargetState.DISARM; break;
-				case 'partial': target = converted = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
-				case 'armed': target = converted = Characteristic.SecuritySystemTargetState.AWAY_ARM; break;
+				case 'disarmed': target = converted = Characteristic.SecuritySystemCurrentState.DISARMED; break;
+				case 'partial': target = converted = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
+				case 'armed': target = converted = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
+				default: break;
 			}
-			this.currentState.updateValue(converted);
+			if(this.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED || target == Characteristic.SecuritySystemCurrentState.DISARMED)
+				this.currentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
                 this.targetState.updateValue(target);
         } else if (name == 'core:IntrusionState' || name == 'core:IntrusionDetectedState') {
