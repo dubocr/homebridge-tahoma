@@ -468,6 +468,42 @@ HeatingSystem.prototype = {
 			} else if (name == 'core:TargetTemperatureState') {
 				zone.targetState.updateValue(value);
 			} else if(zone.heatingCurrentState != null && zone.heatingTargetState != null) {
+				if(zone.device.widget.startsWith('AtlanticPassAPC')) {
+					// PASS APC
+					zone.states[name] = value;
+					//this.log(name + "=>" + value);
+					if (name == 'core:HeatingOnOffState' ||
+						name == 'core:CoolingOnOffState' ||
+						name == 'core:ThermalConfigurationState') {
+						var converted = Characteristic.CurrentHeatingCoolingState.OFF;
+						var target = Characteristic.TargetHeatingCoolingState.OFF;
+						if(zone.states['core:HeatingOnOffState'] == 'on') {
+							converted = Characteristic.CurrentHeatingCoolingState.HEAT;
+						} else if(zone.states['core:CoolingOnOffState'] == 'on') {
+							converted = Characteristic.CurrentHeatingCoolingState.COOL;
+						}
+					
+						if(zone.states['core:HeatingOnOffState'] == 'on' || zone.states['core:CoolingOnOffState'] == 'on') {
+							switch(zone.states['core:ThermalConfigurationState']) {
+								case 'heating':
+									target = Characteristic.TargetHeatingCoolingState.HEAT;
+								break;
+								case 'cooling':
+									target = Characteristic.TargetHeatingCoolingState.COOL;
+								break;
+								default:
+								case 'heatingAndCooling':
+									target = Characteristic.TargetHeatingCoolingState.AUTO;
+								break;
+							}
+						}
+				
+						zone.heatingCurrentState.updateValue(converted);
+						if (!zone.isCommandInProgress())
+							zone.heatingTargetState.updateValue(target);
+					}
+					return;
+				}
 				var valueChange = false;
 				if (name == State.STATE_ON_OFF || name == State.STATE_HEATING_ON_OFF) {
 					zone.onOff = value;
@@ -538,41 +574,6 @@ HeatingSystem.prototype = {
 							target = Characteristic.TargetHeatingCoolingState.AUTO;
 						} else {
 							target = zone.setPointMode == 'comfort' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
-						}
-					}
-				
-					zone.heatingCurrentState.updateValue(converted);
-					if (!zone.isCommandInProgress())
-						zone.heatingTargetState.updateValue(target);
-					return;
-				}
-				
-				// PASS APC
-				zone.states[name] = value;
-				if (name == 'core:HeatingOnOffState' ||
-					name == 'core:CoolingOnOffState' ||
-					name == 'core:ThermalConfigurationState') {
-					var converted = Characteristic.CurrentHeatingCoolingState.OFF;
-					var target = Characteristic.TargetHeatingCoolingState.OFF;
-					
-					if(zone.states['core:HeatingOnOffState'] == 'on') {
-						converted = Characteristic.CurrentHeatingCoolingState.HEAT;
-					} else if(zone.states['core:CoolingOnOffState'] == 'on') {
-						converted = Characteristic.CurrentHeatingCoolingState.COOL;
-					}
-					
-					if(zone.states['core:HeatingOnOffState'] == 'on' || zone.states['core:CoolingOnOffState'] == 'on') {
-						switch(zone.states['core:ThermalConfigurationState']) {
-							case 'heating':
-								target = Characteristic.TargetHeatingCoolingState.HEAT;
-							break;
-							case 'cooling':
-								target = Characteristic.TargetHeatingCoolingState.COOL;
-							break;
-							default:
-							case 'heatingAndCooling':
-								target = Characteristic.TargetHeatingCoolingState.AUTO;
-							break;
 						}
 					}
 				

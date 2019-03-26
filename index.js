@@ -138,8 +138,9 @@ TahomaPlatform.prototype = {
 							}
 							if(device.states != null) {
 								for (state of device.states) {
-									accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-									if(subAccessory != null) {
+									if(subAccessory == null) {
+										accessory.onStateUpdate(state.name, state.value, device.deviceURL);
+									} else {
 										subAccessory.onStateUpdate(state.name, state.value, device.deviceURL);
 									}
 								}
