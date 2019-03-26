@@ -49,11 +49,19 @@ TahomaPlatform.prototype = {
         	baseURL = deviceURL.substring(0, i1);
 					//this.log.info('Search extended : ' + baseURL);
         	for (accessory of this.platformAccessories) {
-				if (accessory.deviceURL != null && accessory.deviceURL.startsWith(baseURL))
+				if (accessory.deviceURL != null && accessory.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
 				return accessory;
 			}
         }
         return null;
+    },
+    
+    getDeviceComponentID: function(deviceURL) {
+        var i1 = deviceURL.indexOf("#");
+        if(i1 != -1) {
+        	return parseInt(deviceURL.substring(i1+1));
+        }
+        return 1;
     },
 
     accessories: function(callback) {
@@ -84,7 +92,7 @@ TahomaPlatform.prototype = {
     	this.api.getDevices(function(error, data) {
     			if (!error) {
 					that.log.debug('Device found: ' + data.length);
-					var ignoredDevices = [];
+					var devicesComponents = [];
 					for (device of data) {
 						var accessory = null;
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
@@ -96,35 +104,49 @@ TahomaPlatform.prototype = {
 						var accessoryConfig = that.config[uiClass] || {};
 						if(DeviceAccessory[uiClass] != null) {
 							that.log.info('[' + device.label + ']' + ' device type: ' + uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+							var componentID = that.getDeviceComponentID(device.deviceURL);
 							if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-								accessory = new DeviceAccessory[uiClass](that.log, that.api, device, accessoryConfig);
-								if(device.states != null) {
-									for (state of device.states) {
-										accessory.onStateUpdate(state.name, state.value);
+								if(componentID == 1) {
+									accessory = new DeviceAccessory[uiClass](that.log, that.api, device, accessoryConfig);
+									if(device.states != null) {
+										for (state of device.states) {
+											accessory.onStateUpdate(state.name, state.value, device.deviceURL);
+										}
 									}
+									that.platformAccessories.push(accessory);
+									//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
+								} else {
+									devicesComponents.push(device);
 								}
-								that.platformAccessories.push(accessory);
-								//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
 							} else {
-								ignoredDevices.push(device);
+								that.log.info('Device ' + device.uiClass + ' ignored');
 							}
 						} else {
 							that.log.info('Device type ' + uiClass + ' unknown');
 						}
 					}
 					
-					for (device of ignoredDevices) {
+					devicesComponents.sort(function(a, b) {
+						return that.getDeviceComponentID(a.deviceURL) > that.getDeviceComponentID(b.deviceURL);
+					});
+					for (device of devicesComponents) {
 						accessory = that.getAccessory(device.deviceURL);
 						if(accessory != null) {
-							accessory.merge(device);
+							var subAccessory = accessory.merge(device);
+							if(subAccessory != null) {
+								that.platformAccessories.push(subAccessory);
+							}
 							if(device.states != null) {
 								for (state of device.states) {
-									accessory.onStateUpdate(state.name, state.value);
+									accessory.onStateUpdate(state.name, state.value, device.deviceURL);
+									if(subAccessory != null) {
+										subAccessory.onStateUpdate(state.name, state.value, device.deviceURL);
+									}
 								}
 							}
 							that.log.info('Device ' + device.label + ' merged with ' + accessory.name);
 						} else {
-							that.log.info('Device ' + device.uiClass + ' ignored');
+							that.log.info('Unable to merge ' + device.label);
 						}
 					}
 				}
@@ -153,7 +175,7 @@ TahomaPlatform.prototype = {
         if (accessory != null) {
         	if(states != null) {
             	for (state of states) {
-            	    accessory.onStateUpdate(state.name, state.value);
+            	    accessory.onStateUpdate(state.name, state.value, deviceURL);
             	}
             }
         }

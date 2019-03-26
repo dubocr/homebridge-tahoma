@@ -112,6 +112,9 @@ AbstractAccessory.prototype = {
                 	cmdName = commands[0].name + " +" + (commands.length-1) + " others";
                 else
                 	cmdName = commands[0].name;
+                for(c of commands) {
+                	that.log('['+that.name+'] ' + c.name + JSON.stringify(c.parameters));
+                }
             } else {
                 that.log('['+that.name+'] ' + commands.name +JSON.stringify(commands.parameters));
                 cmdName = commands.name;
@@ -148,7 +151,7 @@ AbstractAccessory.prototype = {
         Merge with another device
     */
     merge: function(device) {
-    
+    	return true;
     },
 
     /*

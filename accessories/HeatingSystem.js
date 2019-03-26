@@ -1,5 +1,25 @@
 var Service, Characteristic, Command, ExecutionState, State, AbstractAccessory;
 
+var PowerConsumption, EnergyConsumption;
+
+var inherits = function (ctor, superCtor) {
+
+  if (ctor === undefined || ctor === null)
+    throw new TypeError('The constructor to "inherits" must not be ' +
+                        'null or undefined');
+
+  if (superCtor === undefined || superCtor === null)
+    throw new TypeError('The super constructor to "inherits" must not ' +
+                        'be null or undefined');
+
+  if (superCtor.prototype === undefined)
+    throw new TypeError('The super constructor to "inherits" must ' +
+                        'have a prototype');
+
+  ctor.super_ = superCtor;
+  Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+}
+
 module.exports = function(homebridge, abstractAccessory, api) {
     AbstractAccessory = abstractAccessory;
     Service = homebridge.hap.Service;
@@ -8,6 +28,8 @@ module.exports = function(homebridge, abstractAccessory, api) {
     ExecutionState = api.ExecutionState;
     State = api.State;
 
+	makeCharacteristics();
+	
     return HeatingSystem;
 }
 
@@ -22,6 +44,8 @@ HeatingSystem = function(log, api, device, config) {
 	this.temperature = config[this.name] || {};
 	this.tempComfort = this.temperature.comfort || 19;
 	this.tempEco = this.temperature.eco || 17;
+	
+	this.states = [];
 	
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
@@ -45,8 +69,12 @@ HeatingSystem = function(log, api, device, config) {
 			this.targetState.setProps({ minValue: 0, maxValue: 30 });
     }
     
-	this.service = service;
-    this.services.push(service);
+    if(this.device.widget == 'AtlanticPassAPCHeatPump') {
+		this.zones = [];
+    } else {
+    	this.service = service;
+    	this.services.push(service);
+    }
 };
 
 HeatingSystem.UUID = 'HeatingSystem';
@@ -54,8 +82,21 @@ HeatingSystem.UUID = 'HeatingSystem';
 HeatingSystem.prototype = {
 
 	merge: function(device) {
-		if(this.currentHumidity == null && device.UUID == 'HumiditySensor') {
-			this.currentHumidity = this.service.addCharacteristic(Characteristic.CurrentRelativeHumidity);
+		if(device.widget == 'AtlanticPassAPCHeatingAndCoolingZone') {
+			var zone = new HeatingSystem(this.log, this.api, device, {});
+			this.zones.push(zone);
+			this.log("Instantiate zone with " + zone.services.length + " services");
+			//var service = new Service.Thermostat(device.label);
+			//this.services.push(service);
+			//this.services.concat(zone.services);
+			return zone;
+		}
+		if(device.widget == 'TemperatureSensor' && this.zones != null && this.zones.length > 0) {
+			var zone = this.findZone(device.deviceURL, 1);
+			zone.merge(device);
+		}
+		if(this.energyState == null && device.uiClass == 'ElectricitySensor') {
+			
 		}
     },
 	
@@ -87,6 +128,33 @@ HeatingSystem.prototype = {
 					//command = new Command('setModeTemperature', [this.activeMode, value]);
 					command = new Command('setDerogation', [value, 'further_notice']);
         		break;
+				
+			case 'AtlanticPassAPCHeatingAndCoolingZone':
+				command = [];
+				if(this.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
+					command.push(new Command('setDerogatedTargetTemperature', [value]));
+					command.push(new Command('setDerogationOnOffState', ['on']));
+					command.push(new Command('setDerogationTime', [3600]));
+				} else if(this.states['core:ThermalConfigurationState'] == 'heating') {
+					if(this.states['io:PassAPCHeatingProfileState'] == 'comfort') {
+						command.push(new Command('setComfortHeatingTargetTemperature', [value]));
+					} else if(this.states['io:PassAPCHeatingProfileState'] == 'eco') {
+						command.push(new Command('setEcoHeatingTargetTemperature', [value]));
+					} else {
+						this.log("Invalid state " + this.states['io:PassAPCHeatingProfileState']);
+						callback("Invalid state");
+					}
+				} else if(this.states['core:ThermalConfigurationState'] == 'cooling') {
+					if(this.states['io:PassAPCCoolingProfileState'] == 'comfort') {
+						command.push(new Command('setComfortCoolingTargetTemperature', [value]));
+					} else if(this.states['io:PassAPCCoolingProfileState'] == 'eco') {
+						command.push(new Command('setEcoCoolingTargetTemperature', [value]));
+					} else {
+						this.log("Invalid state " + this.states['io:PassAPCHeatingProfileState']);
+						callback("Invalid state");
+					}
+				}
+			break;
         		
         	case 'AtlanticElectricalHeater':
         		if(value >= this.currentState.value)
@@ -256,6 +324,34 @@ HeatingSystem.prototype = {
 						break;
 				}
         		break;
+				
+			case 'AtlanticPassAPCHeatingAndCoolingZone':
+        		switch(value) {
+					case Characteristic.TargetHeatingCoolingState.AUTO:
+						commands.push(new Command('setHeatingOnOffState', ['on']));
+						commands.push(new Command('setCoolingOnOffState', ['on']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.HEAT:
+						commands.push(new Command('setHeatingOnOffState', ['on']));
+						commands.push(new Command('setCoolingOnOffState', ['off']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.COOL:
+						commands.push(new Command('setHeatingOnOffState', ['off']));
+						commands.push(new Command('setCoolingOnOffState', ['on']));
+						break;
+					
+					case Characteristic.TargetHeatingCoolingState.OFF:
+						commands.push(new Command('setHeatingOnOffState', ['off']));
+						commands.push(new Command('setCoolingOnOffState', ['off']));
+						break;
+					
+					default:
+						callback("Bad command");
+						break;
+				}
+        		break;
         	
         	default:
         		switch(value) {
@@ -334,102 +430,188 @@ HeatingSystem.prototype = {
         });
     },
     
-    onStateUpdate: function(name, value) {
-    	if(this.onState != null) {
+    findZone: function(url, sub) {
+    	if(this.zones != null && this.zones.length > 0) {
+			var i1 = url.indexOf("#");
+			if(i1 != -1) {
+				var subid = parseInt(url.substring(i1+1)) - sub;
+				for (z of this.zones) {
+					if(z.device.deviceURL == url || z.device.deviceURL.endsWith("#"+subid)) {
+						return z;
+					}
+				}
+			}
+		}
+		return null;
+    },
+    
+    onStateUpdate: function(name, value, deviceURL) {
+    	var zone = this.findZone(deviceURL, 1) || this;
+    	if(zone.onState != null) {
 			if (name == State.STATE_ON_OFF) {
-				this.onState.updateValue(value == 'on' ? true : false);
+				zone.onState.updateValue(value == 'on' ? true : false);
 			}
 		} else {
-        	if (name == 'core:TemperatureState') { // From merged TemperatureSensor
+        	if (name == 'core:ElectricEnergyConsumptionState') {
+        		converted = value / 1000;
+        		if(zone.energyState) {
+            		zone.energyState.updateValue(converted);
+            	}
+        	} else if (name == 'core:TemperatureState') { // From merged TemperatureSensor
 				var converted = value > 273.15 ? (value - 273.15) : value;
-				this.currentState.updateValue(converted);
-				
+				zone.currentState.updateValue(converted);
 			} else if (name == 'core:RelativeHumidityState') { // From merged HumiditySensor
 				var converted = value;
-				if(this.currentHumidity != null) {
-					this.currentHumidity.updateValue(converted);
+				if(zone.currentHumidity != null) {
+					zone.currentHumidity.updateValue(converted);
 				}
 			} else if (name == 'core:TargetTemperatureState') {
-				this.targetState.updateValue(value);
-			} else if(this.heatingCurrentState != null && this.heatingTargetState != null) {
+				zone.targetState.updateValue(value);
+			} else if(zone.heatingCurrentState != null && zone.heatingTargetState != null) {
 				var valueChange = false;
 				if (name == State.STATE_ON_OFF || name == State.STATE_HEATING_ON_OFF) {
-					this.onOff = value;
+					zone.onOff = value;
 					valueChange = true;
 				} else if (name == 'ovp:HeatingTemperatureInterfaceActiveModeState') {
-					this.activeMode = value;
+					zone.activeMode = value;
 					valueChange = true;
 				} else if (name == 'ovp:HeatingTemperatureInterfaceSetPointModeState') {
-					this.setPointMode = value;
+					zone.setPointMode = value;
 					valueChange = true;
 				} else if (name == 'core:DerogationActivationState') { // SomfyThermostat
-					this.activeMode = value == 'inactive' ? 'auto' : 'manual';
+					zone.activeMode = value == 'inactive' ? 'auto' : 'manual';
 					valueChange = true;
 				} else if (name == 'somfythermostat:DerogationHeatingModeState') { // SomfyThermostat
 					switch(value) {
 						case'atHomeMode':
 						case'geofencingMode':
 						case'manualMode':
-							this.onOff = 'on';
-							this.setPointMode = 'comfort';
+							zone.onOff = 'on';
+							zone.setPointMode = 'comfort';
 						break;
 						case'sleepingMode':
 						case'suddenDropMode':
-							this.onOff = 'on';
-							this.setPointMode = 'eco';
+							zone.onOff = 'on';
+							zone.setPointMode = 'eco';
 						break;
 						case'awayMode':
 						case'freezeMode':
 						default:
-							this.onOff = 'off';
+							zone.onOff = 'off';
 						break;
 					}
 					valueChange = true;
 				} else if (name == 'io:TargetHeatingLevelState') { // AtlanticHeatingInterface
-					this.setPointMode = value;
-					this.activeMode = null;
+					zone.setPointMode = value;
+					zone.activeMode = null;
 					switch(value) {
 						case 'boost':
 						case 'comfort':
 						case 'comfort-1':
 						case 'comfort-2':
-							this.targetState.updateValue(this.tempComfort);
-							this.currentState.updateValue(this.tempComfort);
+							zone.targetState.updateValue(zone.tempComfort);
+							zone.currentState.updateValue(zone.tempComfort);
 						break;
 						case 'eco':
-							this.targetState.updateValue(this.tempEco);
-							this.currentState.updateValue(this.tempEco);
+							zone.targetState.updateValue(zone.tempEco);
+							zone.currentState.updateValue(zone.tempEco);
 						break;
 						case 'frostprotection':
-							this.targetState.updateValue(7);
-							this.currentState.updateValue(7);
+							zone.targetState.updateValue(7);
+							zone.currentState.updateValue(7);
 						break;
 						default:
-							this.targetState.updateValue(0);
-							this.currentState.updateValue(0);
+							zone.targetState.updateValue(0);
+							zone.currentState.updateValue(0);
 						break;
 					}
 					valueChange = true;
 				}
-			
+				
 				if(valueChange) {
 					var converted = Characteristic.CurrentHeatingCoolingState.OFF;
 					var target = Characteristic.TargetHeatingCoolingState.OFF;
 					
-					if(this.onOff == 'on') {
-						converted = this.setPointMode == 'comfort' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
-						if(this.activeMode == 'auto') {
+					if(zone.onOff == 'on') {
+						converted = zone.setPointMode == 'comfort' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+						if(zone.activeMode == 'auto') {
 							target = Characteristic.TargetHeatingCoolingState.AUTO;
 						} else {
-							target = this.setPointMode == 'comfort' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
+							target = zone.setPointMode == 'comfort' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
 						}
 					}
 				
-					this.heatingCurrentState.updateValue(converted);
-					if (!this.isCommandInProgress())
-						this.heatingTargetState.updateValue(target);
+					zone.heatingCurrentState.updateValue(converted);
+					if (!zone.isCommandInProgress())
+						zone.heatingTargetState.updateValue(target);
+					return;
+				}
+				
+				// PASS APC
+				zone.states[name] = value;
+				if (name == 'core:HeatingOnOffState' ||
+					name == 'core:CoolingOnOffState' ||
+					name == 'core:ThermalConfigurationState') {
+					var converted = Characteristic.CurrentHeatingCoolingState.OFF;
+					var target = Characteristic.TargetHeatingCoolingState.OFF;
+					
+					if(zone.states['core:HeatingOnOffState'] == 'on') {
+						converted = Characteristic.CurrentHeatingCoolingState.HEAT;
+					} else if(zone.states['core:CoolingOnOffState'] == 'on') {
+						converted = Characteristic.CurrentHeatingCoolingState.COOL;
+					}
+					
+					if(zone.states['core:HeatingOnOffState'] == 'on' || zone.states['core:CoolingOnOffState'] == 'on') {
+						switch(zone.states['core:ThermalConfigurationState']) {
+							case 'heating':
+								target = Characteristic.TargetHeatingCoolingState.HEAT;
+							break;
+							case 'cooling':
+								target = Characteristic.TargetHeatingCoolingState.COOL;
+							break;
+							default:
+							case 'heatingAndCooling':
+								target = Characteristic.TargetHeatingCoolingState.AUTO;
+							break;
+						}
+					}
+				
+					zone.heatingCurrentState.updateValue(converted);
+					if (!zone.isCommandInProgress())
+						zone.heatingTargetState.updateValue(target);
+					return;
 				}
 			}
     	}
     }
+}
+
+function makeCharacteristics() {
+	PowerConsumption = function() {
+    Characteristic.call(this, 'Current Consumption', 'E863F10D-079E-48FF-8F27-9C2605A29F52');
+    this.setProps({
+      format: Characteristic.Formats.INT,
+      maxValue: 65535,
+      minValue: 0,
+      minStep: 1,
+      unit: "W",
+      perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
+    });
+    this.value = this.getDefaultValue();
+  };
+  inherits(PowerConsumption, Characteristic);
+  
+  EnergyConsumption = function() {
+    Characteristic.call(this, 'Total Consumption', 'E863F10C-079E-48FF-8F27-9C2605A29F52');
+    this.setProps({
+      format: Characteristic.Formats.FLOAT,
+      maxValue: 4294967295,
+      minValue: 0,
+      minStep: 0.01,
+      unit: "kWh",
+      perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
+    });
+    this.value = this.getDefaultValue();
+  };
+  inherits(EnergyConsumption, Characteristic);
 }

@@ -55,7 +55,8 @@ ElectricitySensor.prototype = {
 
     onStateUpdate: function(name, value) {
         if (name == 'core:ElectricEnergyConsumptionState') {
-            this.energyState.updateValue(value);
+        	converted = value / 1000;
+            this.energyState.updateValue(converted);
         } else if (name == 'core:ElectricPowerConsumptionState') {
             this.powerState.updateValue(value);
         }
