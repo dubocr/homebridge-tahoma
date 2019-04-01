@@ -63,7 +63,7 @@ WaterHeatingSystem.prototype = {
     setHeatingCooling: function(value, callback) {
         var that = this;
         
-        var command = new Command('setHeatingOnOffState');
+        var command = new Command('setCurrentOperatingMode');
 		switch(value) {
 			case Characteristic.TargetHeatingCoolingState.AUTO:
 			case Characteristic.TargetHeatingCoolingState.HEAT:
@@ -92,7 +92,7 @@ WaterHeatingSystem.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        if (name == State.STATE_HEATING_ON_OFF) {
+        if (name == "core:OperatingModeState") {
         	var converted = value == 'off' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT;
         	var target = value == 'off' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT;
             this.heatingCurrentState.updateValue(converted);
