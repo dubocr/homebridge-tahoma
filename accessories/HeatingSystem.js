@@ -59,8 +59,9 @@ HeatingSystem = function(log, api, device, config) {
 		if(this.device.widget == 'AtlanticPassAPCHeatPump' || this.device.widget == 'AtlanticPassAPCZoneControl') {
 			this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
 			this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
-			this.targetState.on('set', function(value, callback) { this.targetState.value = 0; callback(); }.bind(this));
+			this.targetState.on('set', function(value, callback) { this.targetState.updateValue(0); callback(); }.bind(this));
 			this.targetState.setProps({ minValue: 0, maxValue: 0 });
+			this.targetState.updateValue(0);
 		} else {
 			this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
 			this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
