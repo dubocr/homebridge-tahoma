@@ -46,6 +46,7 @@ HeatingSystem = function(log, api, device, config) {
 	this.tempEco = this.temperature.eco || 17;
 	
 	this.states = [];
+	this.zones = [];
 	
     if(this.device.widget == 'SomfyPilotWireElectricalHeater') {
     	var service = new Service.Switch(device.label);
@@ -69,12 +70,14 @@ HeatingSystem = function(log, api, device, config) {
 			this.targetState.setProps({ minValue: 0, maxValue: 30 });
     }
     
-    if(this.device.widget == 'AtlanticPassAPCHeatPump') {
-		this.zones = [];
-    } else {
-    	this.service = service;
-    	this.services.push(service);
-    }
+	switch(this.device.widget) {
+		case 'AtlanticPassAPCHeatPump': break;
+		case 'AtlanticPassAPCZoneControl': break;
+		default:
+			this.service = service;
+			this.services.push(service);
+		break;
+	}
 };
 
 HeatingSystem.UUID = 'HeatingSystem';
@@ -83,13 +86,7 @@ HeatingSystem.prototype = {
 
 	merge: function(device) {
 		if(device.widget == 'AtlanticPassAPCHeatingAndCoolingZone') {
-			var zone = new HeatingSystem(this.log, this.api, device, {});
-			this.zones.push(zone);
-			this.log("Instantiate zone with " + zone.services.length + " services");
-			//var service = new Service.Thermostat(device.label);
-			//this.services.push(service);
-			//this.services.concat(zone.services);
-			return zone;
+			return false; // Can't merge accessory, use it at standalone subaccesory
 		}
 		if(device.widget == 'TemperatureSensor' && this.zones != null && this.zones.length > 0) {
 			var zone = this.findZone(device.deviceURL, 1);
@@ -98,6 +95,15 @@ HeatingSystem.prototype = {
 		if(this.energyState == null && device.uiClass == 'ElectricitySensor') {
 			
 		}
+		return true;
+    },
+	
+	addSubAccessory: function(subAccessory) {
+        this.zones.push(subAccessory);
+		this.log("Linking zone " + this.name + " > " + subAccessory.name + " with " + subAccessory.services.length + " services");
+		//var service = new Service.Thermostat(device.label);
+		//this.services.push(service);
+		//this.services.concat(zone.services);
     },
 	
 	/**

@@ -86,6 +86,26 @@ TahomaPlatform.prototype = {
 	  this.log(accessory.displayName, "Configure Accessory");
 	},
 */
+	instanciateDevice: function(device) {
+		var uiClass = device.uiClass;
+		if(that.forceType.hasOwnProperty(device.label)) {
+			uiClass = that.forceType[device.label];
+			that.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
+		}
+		if(DeviceAccessory[uiClass] != null) {
+			var accessoryConfig = that.config[uiClass] || {};
+			accessory = new DeviceAccessory[uiClass](that.log, that.api, device, accessoryConfig);
+			if(device.states != null) {
+				for (state of device.states) {
+					accessory.onStateUpdate(state.name, state.value, device.deviceURL);
+				}
+			}
+			that.log.info('Instanciate device ' + device.label);
+		} else {
+			that.log.info('Device type ' + uiClass + ' unknown');
+		}
+	},
+	
     loadDevices: function(callback) {
     	var that = this;
     	this.platformAccessories = [];
@@ -94,35 +114,19 @@ TahomaPlatform.prototype = {
 					that.log.debug('Device found: ' + data.length);
 					var devicesComponents = [];
 					for (device of data) {
-						var accessory = null;
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						var uiClass = device.uiClass;
-						if(that.forceType.hasOwnProperty(device.label)) {
-							uiClass = that.forceType[device.label];
-							that.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
-						}
-						var accessoryConfig = that.config[uiClass] || {};
-						if(DeviceAccessory[uiClass] != null) {
-							that.log.info('[' + device.label + ']' + ' device type: ' + uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						that.log.info('[' + device.label + ']' + ' device type: ' + uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
 							var componentID = that.getDeviceComponentID(device.deviceURL);
-							if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-								if(componentID == 1) {
-									accessory = new DeviceAccessory[uiClass](that.log, that.api, device, accessoryConfig);
-									if(device.states != null) {
-										for (state of device.states) {
-											accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-										}
-									}
-									that.platformAccessories.push(accessory);
-									//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
-								} else {
-									devicesComponents.push(device);
-								}
+							if(componentID == 1) {
+								var accessory = that.instanciateDevice(device);
+								that.platformAccessories.push(accessory);
+								//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
 							} else {
-								that.log.info('Device ' + device.uiClass + ' ignored');
+								devicesComponents.push(device);
 							}
 						} else {
-							that.log.info('Device type ' + uiClass + ' unknown');
+							that.log.info('Device ' + device.uiClass + ' ignored');
 						}
 					}
 					
@@ -132,20 +136,19 @@ TahomaPlatform.prototype = {
 					for (device of devicesComponents) {
 						accessory = that.getAccessory(device.deviceURL);
 						if(accessory != null) {
-							var subAccessory = accessory.merge(device);
-							if(subAccessory != null) {
-								that.platformAccessories.push(subAccessory);
-							}
-							if(device.states != null) {
-								for (state of device.states) {
-									if(subAccessory == null) {
+							var merged = accessory.merge(device);
+							if(merged) {
+								that.log.info('Device ' + device.label + ' merged with ' + accessory.name);
+								if(device.states != null) {
+									for (state of device.states) {
 										accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-									} else {
-										subAccessory.onStateUpdate(state.name, state.value, device.deviceURL);
 									}
 								}
+							} else {
+								var subAccessory = that.instanciateDevice(device);
+								accessory.addSubAccessory(subAccessory);
+								that.platformAccessories.push(subAccessory);
 							}
-							that.log.info('Device ' + device.label + ' merged with ' + accessory.name);
 						} else {
 							that.log.info('Unable to merge ' + device.label);
 						}

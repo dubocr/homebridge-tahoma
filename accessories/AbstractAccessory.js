@@ -153,6 +153,13 @@ AbstractAccessory.prototype = {
     merge: function(device) {
     	return true;
     },
+	
+	/*
+        Add linked sub accessories like zone
+    */
+	addSubAccessory: function(subAccessory) {
+        
+    },
 
     /*
         Look for current state

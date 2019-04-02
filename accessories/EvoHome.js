@@ -56,7 +56,7 @@ EvoHome.UUID = 'EvoHome';
 EvoHome.prototype = {
 
 	merge: function(device) {
-		
+		return true;
     },
 	
 	/**
