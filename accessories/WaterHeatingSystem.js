@@ -28,6 +28,9 @@ WaterHeatingSystem = function(log, api, device, config) {
     this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
     this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
     
+    this.currentState.setProps({ minValue: 40, maxValue: 60 });
+    this.targetState.setProps({ minValue: 40, maxValue: 60 });
+    
     this.services.push(service);
 };
 

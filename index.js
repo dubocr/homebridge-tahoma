@@ -88,21 +88,24 @@ TahomaPlatform.prototype = {
 */
 	instanciateDevice: function(device) {
 		var uiClass = device.uiClass;
-		if(that.forceType.hasOwnProperty(device.label)) {
-			uiClass = that.forceType[device.label];
-			that.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
+		if(this.forceType.hasOwnProperty(device.label)) {
+			uiClass = this.forceType[device.label];
+			this.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
 		}
 		if(DeviceAccessory[uiClass] != null) {
-			var accessoryConfig = that.config[uiClass] || {};
-			accessory = new DeviceAccessory[uiClass](that.log, that.api, device, accessoryConfig);
+			var accessoryConfig = this.config[uiClass] || {};
+			var accessory = new DeviceAccessory[uiClass](this.log, this.api, device, accessoryConfig);
 			if(device.states != null) {
 				for (state of device.states) {
 					accessory.onStateUpdate(state.name, state.value, device.deviceURL);
 				}
 			}
-			that.log.info('Instanciate device ' + device.label);
+			this.log.info('Instanciate device ' + device.label);
+			this.platformAccessories.push(accessory);
+			return accessory;
 		} else {
-			that.log.info('Device type ' + uiClass + ' unknown');
+			this.log.info('Device type ' + uiClass + ' unknown');
+			return null;
 		}
 	},
 	
@@ -115,12 +118,11 @@ TahomaPlatform.prototype = {
 					var devicesComponents = [];
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						that.log.info('[' + device.label + ']' + ' device type: ' + uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						that.log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
 							var componentID = that.getDeviceComponentID(device.deviceURL);
 							if(componentID == 1) {
 								var accessory = that.instanciateDevice(device);
-								that.platformAccessories.push(accessory);
 								//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
 							} else {
 								devicesComponents.push(device);
@@ -146,8 +148,9 @@ TahomaPlatform.prototype = {
 								}
 							} else {
 								var subAccessory = that.instanciateDevice(device);
-								accessory.addSubAccessory(subAccessory);
-								that.platformAccessories.push(subAccessory);
+								if(subAccessory != null) {
+									accessory.addSubAccessory(subAccessory);
+								}
 							}
 						} else {
 							that.log.info('Unable to merge ' + device.label);
