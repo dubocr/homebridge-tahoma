@@ -44,6 +44,7 @@ HeatingSystem = function(log, api, device, config) {
 	this.temperature = config[this.name] || {};
 	this.tempComfort = this.temperature.comfort || 19;
 	this.tempEco = this.temperature.eco || 17;
+	this.derogationDuration = this.derogationDuration || 3600;
 	
 	this.states = [];
 	this.zones = [];
@@ -73,9 +74,9 @@ HeatingSystem = function(log, api, device, config) {
 		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
 			
 		if(this.device.widget == 'SomfyThermostat')
-			this.targetState.setProps({ minValue: 15, maxValue: 26 });
+			this.targetState.setProps({ minValue: 15, maxValue: 26, minStep: 0.5 });
 		else
-			this.targetState.setProps({ minValue: 0, maxValue: 30 });
+			this.targetState.setProps({ minValue: 0, maxValue: 30, minStep: 0.5 });
     }
     
 	//case 'AtlanticPassAPCHeatPump':
@@ -144,24 +145,36 @@ HeatingSystem.prototype = {
 				if(this.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
 					command.push(new Command('setDerogatedTargetTemperature', [value]));
 					command.push(new Command('setDerogationOnOffState', ['on']));
-					command.push(new Command('setDerogationTime', [3600]));
+					command.push(new Command('setDerogationTime', [this.derogationDuration]));
 				} else if(this.states['core:ThermalConfigurationState'] == 'heating') {
-					if(this.states['io:PassAPCHeatingProfileState'] == 'comfort') {
-						command.push(new Command('setComfortHeatingTargetTemperature', [value]));
-					} else if(this.states['io:PassAPCHeatingProfileState'] == 'eco') {
-						command.push(new Command('setEcoHeatingTargetTemperature', [value]));
+					if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.states['io:PassAPCHeatingModeState'])) {
+						command.push(new Command('setDerogatedTargetTemperature', [value]));
+						command.push(new Command('setDerogationOnOffState', ['on']));
+						command.push(new Command('setDerogationTime', [this.derogationDuration]));
 					} else {
-						this.log("Invalid state " + this.states['io:PassAPCHeatingProfileState']);
-						callback("Invalid state");
+						if(this.states['io:PassAPCHeatingProfileState'] == 'comfort') {
+							command.push(new Command('setComfortHeatingTargetTemperature', [value]));
+						} else if(this.states['io:PassAPCHeatingProfileState'] == 'eco') {
+							command.push(new Command('setEcoHeatingTargetTemperature', [value]));
+						} else {
+							this.log("Invalid state " + this.states['io:PassAPCHeatingProfileState']);
+							callback("Invalid state");
+						}
 					}
 				} else if(this.states['core:ThermalConfigurationState'] == 'cooling') {
-					if(this.states['io:PassAPCCoolingProfileState'] == 'comfort') {
-						command.push(new Command('setComfortCoolingTargetTemperature', [value]));
-					} else if(this.states['io:PassAPCCoolingProfileState'] == 'eco') {
-						command.push(new Command('setEcoCoolingTargetTemperature', [value]));
+					if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.states['io:PassAPCCoolingModeState'])) {
+						command.push(new Command('setDerogatedTargetTemperature', [value]));
+						command.push(new Command('setDerogationOnOffState', ['on']));
+						command.push(new Command('setDerogationTime', [this.derogationDuration]));
 					} else {
-						this.log("Invalid state " + this.states['io:PassAPCHeatingProfileState']);
-						callback("Invalid state");
+						if(this.states['io:PassAPCCoolingProfileState'] == 'comfort') {
+							command.push(new Command('setComfortCoolingTargetTemperature', [value]));
+						} else if(this.states['io:PassAPCCoolingProfileState'] == 'eco') {
+							command.push(new Command('setEcoCoolingTargetTemperature', [value]));
+						} else {
+							this.log("Invalid state " + this.states['io:PassAPCCoolingProfileState']);
+							callback("Invalid state");
+						}
 					}
 				}
 			break;
