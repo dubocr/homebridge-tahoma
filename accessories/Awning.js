@@ -18,8 +18,12 @@ module.exports = function(homebridge, abstractAccessory, api) {
 Awning = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
     var def = config['defaultPosition'] !== undefined ? config['defaultPosition'] : 50;
-    this.reverse = config['reverse'] || false;
-    
+	this.reverse = config['reverse'] || false;
+	this.blindMode = config['blindMode'] || false;
+	this.blindMode = this.blindMode && this.device.uiClass.endsWith('Blind');
+	
+	this.states = [];
+
     var service = this.device.uiClass == 'Window' ? new Service.Window(device.label) : new Service.WindowCovering(device.label);
 	
     this.currentPosition = service.getCharacteristic(Characteristic.CurrentPosition);
@@ -36,20 +40,25 @@ Awning = function(log, api, device, config) {
     	this.currentPosition.updateValue(def);
     	this.targetPosition.updateValue(def);
     } else {
-    	this.targetPosition.on('set', this.postpone.bind(this, this.setClosure.bind(this)));
+		if(this.blindMode) {
+			this.log("Blind mode enabled for " + this.name);
+			this.targetPosition.on('set', this.postpone.bind(this, this.setBlindPosition.bind(this)));
+		} else {
+			this.targetPosition.on('set', this.postpone.bind(this, this.setClosure.bind(this)));
+		}
     	this.obstruction = service.addCharacteristic(Characteristic.ObstructionDetected);
     }
     this.positionState = service.getCharacteristic(Characteristic.PositionState);
     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
-    
-    for(command of this.device.definition.commands) {
-    	if(command.commandName == 'setOrientation')	{
-    		this.currentAngle = service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
-    		this.targetAngle = service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
-    		this.targetAngle.on('set', this.setAngle.bind(this));
-    		break;
-    	}
-    }
+	
+	for(command of this.device.definition.commands) {
+		if(command.commandName == 'setOrientation')	{
+			this.currentAngle = service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
+			this.targetAngle = service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
+			this.targetAngle.on('set', this.setAngle.bind(this));
+			break;
+		}
+	}
     
     this.services.push(service);
 };
@@ -241,12 +250,74 @@ Awning.prototype = {
                     break;
             }
         });
+	},
+	
+	/**
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition
+	* HomeKit '0' (Close) => 100% Closure and 0% Orientation
+	* HomeKit '1-99' (Tilt) => 100% Closure and 1-99% Orientation
+	* HomeKit '100' (Open) => 0% Closure
+	**/
+    setBlindPosition: function(value, callback) {
+        var that = this;
+		var command = [];
+		if(value == 100) {
+			command = new Command('setClosure', [0]);
+		} else if(value == 0) {
+			command = new Command('setClosureAndOrientation', [100, 100]);
+		} else {
+			if(this.states['core:OpenClosedState'] == 'open') {
+				command = new Command('setClosure', [100 - value]);
+			} else {
+				command = new Command('setOrientation', [value]);
+			}
+		}
+		this.executeCommand(command, function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+					break;
+				case ExecutionState.IN_PROGRESS:
+					var newValue = (value == 100 || value > that.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					that.positionState.updateValue(newValue);
+					break;
+				case ExecutionState.COMPLETED:
+				case ExecutionState.FAILED:
+					that.positionState.updateValue(Characteristic.PositionState.STOPPED);
+					that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
+					if(that.obstruction != null) {
+						that.obstruction.updateValue(error == 'WHILEEXEC_BLOCKED_BY_HAZARD');
+					}
+					break;
+				default:
+					break;
+			}
+		});
     },
 
     onStateUpdate: function(name, value) {
-    	if (name == 'core:ClosureState' || name == 'core:TargetClosureState' || name == 'core:DeploymentState') {
-        	if (value == 99) // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
-          		value = 100;
+		this.states[name] = value;
+		if(this.blindMode && (name == 'core:ClosureState' || name == 'core:OpenClosedState' || name == 'core:SlateOrientationState')) {
+			var converted = null;
+			if(this.states['core:OpenClosedState'] == 'open') {
+				var closure = this.states['core:ClosureState'];
+				if(Number.isInteger(closure))
+					converted = 100 - closure;
+			} else {
+				var orientation = this.states['core:SlateOrientationState'];
+				if(Number.isInteger(orientation))
+					converted = orientation;
+			}
+			if(converted !== null) {
+				this.currentPosition.updateValue(converted);
+				if (!this.isCommandInProgress()) // if no command running, update target
+					this.targetPosition.updateValue(converted);
+			}
+		}
+
+		if (!this.blindMode && (name == 'core:ClosureState' || name == 'core:TargetClosureState' || name == 'core:DeploymentState')) {
+			if (value == 99) // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
+				value = 100;
 			var converted = null;
 			if(this.device.widget.startsWith('PositionableHorizontal') || this.device.widget == 'PositionableScreen') {
 				converted = this.reverse ? (100 - value) : value;
