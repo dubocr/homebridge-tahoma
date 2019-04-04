@@ -54,20 +54,22 @@ HeatingSystem = function(log, api, device, config) {
 
 		this.onState = service.getCharacteristic(Characteristic.On);
 		this.onState.on('set', this.setHeatingLevel.bind(this));	
+    } else if(this.device.widget == 'AtlanticPassAPCHeatPump' || this.device.widget == 'AtlanticPassAPCZoneControl') {
+    	/*
+    	this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
+		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
+		this.targetState.on('set', function(value, callback) { this.targetState.updateValue(0); callback(); }.bind(this));
+		this.targetState.setProps({ minValue: 0, maxValue: 0 });
+		this.targetState.updateValue(0);
+		*/
+		var service = new Service.Switch(device.label);
+		this.onState = service.getCharacteristic(Characteristic.On);
+   		this.onState.on('set', this.setOnOff.bind(this));
     } else {
 		var service = new Service.Thermostat(device.label);
-		
-		if(this.device.widget == 'AtlanticPassAPCHeatPump' || this.device.widget == 'AtlanticPassAPCZoneControl') {
-			this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
-			this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
-			this.targetState.on('set', function(value, callback) { this.targetState.updateValue(0); callback(); }.bind(this));
-			this.targetState.setProps({ minValue: 0, maxValue: 0 });
-			this.targetState.updateValue(0);
-		} else {
-			this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
-			this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
-			this.targetState.on('set', this.setTemperature.bind(this));
-		}
+		this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
+		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
+		this.targetState.on('set', this.setTemperature.bind(this));
 		
 		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
 		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
@@ -457,13 +459,19 @@ HeatingSystem.prototype = {
         });
     },
 
-		/**
-		* Triggered when Homekit try to modify the Characteristic.On
-		**/
+	/**
+	* Triggered when Homekit try to modify the Characteristic.On
+	**/
     setOnOff: function(value, callback) {
         var that = this;
         
-        var command = new Command('setOnOff', [value ? 'on' : 'off']);
+        var command = null;
+        
+        if(this.device.widget == 'AtlanticPassAPCHeatPump' || this.device.widget == 'AtlanticPassAPCZoneControl') {
+        	command = new Command('setPassAPCOperatingMode', [value ? 'heating' : 'stop']);
+        } else {
+        	command = new Command('setOnOff', [value ? 'on' : 'off']);
+        }
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -498,7 +506,9 @@ HeatingSystem.prototype = {
     	if(zone.onState != null) {
 			if (name == State.STATE_ON_OFF) {
 				zone.onState.updateValue(value == 'on' ? true : false);
-			}
+			} else if (name == 'io:PassAPCOperatingModeState') {
+				zone.onState.updateValue(value != 'stop');
+			} 
 		} else {
         	if (name == 'core:ElectricEnergyConsumptionState') {
         		converted = value / 1000;
@@ -544,28 +554,6 @@ HeatingSystem.prototype = {
 									target = Characteristic.TargetHeatingCoolingState.AUTO;
 								break;
 							}
-						}
-				
-						zone.heatingCurrentState.updateValue(converted);
-						if (!zone.isCommandInProgress())
-							zone.heatingTargetState.updateValue(target);
-					} else if (name == 'io:PassAPCOperatingModeState') {
-						var converted = Characteristic.CurrentHeatingCoolingState.OFF;
-						var target = Characteristic.TargetHeatingCoolingState.OFF;
-						switch(zone.states['io:PassAPCOperatingModeState']) {
-							case 'heating':
-								target = Characteristic.TargetHeatingCoolingState.HEAT;
-								converted = Characteristic.CurrentHeatingCoolingState.HEAT;
-							break;
-							case 'cooling':
-								target = Characteristic.TargetHeatingCoolingState.COOL;
-								converted = Characteristic.CurrentHeatingCoolingState.COOL;
-							break;
-							default:
-							case 'stop':
-								target = Characteristic.TargetHeatingCoolingState.OFF;
-								converted = Characteristic.CurrentHeatingCoolingState.OFF;
-							break;
 						}
 				
 						zone.heatingCurrentState.updateValue(converted);
