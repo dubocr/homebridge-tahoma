@@ -125,7 +125,7 @@ AbstractAccessory.prototype = {
                     this.api.cancelCommand(this.lastExecId, function() {});
             }
     
-            var label = cmdName + ' ' + this.name;
+            var label = this.name + ' - ' + cmdName + ' - HomeKit';
             var execution = new Execution(label, this.device.deviceURL, commands);
             
             this.api.executeCommand(execution, function(status, error, data) {

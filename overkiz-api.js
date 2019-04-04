@@ -334,6 +334,7 @@ OverkizApi.prototype = {
         //this.log(command);
         this.post({
             url: that.urlForQuery('/exec/'+oid),
+            headers: {'User-Agent': that.service + ' iPhone'},
             body: execution,
             json: true
         }, function(error, json) {
