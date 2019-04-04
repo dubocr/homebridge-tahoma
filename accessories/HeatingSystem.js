@@ -44,7 +44,7 @@ HeatingSystem = function(log, api, device, config) {
 	this.temperature = config[this.name] || {};
 	this.tempComfort = this.temperature.comfort || 19;
 	this.tempEco = this.temperature.eco || 17;
-	this.derogationDuration = this.derogationDuration || 3600;
+	this.derogationDuration = this.derogationDuration || 1;
 	
 	this.states = [];
 	this.zones = [];
