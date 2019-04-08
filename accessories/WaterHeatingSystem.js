@@ -31,6 +31,16 @@ WaterHeatingSystem = function(log, api, device, config) {
     this.targetState.setProps({ minValue: 40, maxValue: 60, minStep: 0.5 });
     
     this.services.push(service);
+	
+	for(command of this.device.definition.commands) {
+		if(command.commandName == 'setBoostOnOffState')	{
+			var boostService = new Service.Switch("BOOST - " + device.label);
+			this.onState = service.getCharacteristic(Characteristic.On);
+			this.onState.on('set', this.setBoost.bind(this));			
+			this.services.push(boostService);
+			break;
+		}
+	}
 };
 
 WaterHeatingSystem.UUID = 'WaterHeatingSystem';
@@ -92,6 +102,29 @@ WaterHeatingSystem.prototype = {
             }
         });
     },
+	
+	/**
+	* Triggered when Homekit try to modify the Characteristic.On
+	**/
+    setBoost: function(value, callback) {
+        var that = this;
+        
+        var command = new Command('setBoostOnOffState', value ? 'on' : 'off');
+        this.executeCommand(command, function(status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.COMPLETED:
+                break;
+                case ExecutionState.FAILED:
+                    that.onState.updateValue(that.onState.value);
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
 
     onStateUpdate: function(name, value) {
         if (name == "core:OperatingModeState") {
@@ -100,6 +133,8 @@ WaterHeatingSystem.prototype = {
             this.heatingCurrentState.updateValue(converted);
             if (!this.isCommandInProgress()) // if no command running, update target
                 this.heatingTargetState.updateValue(target);
+        } else if (name == "core:BoostOnOffState" && this.onState != null) {
+        	this.onState.updateValue(value == 'on');
         } else if (name == State.STATE_TARGET_TEMP) {
             this.currentState.updateValue(value);
             if (!this.isCommandInProgress()) // if no command running, update target
