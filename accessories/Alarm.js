@@ -44,6 +44,26 @@ Alarm = function(log, api, device, config) {
     		this.services.push(service2);
     	}
 	}
+	
+	var values = [0,1,2,3];
+	for(state of this.device.definition.states) {
+		if(state.qualifiedName == 'myfox:AlarmStatusState')	{
+			values = [];
+			for(type of state.values) {
+				switch(type) {
+					case 'armed': values.push(1); break;
+					case 'disarmed': values.push(3); break;
+					case 'partial': values.push(2); break;
+					default: break;
+				}
+			}
+		} else if(state.qualifiedName == 'internal:TargetAlarmModeState') {
+		
+		} else if(state.qualifiedName == 'core:ActiveZonesState') {
+		
+		}
+	}
+	this.targetState.setProps({ validValues: values });
 };
 
 Alarm.UUID = 'Alarm';

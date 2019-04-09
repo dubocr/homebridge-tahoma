@@ -18,28 +18,28 @@ module.exports = function(homebridge, abstractAccessory, api) {
  // TODO : Not implemented
 WaterHeatingSystem = function(log, api, device, config) {
     AbstractAccessory.call(this, log, api, device);
-    var service = new Service.Thermostat(device.label);
+    
+    var service = null;
+    if(device.widget == 'AtlanticPassAPCDHW') {
+    	service = new Service.Switch("BOOST - " + device.label);
+		this.onState = service.getCharacteristic(Characteristic.On);
+		this.onState.on('set', this.setBoost.bind(this));
+    } else {
+		service = new Service.Thermostat(device.label);
 
-    this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
-    this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
-    this.targetState.on('set', this.setTemperature.bind(this));
-    
-    this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
-    this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
-    this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
-    
-    this.targetState.setProps({ minValue: 40, maxValue: 60, minStep: 0.5 });
-    
-    this.services.push(service);
+		this.currentState = service.getCharacteristic(Characteristic.CurrentTemperature);
+		this.targetState = service.getCharacteristic(Characteristic.TargetTemperature)
+		this.targetState.on('set', this.setTemperature.bind(this));
 	
-	for(command of this.device.definition.commands) {
-		if(command.commandName == 'setBoostOnOffState')	{
-			var boostService = new Service.Switch("BOOST - " + device.label);
-			this.onState = service.getCharacteristic(Characteristic.On);
-			this.onState.on('set', this.setBoost.bind(this));			
-			this.services.push(boostService);
-			break;
-		}
+		this.heatingCurrentState = service.getCharacteristic(Characteristic.CurrentHeatingCoolingState);
+		this.heatingTargetState = service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
+		this.heatingTargetState.on('set', this.setHeatingCooling.bind(this));
+	
+		this.targetState.setProps({ minValue: 40, maxValue: 60, minStep: 0.5 });
+    }
+	
+	if(service != null) {
+		this.services.push(service);
 	}
 };
 
@@ -53,6 +53,15 @@ WaterHeatingSystem.prototype = {
     setTemperature: function(value, callback) {
         var that = this;
         
+        var command = null;
+        switch(this.device.widget) {
+        	case 'AtlanticPassAPCDHW':
+        		command = new Command('setComfortTargetDHWTemperature', [value]);
+        	break;
+        	default:
+        		command = new Command('setHeatingTargetTemperature', [value]);
+        	break;
+        }
         var command = new Command('setHeatingTargetTemperature', [value]);
 		this.executeCommand(command, function(status, error, data) {
             switch (status) {
@@ -75,7 +84,15 @@ WaterHeatingSystem.prototype = {
     setHeatingCooling: function(value, callback) {
         var that = this;
         
-        var command = new Command('setCurrentOperatingMode');
+        var command = null;
+        switch(this.device.widget) {
+        	case 'AtlanticPassAPCDHW':
+        		command = new Command('setDHWOnOffState');
+        	break;
+        	default:
+        		command = new Command('setCurrentOperatingMode');
+        	break;
+        }
 		switch(value) {
 			case Characteristic.TargetHeatingCoolingState.AUTO:
 			case Characteristic.TargetHeatingCoolingState.HEAT:
@@ -109,7 +126,7 @@ WaterHeatingSystem.prototype = {
     setBoost: function(value, callback) {
         var that = this;
         
-        var command = new Command('setBoostOnOffState', value ? 'on' : 'off');
+        var command = new Command('setBoostOnOffState', [value ? 'on' : 'off']);
         this.executeCommand(command, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
@@ -127,7 +144,7 @@ WaterHeatingSystem.prototype = {
     },
 
     onStateUpdate: function(name, value) {
-        if (name == "core:OperatingModeState") {
+        if (this.heatingCurrentState != null && name == "core:OperatingModeState") {
         	var converted = value == 'off' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT;
         	var target = value == 'off' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT;
             this.heatingCurrentState.updateValue(converted);

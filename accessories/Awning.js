@@ -267,13 +267,16 @@ Awning.prototype = {
 		if(value == 100) {
 			command = new Command('setClosure', [0]);
 		} else if(value == 0) {
-			command = new Command('setClosureAndOrientation', [100, 100]);
+			command = new Command('setClosureAndOrientation', [100, 0]);
 		} else {
+			/*
 			if(this.states['core:OpenClosedState'] == 'open') {
 				command = new Command('setClosure', [100 - value]);
 			} else {
 				command = new Command('setOrientation', [value]);
 			}
+			*/
+			command = new Command('setClosureAndOrientation', [100, value]);
 		}
 		this.executeCommand(command, function(status, error, data) {
 			switch (status) {
@@ -303,14 +306,19 @@ Awning.prototype = {
 		this.states[name] = value;
 		if(this.blindMode && (name == 'core:ClosureState' || name == 'core:OpenClosedState' || name == 'core:SlateOrientationState')) {
 			var converted = null;
+			/*
 			if(this.states['core:OpenClosedState'] == 'open') {
 				var closure = this.states['core:ClosureState'];
 				if(Number.isInteger(closure))
 					converted = 100 - closure;
 			} else {
+			*/
+			if(this.states['core:OpenClosedState'] == 'closed') {
 				var orientation = this.states['core:SlateOrientationState'];
 				if(Number.isInteger(orientation))
 					converted = orientation;
+			} else {
+				converted = 0;
 			}
 			if(converted !== null) {
 				this.currentPosition.updateValue(converted);

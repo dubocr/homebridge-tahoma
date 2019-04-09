@@ -99,6 +99,9 @@ HeatingSystem.prototype = {
 			var zone = this.findZone(device.deviceURL, 1);
 			zone.merge(device);
 		}
+		if(device.uiClass == 'WaterHeatingSystem') {
+			return false;
+		}
 		if(this.energyState == null && device.uiClass == 'ElectricitySensor') {
 			
 		}
