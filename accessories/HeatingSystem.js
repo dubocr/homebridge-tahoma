@@ -77,6 +77,8 @@ HeatingSystem = function(log, api, device, config) {
 			
 		if(this.device.widget == 'SomfyThermostat')
 			this.targetState.setProps({ minValue: 15, maxValue: 26, minStep: 0.5 });
+		else if(this.device.widget == 'AtlanticElectricalHeater')
+			this.targetState.setProps({ minValue: 0, maxValue: 0, minStep: 0 });
 		else
 			this.targetState.setProps({ minValue: 0, maxValue: 30, minStep: 0.5 });
     }
@@ -183,14 +185,7 @@ HeatingSystem.prototype = {
 					}
 				}
 			break;
-        		
-        	case 'AtlanticElectricalHeater':
-        		if(value >= this.currentState.value)
-        			command = new Command('setHeatingLevel', ['comfort']);
-        		else
-        			command = new Command('setHeatingLevel', ['eco']);
-        		break;
-        		
+			
         	default:
         		command = new Command('setHeatingTargetTemperature', [value]);
         		break;
