@@ -77,9 +77,10 @@ HeatingSystem = function(log, api, device, config) {
 			
 		if(this.device.widget == 'SomfyThermostat')
 			this.targetState.setProps({ minValue: 15, maxValue: 26, minStep: 0.5 });
-		else if(this.device.widget == 'AtlanticElectricalHeater')
-			this.targetState.setProps({ minValue: 0, maxValue: 0, minStep: 0 });
-		else
+		else if(this.device.widget == 'AtlanticElectricalHeater') {
+			this.targetState.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
+			this.heatingTargetState.setProps({ minValue: 0, maxValue: 2, validValues: [0, 1, 2] });
+		} else
 			this.targetState.setProps({ minValue: 0, maxValue: 30, minStep: 0.5 });
     }
     
@@ -134,7 +135,23 @@ HeatingSystem.prototype = {
         		break;
         	
         	case 'SomfyPilotWireHeatingInterface':
-        		callback("Bad command");
+        	case 'AtlanticElectricalHeater':
+        		/*
+        		if(value == 0) {
+        			command = new Command('setHeatingLevel', ['off']);
+        		} else if(value <= 7) {
+        			command = new Command('setHeatingLevel', ['frostprotection']);
+        		} else if(value <= this.tempEco) {
+        			command = new Command('setHeatingLevel', ['eco']);
+        		} else if(value <= this.tempComfort) {
+        			command = new Command('setHeatingLevel', ['comfort']);
+        		} else {
+        			callback();
+        			return;
+        		}
+        		*/
+        		callback();
+        		return;
         		break;
         		
         	case 'ProgrammableAndProtectableThermostatSetPoint':
@@ -603,18 +620,22 @@ HeatingSystem.prototype = {
 						case 'comfort-2':
 							zone.targetState.updateValue(zone.tempComfort);
 							zone.currentState.updateValue(zone.tempComfort);
+							zone.onOff = 'on';
 						break;
 						case 'eco':
 							zone.targetState.updateValue(zone.tempEco);
 							zone.currentState.updateValue(zone.tempEco);
+							zone.onOff = 'on';
 						break;
 						case 'frostprotection':
 							zone.targetState.updateValue(7);
 							zone.currentState.updateValue(7);
+							zone.onOff = 'off';
 						break;
 						default:
 							zone.targetState.updateValue(0);
 							zone.currentState.updateValue(0);
+							zone.onOff = 'off';
 						break;
 					}
 					valueChange = true;
