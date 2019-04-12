@@ -1,9 +1,12 @@
-var Accessory, Service, Characteristic, UUIDGen, Types;
+var Accessory, Service, Characteristic, UUIDGen, Types, mapping;
 
-var OverkizService = require('./overkiz-api');
+var fs = require('fs');
+var OverkizService = require('overkiz-api');
 
 module.exports = function(homebridge) {
-    console.log("homebridge-tahoma API version: " + homebridge.version);
+	console.log("homebridge-tahoma API version: " + homebridge.version);
+		
+    mapping = fs.readFileSync('mapping.json');
 
     // Accessory must be created from PlatformAccessory Constructor
     Accessory = homebridge.platformAccessory;
@@ -13,8 +16,6 @@ module.exports = function(homebridge) {
     Characteristic = homebridge.hap.Characteristic;
     UUIDGen = homebridge.hap.uuid;
     Types = homebridge.hapLegacyTypes;
-
-    DeviceAccessory = require('./accessories/AbstractAccessory.js')(homebridge);
 
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
@@ -31,6 +32,7 @@ function TahomaPlatform(log, config, api) {
 	this.exclusions.push('internal'); // Exclude internal devices
 	this.forceType = config.forceType || {};
 	this.api = new OverkizService.Api(log, config);
+	OverkizDevice = require('overkiz-device')(homebridge, this.log, this.api);
 
     this.platformAccessories = [];
 
@@ -38,8 +40,8 @@ function TahomaPlatform(log, config, api) {
 }
 
 TahomaPlatform.prototype = {
-    getAccessory: function(deviceURL) {
-        for (accessory of this.platformAccessories) {
+    getDevice: function(deviceURL) {
+        for (accessory of this.platformDevices) {
         	if (accessory.deviceURL == deviceURL)
 				return accessory;
         }
@@ -48,7 +50,7 @@ TahomaPlatform.prototype = {
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
 					//this.log.info('Search extended : ' + baseURL);
-        	for (accessory of this.platformAccessories) {
+        	for (accessory of this.platformDevices) {
 				if (accessory.deviceURL != null && accessory.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
 				return accessory;
 			}
@@ -62,6 +64,22 @@ TahomaPlatform.prototype = {
         	return parseInt(deviceURL.substring(i1+1));
         }
         return 1;
+	},
+	
+	getMainDevice: function(deviceURL) {
+        var i1 = deviceURL.indexOf("#");
+        if(i1 != -1) {
+        	baseURL = deviceURL.substring(0, i1);
+					//this.log.info('Search extended : ' + baseURL);
+        	for (device of this.platformDevices) {
+				if(device.deviceURL == deviceURL) {
+					return null;
+				} else if (device.deviceURL == baseURL+'#1') { // accessory.deviceURL.startsWith(baseURL)
+					return device;
+				}
+			}
+        }
+        return null;
     },
 
     accessories: function(callback) {
@@ -86,28 +104,6 @@ TahomaPlatform.prototype = {
 	  this.log(accessory.displayName, "Configure Accessory");
 	},
 */
-	instanciateDevice: function(device) {
-		var uiClass = device.uiClass;
-		if(this.forceType.hasOwnProperty(device.label)) {
-			uiClass = this.forceType[device.label];
-			this.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
-		}
-		if(DeviceAccessory[uiClass] != null) {
-			var accessoryConfig = this.config[uiClass] || {};
-			var accessory = new DeviceAccessory[uiClass](this.log, this.api, device, accessoryConfig);
-			if(device.states != null) {
-				for (state of device.states) {
-					accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-				}
-			}
-			this.log.info('Instanciate device ' + device.label);
-			this.platformAccessories.push(accessory);
-			return accessory;
-		} else {
-			this.log.info('Device type ' + uiClass + ' unknown');
-			return null;
-		}
-	},
 	
     loadDevices: function(callback) {
     	var that = this;
@@ -120,41 +116,32 @@ TahomaPlatform.prototype = {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
 						that.log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-							var componentID = that.getDeviceComponentID(device.deviceURL);
-							if(componentID == 1) {
-								var accessory = that.instanciateDevice(device);
-								//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
+							device = OverkizDevice.getInstance(device);
+							if(device.accessory != null) {
+								this.log.info('Instanciate ' + device.name + ' as ' + device.mapper.service);
+								this.platformDevices.push(device);
 							} else {
-								devicesComponents.push(device);
+								this.log.info('Device type ' + device.uiClass + ' unknown');
 							}
 						} else {
 							that.log.info('Device ' + device.uiClass + ' ignored');
 						}
 					}
 					
-					devicesComponents.sort(function(a, b) {
+					this.platformDevices.sort(function(a, b) {
 						return that.getDeviceComponentID(a.deviceURL) > that.getDeviceComponentID(b.deviceURL);
 					});
-					for (device of devicesComponents) {
-						accessory = that.getAccessory(device.deviceURL);
-						if(accessory != null) {
-							var merged = accessory.merge(device);
-							if(merged) {
-								that.log.info('Device ' + device.label + ' merged with ' + accessory.name);
-								if(device.states != null) {
-									for (state of device.states) {
-										accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-									}
-								}
-							} else {
-								var subAccessory = that.instanciateDevice(device);
-								if(subAccessory != null) {
-									accessory.addSubAccessory(subAccessory);
-								}
-							}
-						} else {
-							that.log.info('Unable to merge ' + device.label);
+					for (device of this.platformDevices) {
+						var main = this.getMainDevice(device.deviceURL);
+						if(main != null) {
+							main.merge(device);
+							that.log.info('Device ' + d.label + ' merged with ' + device.name);
 						}
+					}
+
+					for (device of this.platformDevices) {
+						device.onStatesUpdate(device.states);
+						this.platformAccessories.push(device.accessory);
 					}
 				}
 				callback(error);
@@ -178,14 +165,12 @@ TahomaPlatform.prototype = {
     },
     
     onStatesChange: function(deviceURL, states) {
-        accessory = this.getAccessory(deviceURL);
-        if (accessory != null) {
-        	if(states != null) {
-            	for (state of states) {
-            	    accessory.onStateUpdate(state.name, state.value, deviceURL);
-            	}
-            }
-        }
+		if(states != null) {
+			device = this.getDevice(deviceURL);
+			if (device != null) {
+				device.onStatesUpdate(states, deviceURL);
+			}
+		}
     }
 }
 
