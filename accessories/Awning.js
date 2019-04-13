@@ -86,7 +86,7 @@ Awning.prototype = {
 					that.positionState.updateValue(newValue);
 					break;
 				case ExecutionState.COMPLETED:
-					that.currentPosition.updateValue(value);
+					//that.currentPosition.updateValue(value);
 				case ExecutionState.FAILED:
 					that.positionState.updateValue(Characteristic.PositionState.STOPPED);
 					that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
@@ -119,7 +119,7 @@ Awning.prototype = {
 					that.positionState.updateValue(newValue);
                     break;
                 case ExecutionState.COMPLETED:
-					that.currentPosition.updateValue(value);
+					//that.currentPosition.updateValue(value);
                 case ExecutionState.FAILED:
                     that.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
@@ -245,7 +245,7 @@ Awning.prototype = {
                     callback(error);
                     break;
                 case ExecutionState.COMPLETED:
-                	that.currentAngle.updateValue(value);
+                	//that.currentAngle.updateValue(value);
                 case ExecutionState.FAILED:
                     that.targetAngle.updateValue(that.currentAngle.value); // Update target position in case of cancellation
                     break;
@@ -288,7 +288,7 @@ Awning.prototype = {
 					that.positionState.updateValue(newValue);
 					break;
 				case ExecutionState.COMPLETED:
-					that.currentPosition.updateValue(value);
+					//that.currentPosition.updateValue(value);
 				case ExecutionState.FAILED:
 					that.positionState.updateValue(Characteristic.PositionState.STOPPED);
 					that.targetPosition.updateValue(that.currentPosition.value); // Update target position in case of cancellation
