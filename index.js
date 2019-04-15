@@ -1,12 +1,14 @@
-var Accessory, Service, Characteristic, UUIDGen, Types, mapping;
+var Log, Accessory, Accessories, Service, Characteristic, UUIDGen, Types, mapping, Homebridge, OverkizDevice;
 
+var path = require('path');
 var fs = require('fs');
-var OverkizService = require('overkiz-api');
+var OverkizService = require('./overkiz-api');
 
 module.exports = function(homebridge) {
 	console.log("homebridge-tahoma API version: " + homebridge.version);
-		
-    mapping = fs.readFileSync('mapping.json');
+	
+	Homebridge = homebridge;
+    mapping = JSON.parse(fs.readFileSync(__dirname + '/mapping.json'));
 
     // Accessory must be created from PlatformAccessory Constructor
     Accessory = homebridge.platformAccessory;
@@ -24,6 +26,7 @@ module.exports = function(homebridge) {
 
 function TahomaPlatform(log, config, api) {
     this.log = log;
+    Log = log;
     this.config = config;
     this.hapapi = api;
 
@@ -32,9 +35,26 @@ function TahomaPlatform(log, config, api) {
 	this.exclusions.push('internal'); // Exclude internal devices
 	this.forceType = config.forceType || {};
 	this.api = new OverkizService.Api(log, config);
-	OverkizDevice = require('overkiz-device')(homebridge, this.log, this.api);
+	
+	Accessories = [];
+	// load up all accessories
+	var accessoriesDir = __dirname + '/accessories/';
+	var scriptName = path.basename(__filename);
+
+	fs.readdirSync(accessoriesDir).forEach(function(file) {
+		if (file != scriptName && file.indexOf('.js') > 0) {
+			var name = file.replace('.js', '');
+
+			console.log("Import " + file);
+			Accessories[name] = require(path.join(accessoriesDir, file));
+			//inherits(Generic[name], Generic);
+		}
+	});
+	//Accessories = require('./accessories/Generic')(Homebridge, this.log, OverkizService);
+	OverkizDevice = require('./overkiz-device')(Homebridge, this.log, OverkizService);
 
     this.platformAccessories = [];
+    this.platformDevices = [];
 
     this.api.setDeviceStateChangedEventListener(this);
 }
@@ -110,21 +130,31 @@ TahomaPlatform.prototype = {
     	this.platformAccessories = [];
     	this.api.getDevices(function(error, data) {
     			if (!error) {
-					that.log.debug('Device found: ' + data.length);
+					Log.debug('Device found: ' + data.length);
 					var devicesComponents = [];
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						that.log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						Log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-							device = OverkizDevice.getInstance(device);
-							if(device.accessory != null) {
-								this.log.info('Instanciate ' + device.name + ' as ' + device.mapper.service);
-								this.platformDevices.push(device);
+							var access = mapping[device.uiClass];
+							if(access != undefined) {
+								var config = that.config[access] || {};
+								device = new OverkizDevice(device);
+								if(Accessories[access] != undefined) {
+									device.accessory = new Accessories[access](Homebridge, device, config);
+									//device = OverkizDevice.getInstance(device);
+									//if(device.accessory != null) {
+									console.log(device.accessory);
+									Log.info('Instanciate ' + device.name + ' as ' + access);
+									this.platformDevices.push(device);
+								} else {
+									Log.info('Unknown accessory ' + access);
+								}
 							} else {
-								this.log.info('Device type ' + device.uiClass + ' unknown');
+								Log.info('Device type ' + device.uiClass + ' not supported');
 							}
 						} else {
-							that.log.info('Device ' + device.uiClass + ' ignored');
+							Log.info('Device ' + device.uiClass + ' ignored');
 						}
 					}
 					
@@ -135,7 +165,7 @@ TahomaPlatform.prototype = {
 						var main = this.getMainDevice(device.deviceURL);
 						if(main != null) {
 							main.merge(device);
-							that.log.info('Device ' + d.label + ' merged with ' + device.name);
+							Log.info('Device ' + d.label + ' merged with ' + device.name);
 						}
 					}
 
@@ -145,7 +175,7 @@ TahomaPlatform.prototype = {
 					}
 				}
 				callback(error);
-			});
+			}.bind(this));
     },
     
     loadScenarios: function(callback) {
@@ -154,7 +184,7 @@ TahomaPlatform.prototype = {
 				if (!error) {
 					for (scenario of data) {
 						if(!Array.isArray(that.exposeScenarios) || that.exposeScenarios.indexOf(scenario.label) != -1) {
-							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.log, that.api);
+							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, Log, that.api);
 							that.platformAccessories.push(scenarioAccessory);
 							//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [scenarioAccessory]);
 						}
@@ -205,7 +235,7 @@ ScenarioAccessory.prototype = {
 						if (status == ExecutionState.INITIALIZED)
 							that.lastExecId = data.execId;
 						if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
-							that.log.info('[Scenario] ' + that.name + ' ' + (error == null ? status : error));
+							Log.info('[Scenario] ' + that.name + ' ' + (error == null ? status : error));
 							that.state.updateValue(0);
 						}
 					}

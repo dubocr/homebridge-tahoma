@@ -1,7 +1,11 @@
+var Generic, Characteristic, Command, ExecutionState;
+Generic = require('./Generic');
 
 module.exports = function(homebridge, log, api) {
-    Generic = require('Generic')(homebridge, log, api);
+    Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
+    Command = api.Command;
+    ExecutionState = api.ExecutionState;
     return OccupancySensor;
 }
 

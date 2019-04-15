@@ -1,7 +1,11 @@
+var Generic, Characteristic, Command, ExecutionState;
+Generic = require('./Generic');
 
 module.exports = function(homebridge, log, api) {
-    Generic = require('Generic')(homebridge, log, api);
+    Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
+    Command = api.Command;
+    ExecutionState = api.ExecutionState;
     return HeaterCooler;
 }
 
@@ -10,8 +14,8 @@ class HeaterCooler extends Generic {
         super(device, config);
 
         this.service = new Service.HeaterCooler(device.getName());
-        this.currentState = service.getCharacteristic(Characteristic.CurrentHeaterCoolerState);
-        this.targetState = service.getCharacteristic(Characteristic.TargetHeaterCoolerState);
+        this.currentState = this.service.getCharacteristic(Characteristic.CurrentHeaterCoolerState);
+        this.targetState = this.service.getCharacteristic(Characteristic.TargetHeaterCoolerState);
         
         this.services.push(this.service);
     }

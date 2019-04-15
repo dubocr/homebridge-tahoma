@@ -1,32 +1,27 @@
-var Service, Characteristic;
+var inherits = function (ctor, superCtor) {
+	if (ctor === undefined || ctor === null)
+		throw new TypeError('The constructor to "inherits" must not be null or undefined');
 
-var path = require('path');
-var fs = require('fs');
+	if (superCtor === undefined || superCtor === null)
+		throw new TypeError('The super constructor to "inherits" must not be null or undefined');
 
-module.exports = function(homebridge, log) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-	Accessory = homebridge.platformAccessory;
-    UUIDGen = homebridge.hap.uuid;
-	
-    // load up all accessories
-    var accessoriesDir = __dirname;
-    var scriptName = path.basename(__filename);
+	if (superCtor.prototype === undefined)
+		throw new TypeError('The super constructor to "inherits" must have a prototype');
 
-    fs.readdirSync(accessoriesDir).forEach(function(file) {
-        if (file != scriptName && file.indexOf('.js') > 0) {
-            var name = file.replace('.js', '');
-
-            Generic[name] = require(path.join(accessoriesDir, file))(homebridge, log);
-            inherits(Generic[name], Generic);
-        }
-    });
-
-    return Generic;
+	ctor.super_ = superCtor;
+	Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
 }
 
-class Generic extends Accessory {
-    constructor(device, config) {
+
+
+class Generic {
+    constructor(homebridge, device, config) {
+    	var Service = homebridge.hap.Service;
+    	var Characteristic = homebridge.hap.Characteristic;
+    	var UUIDGen = homebridge.hap.uuid;
+    	//Log("Building Generic for device " + device.label);
+    	this.services = [];
+    	
         var informationService = new Service.AccessoryInformation();
 
         this.displayName = device.getName();
@@ -42,3 +37,5 @@ class Generic extends Accessory {
         return this.services;
     }
 }
+
+module.exports = Generic;

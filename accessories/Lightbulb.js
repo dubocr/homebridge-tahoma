@@ -1,7 +1,11 @@
+var Generic, Characteristic, Command, ExecutionState;
+Generic = require('./Generic');
 
 module.exports = function(homebridge, log, api) {
-    Generic = require('Generic')(homebridge, log, api);
+    Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
+    Command = api.Command;
+    ExecutionState = api.ExecutionState;
     return Lightbulb;
 }
 
@@ -10,19 +14,19 @@ class Lightbulb extends Generic {
         super(device, config);
 
         this.service = new Service.Lightbulb(device.getName());
-        this.onState = service.getCharacteristic(Characteristic.On);
+        this.onState = this.service.getCharacteristic(Characteristic.On);
         this.onState.on('set', this.setOn.bind(this));
         
         if(this.device.widget.includes('Dimmer')) {
-            this.brightnessState = service.addCharacteristic(Characteristic.Brightness);
+            this.brightnessState = this.service.addCharacteristic(Characteristic.Brightness);
             this.brightnessState.on('set', this.setBrightness.bind(this));
         }
         
         if(this.device.widget.includes('HueSat')) {
             this.hueTarget = 0;
-            this.hueState = service.addCharacteristic(Characteristic.Hue);
+            this.hueState = this.service.addCharacteristic(Characteristic.Hue);
             this.hueState.on('set', this.setHue.bind(this));
-            this.saturationState = service.addCharacteristic(Characteristic.Saturation);
+            this.saturationState = this.service.addCharacteristic(Characteristic.Saturation);
             this.saturationState.on('set', this.setSaturation.bind(this));
         }
 

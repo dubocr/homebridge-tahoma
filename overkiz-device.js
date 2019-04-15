@@ -22,13 +22,13 @@ module.exports = function(homebridge, log, api) {
     Api = api;
     Log = log;
     Characteristic = homebridge.hap.Characteristic;
-    Accessories = require('accessories/Generic')(homebridge, log);
-    return { OverkizDevice, Mapper };
+    return OverkizDevice;
 }
 
 class OverkizDevice {
     constructor(device) {
-
+		Object.assign(this, device);
+		
         this.name = device.label;
         this.deviceURL = device.deviceURL;
 
@@ -36,8 +36,6 @@ class OverkizDevice {
         
         this.states = [];
         this.services = [];
-
-        this.accessory = new Accessories[map.service](device.label);
     }
 
     getName() {
@@ -49,7 +47,7 @@ class OverkizDevice {
     }
 
     getManufacturer() {
-        var manufacturer = this._look_state(OverkizApi.State.STATE_MANUFACTURER);
+        var manufacturer = this._look_state(Api.State.STATE_MANUFACTURER);
         if (manufacturer != null)
             return manufacturer;
         else
@@ -57,7 +55,7 @@ class OverkizDevice {
     }
 
     getModel() {
-        var manufacturer = this._look_state(OverkizApi.State.STATE_MODEL);
+        var manufacturer = this._look_state(Api.State.STATE_MODEL);
         if (manufacturer != null)
             return manufacturer;
         else
@@ -77,7 +75,7 @@ class OverkizDevice {
     }
     
     getState(state, callback) {
-        Api.requestState(this.device.deviceURL, state, callback);
+        Api.Api.requestState(this.device.deviceURL, state, callback);
     }
     
     executeCommand(commands, callback) {
@@ -110,7 +108,7 @@ class OverkizDevice {
             var label = this.name + ' - ' + cmdName + ' - HomeKit';
             var execution = new Execution(label, this.device.deviceURL, commands);
             
-            Api.executeCommand(execution, function(status, error, data) {
+            Api.Api.executeCommand(execution, function(status, error, data) {
             	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
                     	// API Error
@@ -134,7 +132,7 @@ class OverkizDevice {
     */
     _look_state(stateName) {
         if(this.device.states != null) {
-            for (state of this.device.states) {
+            for (var state of this.device.states) {
                 if (state.name == stateName)
                     return state.value;
             }
@@ -177,7 +175,7 @@ class OverkizDevice {
         device.accessory = this.accessory;
     }
 
-    getInstance(device) {
+    static getInstance(device) {
         inherits(device, OverkizDevice);
         device.mapper = { service: null };
 
@@ -265,7 +263,7 @@ class OverkizDevice {
         }
 
         var config = config[device.mapper.service] || {};
-        device.accessory = new Accessories[device.mapper.service](device, config);
+        //device.accessory = new Accessories[device.mapper.service](device, config);
         return device;
     }
 }

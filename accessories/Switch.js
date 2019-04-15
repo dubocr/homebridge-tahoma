@@ -1,17 +1,23 @@
+var Generic, Characteristic, Command, ExecutionState, UUIDGen;
+Generic = require('./Generic');
 
 module.exports = function(homebridge, log, api) {
-    Generic = require('Generic')(homebridge, log, api);
+    Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
+    UUIDGen = homebridge.hap.uuid;
+    Command = api.Command;
+    ExecutionState = api.ExecutionState;
     return Switch;
 }
 
+
 class Switch extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, device, config) {
+        super(homebridge, device, config);
 
         this.service = new Service.Switch(device.getName());
-        this.onState = service.getCharacteristic(Characteristic.On);
-        this.onState.on('set', this.setOn.bind(this));
+        this.onState = this.service.getCharacteristic(Characteristic.On);
+        this.onState.on('set', Switch.prototype.setOn.bind(this));
         this.services.push(this.service);
     }
 
@@ -46,3 +52,5 @@ class Switch extends Generic {
             this.onState.updateValue(onState);
     }
 }
+
+module.exports = Switch;

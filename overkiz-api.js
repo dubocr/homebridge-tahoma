@@ -5,7 +5,7 @@ Command = function(name, parameters) {
     this.type = 1;
     this.name = name;
     if (typeof(parameters)==='undefined') parameters = [];
-    if (!Array​.isArray(parameters)) parameters = [parameters];
+    if (!Array.isArray(parameters)) parameters = [parameters];
     this.parameters = parameters;
 }
 
