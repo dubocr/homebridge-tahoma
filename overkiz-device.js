@@ -1,4 +1,4 @@
-var Accessories, Characteristic;
+var Api, Log, Characteristic;
 
 var path = require('path');
 var fs = require('fs');
@@ -20,6 +20,7 @@ var inherits = function (ctor, superCtor) {
 
 module.exports = function(homebridge, log, api) {
     Api = api;
+    Log = log;
     Characteristic = homebridge.hap.Characteristic;
     Accessories = require('accessories/Generic')(homebridge, log);
     return { OverkizDevice, Mapper };
@@ -71,14 +72,7 @@ class OverkizDevice {
         }
 
         for (state of states) {
-            var characNames = this.mapper.states[state.name];
-            if(!Array.isArray(characNames)) {
-                characNames = characNames ? [characNames] : [];
-            }
-            for(characName of characNames) {
-                var characValue = this.stateConvert(state.name+" > "+characName, state.value);
-                this.updateCharacteristic(characName, characValue);
-            }
+            this.onStateUpdate(state.name, state.value);
         }
     }
     
@@ -87,18 +81,24 @@ class OverkizDevice {
     }
     
     executeCommand(commands, callback) {
-            var that = this;
             var cmdName = '';
-            if(Array.isArray(commands)) {
-            	if(commands.length > 1)
-                	cmdName = commands[0].name + " +" + (commands.length-1) + " others";
-                else
-                	cmdName = commands[0].name;
+            if(commands == null) {
+                Log("No target command for " + this.name);
+                callback("No target command for " + this.name);
+            } else if(Array.isArray(commands)) {
+            	if(commands.length == 0) {
+                    Log("No target command for " + this.name);
+                    callback("No target command for " + this.name);
+                } else if(commands.length > 1) {
+                    cmdName = commands[0].name + " +" + (commands.length-1) + " others";
+                } else {
+                    cmdName = commands[0].name;
+                }
                 for(c of commands) {
-                	that.log('['+that.name+'] ' + c.name + JSON.stringify(c.parameters));
+                	Log('['+this.name+'] ' + c.name + JSON.stringify(c.parameters));
                 }
             } else {
-                that.log('['+that.name+'] ' + commands.name +JSON.stringify(commands.parameters));
+                Log('['+this.name+'] ' + commands.name +JSON.stringify(commands.parameters));
                 cmdName = commands.name;
                 commands = [commands];
             }
@@ -114,19 +114,19 @@ class OverkizDevice {
             	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
                     	// API Error
-                    	that.updateReachability(false);
+                    	this.updateReachability(false);
                 	} else {
-                		that.lastExecId = data.execId;
+                		this.lastExecId = data.execId;
                     }
                 }
                 
                 if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
-                    that.log('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+                    Log('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
                 else
-                    that.log.debug('[' + that.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+                    Log.debug('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
 
                 callback(status, error, data);
-            });
+            }.bind(this));
     }
 
     /*
@@ -147,7 +147,6 @@ class OverkizDevice {
     }
     
     postpone(todo, value, callback) {
-        var that = this;
         if(this.timeout != null) {
             clearTimeout(this.timeout);
         }
@@ -157,18 +156,13 @@ class OverkizDevice {
         callback();
     }
 
-    getCommands(charac, value) {
-        var commands = [];
-        var commandNames = this.mapper.characteristics[charac];
-        if(!Array.isArray(commandNames)) {
-            commandNames = commandNames ? [commandNames] : [];
+    hasCommand(name) {
+        for(command of device.definition.commands) {
+            if(command.commandName == name)	{
+                return true;
+            }
         }
-        for(commandName of commandNames) {
-            var command = new command(commandName);
-            command.parameters = this.commandConvert(charac+" > "+commandName, value);
-            commands.push(command);
-        }
-        return commands;
+        return false;
     }
     
     merge(device) {
@@ -183,83 +177,65 @@ class OverkizDevice {
         device.accessory = this.accessory;
     }
 
-    updateCharacteristic(name, value) {
-        this.log("Characteristic " + name + " updated to " + value);
-    }
-
-    commandConvert(name, value) {
-        switch(name) {
-            case "TargetHeatingCoolingState > setOnOff":
-                switch(value) {
-                    case Characteristic.TargetHeatingCoolingState.AUTO: return ['on'];
-                    case Characteristic.TargetHeatingCoolingState.HEAT: return ['on'];
-                    case Characteristic.TargetHeatingCoolingState.COOL: return ['on'];
-                    case Characteristic.TargetHeatingCoolingState.OFF: return ['on'];
-                }
-                
-
-            case "TargetTemperature > setActiveMode":
-                return [value];
-            
-            case "TargetDoorState > setClosure":
-                return [value];
-        }
-    }
-
-    stateConvert() {
-        switch(name) {
-            case "core:CO2ConcentrationState > CarbonDioxideLevel":
-                return value - 273.15;
-            
-            case "core:OpenClosedPedestrianState > CurrentDoorState":
-                switch(value) {
-                    case "pedestrian": return Characteristic.CurrentDoorState.STOPPED;
-                    case "closed": return Characteristic.CurrentDoorState.CLOSED;
-                    default: 
-                    case "open":
-                    case "unknown": return Characteristic.CurrentDoorState.OPEN;
-                }
-            case "core:OpenClosedPedestrianState > TargetDoorState":
-                switch(value) {
-                    case "pedestrian": return Characteristic.TargetDoorState.OPEN;
-                    case "closed": return Characteristic.TargetDoorState.CLOSED;
-                    default: 
-                    case "open":
-                    case "unknown": return Characteristic.TargetDoorState.OPEN;
-                }
-        }
-    }
-
     getInstance(device) {
         inherits(device, OverkizDevice);
-        device.mapper = { service: null, states: {}, characteristics: {} };
+        device.mapper = { service: null };
 
         switch(device.uiClass) {
             
             case "AirSensor":
             device.mapper.service = "AirQualitySensor";
-            device.mapper.states = { "core:CO2ConcentrationState": "CarbonDioxideLevel" };
             break;
+
+            case "ContactSensor":
+            case "WindowHandle":
+            device.mapper.service = "ContactSensor";
+            break;
+
+            case "DoorLock":
+            device.mapper.service = "LockMechanism";
+            break;
+
+            case "Fan":
+            device.mapper.service = "Fan";
+            break;
+
+            case "Light":
+            device.mapper.service = "Lightbulb";
+             break;
             
             case "HeatinSystem":
             device.mapper.service = "Thermostat";
-            device.mapper.characteristics = { 
-                "TargetHeatingCoolingState": "setOperatingMode",
-                "TargetTemperature": "setTargetTemperature"
-            };
-            device.mapper.states = { 
-                "io:TargetHeatingLevelState": "TargetHeatingCoolingState",
-                "ramses:RAMSESOperatingModeState" : ["CurrentHeatingCoolingState", "TargetHeatingCoolingState"],
-                "core:TemperatureState": "CurrentTemperature",
-                "core:TargetTemperatureState" : "TargetTemperature"
-            };
+            break;
+
+            case "HumiditySensor":
+            device.mapper.service = "HumiditySensor";
+            break;
+            
+            case "LightSensor":
+            device.mapper.service = "LightSensor";
+            break;
+
+            case "OccupancySensor":
+            device.mapper.service = "OccupancySensor";
             break;
             
             case "Awning":
             case "Window":
             device.mapper.service = "Window";
-            device.mapper.characteristics = { "On": "setHeatingLevel" };
-            device.mapper.states = { "io:TargetHeatingLevelState": "On" };
+            break;
+
+            case "Pergola":
+            device.mapper.service = "Window";
+            config[device.mapper.service].blindMode = true;
+            break;
+
+            case "OnOff":
+            device.mapper.service = "Switch";
+            break;
+
+            case "Gate":
+            device.mapper.service = "GarageDoorOpener";
             break;
 
         }
@@ -268,15 +244,24 @@ class OverkizDevice {
             
             case "SomfyPilotWireElectricalHeater":
             device.mapper.service = "Switch";
-            device.mapper.characteristics = { "On": "setHeatingLevel" };
             break;
             
             case "AtlanticPassAPCZoneControl":
             case "AtlanticPassAPCHeatPump":
             device.mapper.service = "Switch";
-            device.mapper.characteristics = { "On": "setPassAPCOperatingMode"};
             break;
 
+            case "DimmerOnOff":
+            device.mapper.service = "Lightbulb";
+            break;
+
+            case 'StatelessAlarmController':
+            device.stateless = true;
+            break;
+
+            case 'UpDownHorizontal':
+            device.stateless = true;
+            break;
         }
 
         var config = config[device.mapper.service] || {};
