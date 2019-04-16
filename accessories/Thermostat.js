@@ -1,8 +1,14 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class Thermostat extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
+		
         this.currentHumidity = null;
         this.temperature = config[this.name] || {};
         this.tempComfort = this.temperature.comfort || 19;
@@ -20,7 +26,7 @@ class Thermostat extends Generic {
 
         this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
 
-        this.services.push(service);
+        this.addService(service);
 
         switch(this.device.widget) {
             // EvoHome
@@ -102,7 +108,7 @@ class Thermostat extends Generic {
             break;
         }
         if(commands.length) {
-            this.executeCommand(commands, function(status, error, data) {
+            this.device.executeCommand(commands, function(status, error, data) {
                 switch (status) {
                     case ExecutionState.INITIALIZED: callback(error); break;
                     case ExecutionState.IN_PROGRESS: break;
@@ -153,7 +159,7 @@ class Thermostat extends Generic {
             case 'AtlanticPassAPCDHW':
         }
         if(commands.length) {
-            this.executeCommand(commands, function(status, error, data) {
+            this.device.executeCommand(commands, function(status, error, data) {
                 switch (status) {
                     case ExecutionState.INITIALIZED: callback(error); break;
                     case ExecutionState.IN_PROGRESS: break;

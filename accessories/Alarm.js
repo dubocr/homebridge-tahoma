@@ -1,8 +1,14 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class Alarm extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
+		
         this.stayZones = config.STAY_ARM || 'A';
         this.nightZones = config.NIGHT_ARM || 'B';
         this.occupancySensor = config.occupancySensor || false;
@@ -18,12 +24,12 @@ class Alarm extends Generic {
             this.currentState.updateValue(Characteristic.SecuritySystemCurrentState.DISARMED);
             this.targetState.updateValue(Characteristic.SecuritySystemTargetState.DISARM);
         }
-        this.services.push(this.service);
+        this.addService(this.service);
 
         if(this.occupancySensor) {
 			var altService = new Service.OccupancySensor(device.label);
     		this.occupancyState = altService.getCharacteristic(Characteristic.OccupancyDetected);
-    		this.services.push(altService);
+    		this.addService(altService);
         }
         
         var values = [0,1,2,3];
@@ -82,7 +88,7 @@ class Alarm extends Generic {
         }
         
         if(commands != null) {
-            this.executeCommand(commands, function(status, error, data) {
+            this.device.executeCommand(commands, function(status, error, data) {
                 switch (status) {
                     case ExecutionState.INITIALIZED:
                         callback(error);

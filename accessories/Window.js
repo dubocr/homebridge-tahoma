@@ -1,8 +1,14 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class Window extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
+		
         this.defaultPosition = config['defaultPosition'] !== undefined ? config['defaultPosition'] : 50;
         this.reverse = config['reverse'] || false;
         this.blindMode = config['blindMode'] || false;
@@ -12,6 +18,7 @@ class Window extends Generic {
 
         this.currentPosition = this.service.getCharacteristic(Characteristic.CurrentPosition);
         this.targetPosition = this.service.getCharacteristic(Characteristic.TargetPosition);
+		this.targetPosition.on('set', this.setTarget.bind(this));
 
         if(device.stateless) {
             this.currentPosition.updateValue(this.defaultPosition);
@@ -26,32 +33,10 @@ class Window extends Generic {
             this.targetAngle.on('set', this.setAngle.bind(this));
         }
 
-        if(device.widget.startsWith('UpDownHorizontal')) {
-            this.targetPosition.on('set', this.deployUndeployCommand.bind(this));
-            this.currentPosition.updateValue(def);
-            this.targetPosition.updateValue(def);
-        } else if(device.widget.startsWith('PositionableHorizontal') || device.widget == 'PositionableScreen') { // PositionableHorizontal, PositionableScreen
-            this.targetPosition.on('set', this.postpone.bind(this, this.setDeployment.bind(this)));
-            this.obstruction = this.service.addCharacteristic(Characteristic.ObstructionDetected);
-        } else if(device.widget.startsWith('UpDown') || device.widget.startsWith('RTS')) {
-            this.targetPosition.on('set', this.upDownCommand.bind(this));
-            this.currentPosition.updateValue(def);
-            this.targetPosition.updateValue(def);
-        } else {
-            if(this.blindMode) {
-                this.log("Blind mode enabled for " + this.name);
-                this.targetPosition.on('set', this.postpone.bind(this, this.setBlindPosition.bind(this)));
-            } else {
-                this.targetPosition.on('set', this.postpone.bind(this, this.setClosure.bind(this)));
-            }
-            this.obstruction = this.service.addCharacteristic(Characteristic.ObstructionDetected);
-        }
         this.positionState = this.service.getCharacteristic(Characteristic.PositionState);
         this.positionState.updateValue(Characteristic.PositionState.STOPPED);
 
-        
-
-        this.services.push(this.service);
+        this.addService(this.service);
     }
 
     /**
@@ -135,7 +120,7 @@ class Window extends Generic {
                 }
             break;
         }
-		this.device.executeCommand(command, function(status, error, data) {
+		this.device.executeCommand(commands, function(status, error, data) {
 			switch (status) {
 				case ExecutionState.INITIALIZED: callback(error); break;
 				case ExecutionState.IN_PROGRESS:

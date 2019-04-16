@@ -1,5 +1,6 @@
 var Log, Accessory, Accessories, Service, Characteristic, UUIDGen, Types, mapping, Homebridge, OverkizDevice;
 
+var { builder } = require('./accessories/Generic');
 var path = require('path');
 var fs = require('fs');
 var OverkizService = require('./overkiz-api');
@@ -44,14 +45,10 @@ function TahomaPlatform(log, config, api) {
 	fs.readdirSync(accessoriesDir).forEach(function(file) {
 		if (file != scriptName && file.indexOf('.js') > 0) {
 			var name = file.replace('.js', '');
-
-			console.log("Import " + file);
 			Accessories[name] = require(path.join(accessoriesDir, file));
-			//inherits(Generic[name], Generic);
 		}
 	});
-	//Accessories = require('./accessories/Generic')(Homebridge, this.log, OverkizService);
-	OverkizDevice = require('./overkiz-device')(Homebridge, this.log, OverkizService);
+	OverkizDevice = require('./overkiz-device')(Homebridge, this.log, this.api);
 
     this.platformAccessories = [];
     this.platformDevices = [];
@@ -138,13 +135,18 @@ TahomaPlatform.prototype = {
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
 							var access = mapping[device.uiClass];
 							if(access != undefined) {
-								var config = that.config[access] || {};
+								var config = null;
+								if(access instanceof Object) {
+									access = access.accessory;
+									config = access.config || {};
+								} else {
+									config = that.config[access] || {};
+								}
 								device = new OverkizDevice(device);
 								if(Accessories[access] != undefined) {
-									device.accessory = new Accessories[access](Homebridge, device, config);
+									device.accessory = new Accessories[access](Homebridge, Log, device, config);
 									//device = OverkizDevice.getInstance(device);
 									//if(device.accessory != null) {
-									console.log(device.accessory);
 									Log.info('Instanciate ' + device.name + ' as ' + access);
 									this.platformDevices.push(device);
 								} else {
@@ -171,7 +173,7 @@ TahomaPlatform.prototype = {
 
 					for (device of this.platformDevices) {
 						device.onStatesUpdate(device.states);
-						this.platformAccessories.push(device.accessory);
+						this.platformAccessories.push(device.accessory.hapAccessory);
 					}
 				}
 				callback(error);

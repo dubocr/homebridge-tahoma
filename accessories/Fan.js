@@ -1,8 +1,13 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class Fan extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
 
         this.service = new Service.Fan(device.getName());
         this.onState = this.service.getCharacteristic(Characteristic.On);
@@ -13,7 +18,7 @@ class Fan extends Generic {
             this.speedState.on('set', this.setSpeed.bind(this));
         }
 
-        this.services.push(this.service);
+        this.addService(this.service);
     }
 
     /**
@@ -30,7 +35,7 @@ class Fan extends Generic {
             break;
         }
         if(commands.length) {
-            this.executeCommand(commands, function(status, error, data) {
+            this.device.executeCommand(commands, function(status, error, data) {
                 switch (status) {
                     case ExecutionState.INITIALIZED: callback(error); break;
                     case ExecutionState.IN_PROGRESS:
@@ -47,7 +52,7 @@ class Fan extends Generic {
 	**/
     setSpeed(value, callback) {
         var commands = new Command('setIntensity', [value]);
-        this.executeCommand(commands, function(status, error, data) {
+        this.device.executeCommand(commands, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED: callback(error); break;
                 case ExecutionState.IN_PROGRESS:

@@ -1,13 +1,18 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class Switch extends Generic {
-    constructor (device, config) {
-        super(device, config);
-
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
+		
         this.service = new Service.Switch(device.getName());
         this.onState = this.service.getCharacteristic(Characteristic.On);
         this.onState.on('set', Switch.prototype.setOn.bind(this));
-        this.services.push(this.service);
+        this.addService(this.service);
     }
 
         /**
@@ -15,7 +20,7 @@ class Switch extends Generic {
 	**/
     setOn(value, callback) {
         var commands = new Command(value ? 'on' : 'off');
-        this.executeCommand(commands, function(status, error, data) {
+        this.device.executeCommand(commands, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED: callback(error); break;
                 case ExecutionState.IN_PROGRESS: break;

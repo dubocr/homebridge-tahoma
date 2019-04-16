@@ -1,25 +1,4 @@
-var Accessories, Log, Service, Characteristic, Command, ExecutionState;
-var builder = function(homebridge, log, api) {
-    Log = log;
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-	ExecutionState = api.ExecutionState;
-	
-	Accessories = [];
-	// load up all accessories
-	var accessoriesDir = __dirname;
-	var scriptName = path.basename(__filename);
-
-	fs.readdirSync(accessoriesDir).forEach(function(file) {
-		if (file != scriptName && file.indexOf('.js') > 0) {
-			var name = file.replace('.js', '');
-
-			console.log("Import " + file);
-			Accessories[name] = require(path.join(accessoriesDir, file));
-		}
-	});
-}
+var Log, Service, Characteristic, Accessory, UUIDGen;
 
 var inherits = function (ctor, superCtor) {
 	if (ctor === undefined || ctor === null)
@@ -36,27 +15,48 @@ var inherits = function (ctor, superCtor) {
 }
 
 class Generic {
-    constructor(homebridge, device, config) {
-    	var Service = homebridge.hap.Service;
-    	var Characteristic = homebridge.hap.Characteristic;
-    	var UUIDGen = homebridge.hap.uuid;
-    	//Log("Building Generic for device " + device.label);
-    	this.services = [];
+    constructor(homebridge, log, device, config) {
+    	Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
+		Accessory = homebridge.platformAccessory;
+		UUIDGen = homebridge.hap.uuid;
+		
+		this.device = device;
+    	
+    	this.hapAccessory = {};
+    	this.hapAccessory.name = device.name;
+    	this.hapAccessory.displayName = device.name;
+    	this.hapAccessory.uuid_base = UUIDGen.generate(device.getSerialNumber());
+    	this.hapAccessory.services = [];
+    	this.hapAccessory.getServices = function() {
+    		return this.services;
+    	};
+    	//inherits(HAPAccessory, Accessory);
     	
         var informationService = new Service.AccessoryInformation();
-
-        this.displayName = device.getName();
-        this.uuid_base = UUIDGen.generate(device.getSerialNumber());
 
         informationService.setCharacteristic(Characteristic.Manufacturer, device.getManufacturer());
         informationService.setCharacteristic(Characteristic.Model, device.getModel());
         informationService.setCharacteristic(Characteristic.SerialNumber, device.getSerialNumber());
-        this.services.push(informationService);
+        this.addService(informationService);
     }
 
+    addService(service) {
+        this.hapAccessory.services.push(service);
+    }
+    
     getServices() {
-        return this.services;
+        return this.hapAccessory.services;
+    }
+    
+    isCommandInProgress() {
+    	return this.device.isCommandInProgress();
+    }
+    
+    executeCommand(commands, callback) {
+    	return this.device.executeCommand(commands, callback);
     }
 }
 
-module.exports = { builder, Accessories, Log, Service, Characteristic, Command, ExecutionState, Generic };
+module.exports = Generic;

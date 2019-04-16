@@ -1,8 +1,13 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class Lightbulb extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
 
         this.service = new Service.Lightbulb(device.getName());
         this.onState = this.service.getCharacteristic(Characteristic.On);
@@ -21,7 +26,7 @@ class Lightbulb extends Generic {
             this.saturationState.on('set', this.setSaturation.bind(this));
         }
 
-        this.services.push(this.service);
+        this.addService(this.service);
     }
 
     /**

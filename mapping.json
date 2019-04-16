@@ -1,4 +1,18 @@
 {
 	"Alarm": "Alarm",
-	"OnOff": "Switch"
+	"AirSensor": "AirQualitySensor",
+	"ContactSensor": "ContactSensor",
+	"WindowHandle": "ContactSensor",
+	"DoorLock": "LockMechanism",
+	"Fan": "Fan",
+	"Light": "Lightbulb",
+	"HeatinSystem": "Thermostat",
+	"HumiditySensor": "HumiditySensor",
+	"LightSensor": "LightSensor",
+	"OccupancySensor": "OccupancySensor",
+	"Awning": "Window",
+	"Window": "Window",
+	"Pergola": { "accessory": "Window", "config": { "blindMode": true } },
+	"OnOff": "Switch",
+	"Gate": "GarageDoorOpener"
 }

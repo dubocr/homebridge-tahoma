@@ -1,4 +1,5 @@
 var Api, Log, Characteristic;
+var { State, Command, ExecutionState } = require('./overkiz-api');
 
 var path = require('path');
 var fs = require('fs');
@@ -47,7 +48,7 @@ class OverkizDevice {
     }
 
     getManufacturer() {
-        var manufacturer = this._look_state(Api.State.STATE_MANUFACTURER);
+        var manufacturer = this._look_state(State.STATE_MANUFACTURER);
         if (manufacturer != null)
             return manufacturer;
         else
@@ -55,7 +56,7 @@ class OverkizDevice {
     }
 
     getModel() {
-        var manufacturer = this._look_state(Api.State.STATE_MODEL);
+        var manufacturer = this._look_state(State.STATE_MODEL);
         if (manufacturer != null)
             return manufacturer;
         else
@@ -65,17 +66,17 @@ class OverkizDevice {
     onStatesUpdate(states) {
         if(states == null) return;
 
-        for (state of states) {
+        for (var state of states) {
             this.states[state.name] = state.value;
         }
 
-        for (state of states) {
-            this.onStateUpdate(state.name, state.value);
+        for (var state of states) {
+            this.accessory.onStateUpdate(state.name, state.value);
         }
     }
     
     getState(state, callback) {
-        Api.Api.requestState(this.device.deviceURL, state, callback);
+        Api.requestState(this.device.deviceURL, state, callback);
     }
     
     executeCommand(commands, callback) {
@@ -92,7 +93,7 @@ class OverkizDevice {
                 } else {
                     cmdName = commands[0].name;
                 }
-                for(c of commands) {
+                for(var c of commands) {
                 	Log('['+this.name+'] ' + c.name + JSON.stringify(c.parameters));
                 }
             } else {
@@ -108,7 +109,7 @@ class OverkizDevice {
             var label = this.name + ' - ' + cmdName + ' - HomeKit';
             var execution = new Execution(label, this.device.deviceURL, commands);
             
-            Api.Api.executeCommand(execution, function(status, error, data) {
+            Api.executeCommand(execution, function(status, error, data) {
             	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
                     	// API Error
@@ -155,7 +156,7 @@ class OverkizDevice {
     }
 
     hasCommand(name) {
-        for(command of device.definition.commands) {
+        for(var command of this.device.definition.commands) {
             if(command.commandName == name)	{
                 return true;
             }

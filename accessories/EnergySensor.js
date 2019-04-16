@@ -1,4 +1,6 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 var PowerConsumption, EnergyConsumption;
 
 var inherits = function (ctor, superCtor) {
@@ -16,8 +18,11 @@ var inherits = function (ctor, superCtor) {
 }
 
 class EnergySensor extends Generic {
-	constructor (device, config) {
-		super(device, config);
+	constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
 
 		makeCharacteristics();
 
@@ -28,7 +33,7 @@ class EnergySensor extends Generic {
 		this.energyState = this.service.getCharacteristic(EnergyConsumption);
 		this.powerState = this.service.getCharacteristic(PowerConsumption);
 
-		this.services.push(this.service);
+		this.addService(this.service);
 	}
 
 	onStateUpdate(name, value) {

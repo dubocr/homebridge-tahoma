@@ -1,24 +1,31 @@
-var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var Log, Service, Characteristic;
+var Generic = require('./Generic');
+var { Command, ExecutionState } = require('../overkiz-api');
 
 class GarageDoorOpener extends Generic {
-    constructor (device, config) {
-        super(device, config);
+    constructor (homebridge, log, device, config) {
+        super(homebridge, log, device, config);
+		Log = log;
+		Service = homebridge.hap.Service;
+		Characteristic = homebridge.hap.Characteristic;
 
         this.service = new Service.GarageDoorOpener(device.getName());
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentDoorState);
         this.targetState = this.service.getCharacteristic(Characteristic.TargetDoorState)
+        this.targetState.on('set', this.setState.bind(this));
+        
         if(device.stateless) {
             this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
         }
-        this.services.push(this.service);
+        this.addService(this.service);
     }
 
     /**
 	* Triggered when Homekit try to modify the Characteristic.TargetDoorState
 	**/
     setState(value, callback) {
-        var commands = null;
+        var commands = [];
        
         switch(this.device.widget) {
             case 'CyclicSwingingGateOpener':
@@ -50,7 +57,7 @@ class GarageDoorOpener extends Generic {
                 commands.push(new Command(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close'));
             break;
         }
-        this.executeCommand(commands, function(status, error, data) {
+        this.device.executeCommand(commands, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED: callback(error); break;
                 case ExecutionState.IN_PROGRESS: break;
