@@ -1,6 +1,6 @@
-var Generic, Characteristic, Command, ExecutionState, PowerConsumption, EnergyConsumption;
-Generic = require('./Generic');
-  
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
+var PowerConsumption, EnergyConsumption;
+
 var inherits = function (ctor, superCtor) {
 	if (ctor === undefined || ctor === null)
 		throw new TypeError('The constructor to "inherits" must not be null or undefined');
@@ -15,18 +15,11 @@ var inherits = function (ctor, superCtor) {
 	Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
 }
 
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-	makeCharacteristics();
-	return EnergySensor;
-}
-
 class EnergySensor extends Generic {
 	constructor (device, config) {
 		super(device, config);
+
+		makeCharacteristics();
 
 		this.service = new Service.Outlet(device.getName());
 		this.service.addCharacteristic(EnergyConsumption);
@@ -86,3 +79,5 @@ function makeCharacteristics() {
 	};
 	inherits(EnergyConsumption, Characteristic);
 }
+
+module.exports = EnergySensor

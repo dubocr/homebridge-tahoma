@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return AirQualitySensor;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class AirQualitySensor extends Generic {
     constructor (device, config) {
@@ -32,4 +23,6 @@ class AirQualitySensor extends Generic {
         if (this.co2State != null && co2State != null)
             this.co2State.updateValue(co2State);
     }
-}    
+}
+
+module.exports = AirQualitySensor

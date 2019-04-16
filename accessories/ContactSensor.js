@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return ContactSensor;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class ContactSensor extends Generic {
     constructor (device, config) {
@@ -35,4 +26,6 @@ class ContactSensor extends Generic {
         if (this.contactState != null && contactState != null)
             this.contactState.updateValue(contactState);
     }
-}    
+}
+
+module.exports = ContactSensor

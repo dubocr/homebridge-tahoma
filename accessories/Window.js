@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return Window;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class Window extends Generic {
     constructor (device, config) {
@@ -239,4 +230,6 @@ class Window extends Generic {
         if(!this.isCommandInProgress() && this.targetAngle != null && targetAngle != null)
             this.targetAngle.updateValue(targetAngle);
     }
-}    
+}
+
+module.exports = Window

@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return OccupancySensor;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class OccupancySensor extends Generic {
     constructor (device, config) {
@@ -33,4 +24,6 @@ class OccupancySensor extends Generic {
         if (this.occupancyState != null && occupancyState != null)
             this.occupancyState.updateValue(occupancyState);
     }
-}    
+}
+
+module.exports = OccupancySensor

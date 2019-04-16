@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return Alarm;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class Alarm extends Generic {
     constructor (device, config) {
@@ -196,4 +187,6 @@ class Alarm extends Generic {
         if(targetState != null && !this.isCommandInProgress())
             this.targetState.updateValue(targetState);
     }
-}    
+}
+
+module.exports = Alarm

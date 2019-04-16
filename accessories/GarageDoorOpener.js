@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return GarageDoorOpener;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class GarageDoorOpener extends Generic {
     constructor (device, config) {
@@ -105,4 +96,6 @@ class GarageDoorOpener extends Generic {
         if(!this.isCommandInProgress() && this.targetState != null && targetState != null)
             this.targetState.updateValue(targetState);
     }
-}    
+}
+
+module.exports = GarageDoorOpener

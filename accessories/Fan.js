@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return Fan;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class Fan extends Generic {
     constructor (device, config) {
@@ -86,3 +77,5 @@ class Fan extends Generic {
             this.speedState.updateValue(speedState);
     }
 }
+
+module.exports = Fan

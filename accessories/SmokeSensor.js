@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return SmokeSensor;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class SmokeSensor extends Generic {
     constructor (device, config) {
@@ -33,4 +24,6 @@ class SmokeSensor extends Generic {
         if (this.smokeState != null && smokeState != null)
             this.smokeState.updateValue(smokeState);
     }
-}    
+}
+
+module.exports = SmokeSensor

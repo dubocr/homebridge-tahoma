@@ -1,13 +1,4 @@
-var Generic, Characteristic, Command, ExecutionState;
-Generic = require('./Generic');
-
-module.exports = function(homebridge, log, api) {
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    Command = api.Command;
-    ExecutionState = api.ExecutionState;
-    return Thermostat;
-}
+var { Log, Service, Characteristic, Command, ExecutionState, Generic } = require('./Generic');
 
 class Thermostat extends Generic {
     constructor (device, config) {
@@ -32,8 +23,12 @@ class Thermostat extends Generic {
         this.services.push(service);
 
         switch(this.device.widget) {
+            // EvoHome
             case 'HeatingSetPoint':
             case 'EvoHomeController':
+                this.targetState.setProps({ validValues: [0,3] });
+            break;
+
             case 'ProgrammableAndProtectableThermostatSetPoint':
             case 'ThermostatSetPoint':
 
@@ -67,8 +62,22 @@ class Thermostat extends Generic {
         var commands = [];
         
         switch(this.device.widget) {
+            // EvoHome
             case 'HeatingSetPoint':
             case 'EvoHomeController':
+                switch(value) {
+                    case Characteristic.TargetHeatingCoolingState.AUTO:
+                    case Characteristic.TargetHeatingCoolingState.HEAT:
+                    case Characteristic.TargetHeatingCoolingState.COOL:
+                        command = new Command('setOperatingMode', 'auto');
+                        break;
+        
+                    case Characteristic.TargetHeatingCoolingState.OFF:
+                        command = new Command('setOperatingMode', 'off');
+                        break;
+                }
+            break;
+
             case 'ProgrammableAndProtectableThermostatSetPoint':
             case 'ThermostatSetPoint':
 
@@ -115,8 +124,12 @@ class Thermostat extends Generic {
         var commands = [];
         
         switch(this.device.widget) {
+            // EvoHome
             case 'HeatingSetPoint':
             case 'EvoHomeController':
+                command = new Command('setTargetTemperature', value);
+            break;
+
             case 'ProgrammableAndProtectableThermostatSetPoint':
             case 'ThermostatSetPoint':
 
@@ -157,4 +170,46 @@ class Thermostat extends Generic {
             }.bind(this));
         }
     }
-}    
+
+    onStateUpdate(name, value) {
+        var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null;
+
+        switch(name) {
+            case 'core:TemperatureState':
+                currentTemperature = value > 273.15 ? (value - 273.15) : value;
+            break;
+            case 'core:TargetTemperatureState':
+                targetTemperature = value;
+            break;
+            case 'ramses:RAMSESOperatingModeState':
+                switch(value) {
+                    case 'auto':
+                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
+                        targetState = Characteristic.TargetHeatingCoolingState.AUTO;
+                    break;
+                    case 'eco':
+                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
+                        targetState = Characteristic.TargetHeatingCoolingState.COOL;
+                    break;
+                    case 'holidays':
+                    case 'off':
+                    default:
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                    break;
+                }
+            break;
+        }
+
+        if(this.currentState != null && currentState != null)
+            this.currentState.updateValue(currentState);
+        if(!this.isCommandInProgress() && this.targetState != null && targetState != null)
+            this.targetState.updateValue(targetState);
+        if(this.currentTemperature != null && currentTemperature != null)
+            this.currentTemperature.updateValue(currentTemperature);
+        if(!this.isCommandInProgress() && this.targetTemperature != null && targetTemperature != null)
+            this.targetTemperature.updateValue(targetTemperature);
+    }
+}
+
+module.exports = Thermostat
