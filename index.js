@@ -1,9 +1,8 @@
-var Log, Accessory, Accessories, Service, Characteristic, UUIDGen, Types, mapping, Homebridge, OverkizDevice;
-
-var { builder } = require('./accessories/Generic');
+var Log, Services, mapping, Homebridge;
 var path = require('path');
 var fs = require('fs');
-var OverkizService = require('./overkiz-api');
+var { Api } = require('./overkiz-api');
+var OverkizDevice = require('./overkiz-device');
 
 module.exports = function(homebridge) {
 	console.log("homebridge-tahoma API version: " + homebridge.version);
@@ -11,22 +10,13 @@ module.exports = function(homebridge) {
 	Homebridge = homebridge;
     mapping = JSON.parse(fs.readFileSync(__dirname + '/mapping.json'));
 
-    // Accessory must be created from PlatformAccessory Constructor
-    Accessory = homebridge.platformAccessory;
-
-    // Service and Characteristic are from hap-nodejs
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    UUIDGen = homebridge.hap.uuid;
-    Types = homebridge.hapLegacyTypes;
-
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
     homebridge.registerPlatform("homebridge-tahoma", "Tahoma", TahomaPlatform, false);
 }
 
 function TahomaPlatform(log, config, api) {
-    this.log = log;
+    Log = log;
     Log = log;
     this.config = config;
     this.hapapi = api;
@@ -35,21 +25,20 @@ function TahomaPlatform(log, config, api) {
 	this.exclusions = config.exclude || [];
 	this.exclusions.push('internal'); // Exclude internal devices
 	this.forceType = config.forceType || {};
-	this.api = new OverkizService.Api(log, config);
+	this.api = new Api(log, config);
 	
-	Accessories = [];
-	// load up all accessories
-	var accessoriesDir = __dirname + '/accessories/';
+	Services = [];
+	// load up all services
+	var servicesDir = __dirname + '/services/';
 	var scriptName = path.basename(__filename);
 
-	fs.readdirSync(accessoriesDir).forEach(function(file) {
+	fs.readdirSync(servicesDir).forEach(function(file) {
 		if (file != scriptName && file.indexOf('.js') > 0) {
 			var name = file.replace('.js', '');
-			Accessories[name] = require(path.join(accessoriesDir, file));
+			Services[name] = require(path.join(servicesDir, file));
 		}
 	});
-	OverkizDevice = require('./overkiz-device')(Homebridge, this.log, this.api);
-
+	
     this.platformAccessories = [];
     this.platformDevices = [];
 
@@ -66,7 +55,7 @@ TahomaPlatform.prototype = {
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
-					//this.log.info('Search extended : ' + baseURL);
+					//Log.info('Search extended : ' + baseURL);
         	for (accessory of this.platformDevices) {
 				if (accessory.deviceURL != null && accessory.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
 				return accessory;
@@ -87,7 +76,7 @@ TahomaPlatform.prototype = {
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
-					//this.log.info('Search extended : ' + baseURL);
+					//Log.info('Search extended : ' + baseURL);
         	for (device of this.platformDevices) {
 				if(device.deviceURL == deviceURL) {
 					return null;
@@ -118,7 +107,7 @@ TahomaPlatform.prototype = {
  
  /*
 	configureAccessory: function(accessory) {
-	  this.log(accessory.displayName, "Configure Accessory");
+	  Log(accessory.displayName, "Configure Accessory");
 	},
 */
 	
@@ -131,29 +120,41 @@ TahomaPlatform.prototype = {
 					var devicesComponents = [];
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						Log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						Log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ' > ' + device.widget + ', name: ' + device.controllableName + ', protocol: ' + protocol);
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-							var access = mapping[device.uiClass];
-							if(access != undefined) {
-								var config = null;
-								if(access instanceof Object) {
-									access = access.accessory;
-									config = access.config || {};
-								} else {
-									config = that.config[access] || {};
-								}
-								device = new OverkizDevice(device);
-								if(Accessories[access] != undefined) {
-									device.accessory = new Accessories[access](Homebridge, Log, device, config);
-									//device = OverkizDevice.getInstance(device);
-									//if(device.accessory != null) {
-									Log.info('Instanciate ' + device.name + ' as ' + access);
-									this.platformDevices.push(device);
-								} else {
-									Log.info('Unknown accessory ' + access);
-								}
+							device = new OverkizDevice(Homebridge, Log, this.api, device);
+							var deviceDefinition = mapping[device.widget];
+							if(deviceDefinition == undefined) {
+								deviceDefinition = mapping[device.uiClass];
+							}
+							if(deviceDefinition == undefined) {
+								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget);
 							} else {
-								Log.info('Device type ' + device.uiClass + ' not supported');
+								var services = [];
+								if(deviceDefinition instanceof Array) {
+									for(var s of deviceDefinition) {
+										services[s] = that.config[s] || {};
+									}
+								} else if(deviceDefinition instanceof Object) {
+									for(var service in deviceDefinition) {
+										var config = that.config[s] || {};
+										Object.assign(config, deviceDefinition[service]);
+										services[s] = config;
+									}
+								} else if(deviceDefinition != undefined) {
+									services[deviceDefinition] = that.config[deviceDefinition] || {};
+								}
+								
+								for(var service in services) {
+									if(Services[service] == undefined) {
+										Log.info('Service ' + service + ' not implemented');
+									} else {
+										var config = services[service];
+										device.services.push(new Services[service](Homebridge, Log, device, config));
+										Log.info('Instanciate ' + device.name + ' as ' + service);
+										this.platformDevices.push(device);
+									}
+								}
 							}
 						} else {
 							Log.info('Device ' + device.uiClass + ' ignored');
@@ -167,13 +168,13 @@ TahomaPlatform.prototype = {
 						var main = this.getMainDevice(device.deviceURL);
 						if(main != null) {
 							main.merge(device);
-							Log.info('Device ' + d.label + ' merged with ' + device.name);
+							Log.info('Device ' + main.name + ' merged with ' + device.name);
 						}
 					}
 
 					for (device of this.platformDevices) {
 						device.onStatesUpdate(device.states);
-						this.platformAccessories.push(device.accessory.hapAccessory);
+						this.platformAccessories.push(device.getAccessory(Homebridge));
 					}
 				}
 				callback(error);
@@ -186,7 +187,7 @@ TahomaPlatform.prototype = {
 				if (!error) {
 					for (scenario of data) {
 						if(!Array.isArray(that.exposeScenarios) || that.exposeScenarios.indexOf(scenario.label) != -1) {
-							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, Log, that.api);
+							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.api);
 							that.platformAccessories.push(scenarioAccessory);
 							//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [scenarioAccessory]);
 						}
@@ -206,8 +207,7 @@ TahomaPlatform.prototype = {
     }
 }
 
-function ScenarioAccessory(name, oid, log, api) {
-    this.log = log;
+function ScenarioAccessory(name, oid, api) {
     this.api = api;
     this.name = name;
     this.oid = oid;

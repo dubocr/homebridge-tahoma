@@ -1,10 +1,10 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class GarageDoorOpener extends Generic {
+class GarageDoorOpener extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
@@ -18,7 +18,6 @@ class GarageDoorOpener extends Generic {
             this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
         }
-        this.addService(this.service);
     }
 
     /**
@@ -35,6 +34,10 @@ class GarageDoorOpener extends Generic {
             case 'RTSGeneric4T':
             case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
+                setTimeout(5000, function() {
+                	this.currentState.update(!value);
+                	this.targetState.update(!value);
+                }.bind(this));
             break;
 
             case 'OpenCloseSlidingGate':
@@ -45,7 +48,7 @@ class GarageDoorOpener extends Generic {
             case 'UpDownGarageDoorWithVentilationPosition':
             case 'UpDownGarageDoor':
             case 'DiscretePositionableGarageDoor':
-                if(this.isCommandInProgress()) {
+                if(this.device.isCommandInProgress()) {
                     commands.push(new Command('stop'));
                 } else {
                     commands.push(new Command(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close'));
@@ -100,7 +103,7 @@ class GarageDoorOpener extends Generic {
 
     	if(this.currentState != null && currentState != null)
             this.currentState.updateValue(currentState);
-        if(!this.isCommandInProgress() && this.targetState != null && targetState != null)
+        if(!this.device.isCommandInProgress() && this.targetState != null && targetState != null)
             this.targetState.updateValue(targetState);
     }
 }

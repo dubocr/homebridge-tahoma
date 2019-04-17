@@ -1,10 +1,10 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class Alarm extends Generic {
+class Alarm extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
@@ -24,12 +24,10 @@ class Alarm extends Generic {
             this.currentState.updateValue(Characteristic.SecuritySystemCurrentState.DISARMED);
             this.targetState.updateValue(Characteristic.SecuritySystemTargetState.DISARM);
         }
-        this.addService(this.service);
 
         if(this.occupancySensor) {
 			var altService = new Service.OccupancySensor(device.label);
     		this.occupancyState = altService.getCharacteristic(Characteristic.OccupancyDetected);
-    		this.addService(altService);
         }
         
         var values = [0,1,2,3];
@@ -190,7 +188,7 @@ class Alarm extends Generic {
             this.currentState.updateValue(currentState);
         if(this.occupancyState != null && occupancyState != null)
             this.occupancyState.updateValue(occupancyState);
-        if(targetState != null && !this.isCommandInProgress())
+        if(targetState != null && !this.device.isCommandInProgress())
             this.targetState.updateValue(targetState);
     }
 }

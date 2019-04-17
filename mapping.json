@@ -6,13 +6,20 @@
 	"DoorLock": "LockMechanism",
 	"Fan": "Fan",
 	"Light": "Lightbulb",
-	"HeatinSystem": "Thermostat",
+	"HeatingSystem": "Thermostat",
 	"HumiditySensor": "HumiditySensor",
 	"LightSensor": "LightSensor",
 	"OccupancySensor": "OccupancySensor",
 	"Awning": "Window",
 	"Window": "Window",
-	"Pergola": { "accessory": "Window", "config": { "blindMode": true } },
+	"Pergola": { "Window": { "blindMode": true } },
 	"OnOff": "Switch",
-	"Gate": "GarageDoorOpener"
+	"Gate": "GarageDoorOpener",
+	
+	"SomfyPilotWireElectricalHeater": "Switch",
+    "AtlanticPassAPCZoneControl": "Switch",
+    "AtlanticPassAPCHeatPump": "Switch",
+    "DimmerOnOff": "Lightbulb",
+    "StatelessAlarmController": { "Alarm": { "stateless": true } }
 }
+

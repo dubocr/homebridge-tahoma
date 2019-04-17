@@ -1,17 +1,16 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class HumiditySensor extends Generic {
+class HumiditySensor extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
 
         this.service = new Service.HumiditySensor(device.getName());
         this.humidityState = this.service.getCharacteristic(Characteristic.CurrentRelativeHumidity);
-        this.addService(this.service);
     }
 
     onStateUpdate(name, value) {

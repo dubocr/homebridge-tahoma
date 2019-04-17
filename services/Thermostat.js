@@ -1,10 +1,10 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class Thermostat extends Generic {
+class Thermostat extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
@@ -25,8 +25,6 @@ class Thermostat extends Generic {
         this.targetState.on('set', this.setTargetState.bind(this))
 
         this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
-
-        this.addService(service);
 
         switch(this.device.widget) {
             // EvoHome
@@ -209,11 +207,11 @@ class Thermostat extends Generic {
 
         if(this.currentState != null && currentState != null)
             this.currentState.updateValue(currentState);
-        if(!this.isCommandInProgress() && this.targetState != null && targetState != null)
+        if(!this.device.isCommandInProgress() && this.targetState != null && targetState != null)
             this.targetState.updateValue(targetState);
         if(this.currentTemperature != null && currentTemperature != null)
             this.currentTemperature.updateValue(currentTemperature);
-        if(!this.isCommandInProgress() && this.targetTemperature != null && targetTemperature != null)
+        if(!this.device.isCommandInProgress() && this.targetTemperature != null && targetTemperature != null)
             this.targetTemperature.updateValue(targetTemperature);
     }
 }

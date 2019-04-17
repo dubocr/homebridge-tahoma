@@ -1,42 +1,47 @@
-var Api, Log, Characteristic;
-var { State, Command, ExecutionState } = require('./overkiz-api');
-
-var path = require('path');
-var fs = require('fs');
-
-var inherits = function (ctor, superCtor) {
-
-    if (ctor === undefined || ctor === null)
-        throw new TypeError('The constructor to "inherits" must not be null or undefined');
-
-    if (superCtor === undefined || superCtor === null)
-        throw new TypeError('The super constructor to "inherits" must not be null or undefined');
-
-    if (superCtor.prototype === undefined)
-        throw new TypeError('The super constructor to "inherits" must have a prototype');
-
-    ctor.super_ = superCtor;
-    Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
-}
-
-module.exports = function(homebridge, log, api) {
-    Api = api;
-    Log = log;
-    Characteristic = homebridge.hap.Characteristic;
-    return OverkizDevice;
-}
+var Log;
+var { State, Command, Execution, ExecutionState } = require('./overkiz-api');
 
 class OverkizDevice {
-    constructor(device) {
-		Object.assign(this, device);
-		
-        this.name = device.label;
-        this.deviceURL = device.deviceURL;
-
-        this.device = device;
-        
-        this.states = [];
+    constructor(homebridge, log, api, device) {
+    	Object.assign(this, device);
         this.services = [];
+        
+		Log = log;
+		this.api = api;
+        this.name = device.label;
+        
+        if(this.states == undefined) {
+        	this.stateless = true;
+        }
+    }
+    
+    getAccessory(homebridge) {
+    	var device = this;
+    	
+		var Service = homebridge.hap.Service;
+		var Characteristic = homebridge.hap.Characteristic;
+		var Accessory = homebridge.platformAccessory;
+		var UUIDGen = homebridge.hap.uuid;
+		
+        var informationService = new Service.AccessoryInformation();
+        informationService.setCharacteristic(Characteristic.Manufacturer, this.getManufacturer());
+        informationService.setCharacteristic(Characteristic.Model, this.getModel());
+        informationService.setCharacteristic(Characteristic.SerialNumber, this.getSerialNumber());
+        
+    	var hapAccessory = {};
+    	hapAccessory.name = this.name;
+    	hapAccessory.displayName = this.name;
+    	hapAccessory.uuid_base = UUIDGen.generate(this.getSerialNumber());
+    	hapAccessory.services = [informationService];
+    	hapAccessory.getServices = function() {
+    		var hapServices = [];
+    		for(var service of device.services) {
+    			hapServices.push(service.getHapService());
+    		}
+    		return this.services.concat(hapServices);
+    	};
+    	//inherits(HAPAccessory, Accessory);
+    	return hapAccessory;
     }
 
     getName() {
@@ -70,13 +75,15 @@ class OverkizDevice {
             this.states[state.name] = state.value;
         }
 
-        for (var state of states) {
-            this.accessory.onStateUpdate(state.name, state.value);
+		for(var service of this.services) {
+        	for (var state of states) {
+            	service.onStateUpdate(state.name, state.value);
+        	}
         }
     }
     
     getState(state, callback) {
-        Api.requestState(this.device.deviceURL, state, callback);
+        this.api.requestState(this.deviceURL, state, callback);
     }
     
     executeCommand(commands, callback) {
@@ -103,13 +110,13 @@ class OverkizDevice {
             }
             
             if (this.isCommandInProgress()) {
-                    Api.cancelCommand(this.lastExecId, function() {});
+                    this.api.cancelCommand(this.lastExecId, function() {});
             }
     
             var label = this.name + ' - ' + cmdName + ' - HomeKit';
-            var execution = new Execution(label, this.device.deviceURL, commands);
+            var execution = new Execution(label, this.deviceURL, commands);
             
-            Api.executeCommand(execution, function(status, error, data) {
+            this.api.executeCommand(execution, function(status, error, data) {
             	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
                     	// API Error
@@ -132,8 +139,8 @@ class OverkizDevice {
         Look for current state
     */
     _look_state(stateName) {
-        if(this.device.states != null) {
-            for (var state of this.device.states) {
+        if(this.states != null) {
+            for (var state of this.states) {
                 if (state.name == stateName)
                     return state.value;
             }
@@ -142,7 +149,7 @@ class OverkizDevice {
     }
 
     isCommandInProgress() {
-        return (this.lastExecId in Api.executionCallback);
+        return (this.lastExecId in this.api.executionCallback);
     }
     
     postpone(todo, value, callback) {
@@ -156,7 +163,7 @@ class OverkizDevice {
     }
 
     hasCommand(name) {
-        for(var command of this.device.definition.commands) {
+        for(var command of this.definition.commands) {
             if(command.commandName == name)	{
                 return true;
             }
@@ -173,98 +180,8 @@ class OverkizDevice {
             this.parent.merge(device);
         }
         device.parent = this;
-        device.accessory = this.accessory;
-    }
-
-    static getInstance(device) {
-        inherits(device, OverkizDevice);
-        device.mapper = { service: null };
-
-        switch(device.uiClass) {
-            
-            case "AirSensor":
-            device.mapper.service = "AirQualitySensor";
-            break;
-
-            case "ContactSensor":
-            case "WindowHandle":
-            device.mapper.service = "ContactSensor";
-            break;
-
-            case "DoorLock":
-            device.mapper.service = "LockMechanism";
-            break;
-
-            case "Fan":
-            device.mapper.service = "Fan";
-            break;
-
-            case "Light":
-            device.mapper.service = "Lightbulb";
-             break;
-            
-            case "HeatinSystem":
-            device.mapper.service = "Thermostat";
-            break;
-
-            case "HumiditySensor":
-            device.mapper.service = "HumiditySensor";
-            break;
-            
-            case "LightSensor":
-            device.mapper.service = "LightSensor";
-            break;
-
-            case "OccupancySensor":
-            device.mapper.service = "OccupancySensor";
-            break;
-            
-            case "Awning":
-            case "Window":
-            device.mapper.service = "Window";
-            break;
-
-            case "Pergola":
-            device.mapper.service = "Window";
-            config[device.mapper.service].blindMode = true;
-            break;
-
-            case "OnOff":
-            device.mapper.service = "Switch";
-            break;
-
-            case "Gate":
-            device.mapper.service = "GarageDoorOpener";
-            break;
-
-        }
-
-        switch(device.widget) {
-            
-            case "SomfyPilotWireElectricalHeater":
-            device.mapper.service = "Switch";
-            break;
-            
-            case "AtlanticPassAPCZoneControl":
-            case "AtlanticPassAPCHeatPump":
-            device.mapper.service = "Switch";
-            break;
-
-            case "DimmerOnOff":
-            device.mapper.service = "Lightbulb";
-            break;
-
-            case 'StatelessAlarmController':
-            device.stateless = true;
-            break;
-
-            case 'UpDownHorizontal':
-            device.stateless = true;
-            break;
-        }
-
-        var config = config[device.mapper.service] || {};
-        //device.accessory = new Accessories[device.mapper.service](device, config);
-        return device;
+        device.services = this.services;
     }
 }
+
+module.exports = OverkizDevice

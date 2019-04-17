@@ -1,10 +1,10 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class HeaterCooler extends Generic {
+class HeaterCooler extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
@@ -13,8 +13,6 @@ class HeaterCooler extends Generic {
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentHeaterCoolerState);
         this.targetState = this.service.getCharacteristic(Characteristic.TargetHeaterCoolerState);
         this.targetState.on('set', this.setStatus.bind(this));
-
-        this.addService(this.service);
     }
 
     /**
@@ -48,7 +46,7 @@ class HeaterCooler extends Generic {
         
         if(this.currentState != null && currentState != null)
             this.currentState.updateValue(currentState);
-        if(!this.isCommandInProgress() && this.targetState != null && targetState != null)
+        if(!this.device.isCommandInProgress() && this.targetState != null && targetState != null)
             this.targetState.updateValue(targetState);
     }
 }

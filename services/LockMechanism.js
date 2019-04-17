@@ -1,10 +1,10 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class LockMechanism extends Generic {
+class LockMechanism extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
@@ -15,8 +15,6 @@ class LockMechanism extends Generic {
         this.targetState = this.service.getCharacteristic(Characteristic.LockTargetState)
         
         this.targetState.on('set', this.setState.bind(this));
-
-        this.addService(this.service);
     }
 
     /**
@@ -45,11 +43,11 @@ class LockMechanism extends Generic {
         switch(name) {
             case 'core:LockedUnlockedState':
             switch(value) {
-                case '':
+                case 'locked':
                 currentState = Characteristic.LockCurrentState.SECURED;
                 targetState = Characteristic.LockTargetState.SECURED;
                 break;
-                case '':
+                case 'unlocked':
                 currentState = Characteristic.LockCurrentState.UNSECURED;
                 targetState = Characteristic.LockTargetState.UNSECURED;
                 break;
@@ -59,7 +57,7 @@ class LockMechanism extends Generic {
 
     	if(this.currentState != null && currentState != null)
             this.currentState.updateValue(currentState);
-        if(!this.isCommandInProgress() && this.targetState != null && targetState != null)
+        if(!this.device.isCommandInProgress() && this.targetState != null && targetState != null)
             this.targetState.updateValue(targetState);
     }
 }

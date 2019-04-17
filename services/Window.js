@@ -1,10 +1,10 @@
 var Log, Service, Characteristic;
-var Generic = require('./Generic');
+var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
-class Window extends Generic {
+class Window extends AbstractService {
     constructor (homebridge, log, device, config) {
-        super(homebridge, log, device, config);
+        super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
@@ -35,8 +35,6 @@ class Window extends Generic {
 
         this.positionState = this.service.getCharacteristic(Characteristic.PositionState);
         this.positionState.updateValue(Characteristic.PositionState.STOPPED);
-
-        this.addService(this.service);
     }
 
     /**
@@ -54,7 +52,7 @@ class Window extends Generic {
             break;
 
             case 'UpDownHorizontalAwning':
-                if(this.isCommandInProgress()) {
+                if(this.device.isCommandInProgress()) {
                     commands.push(new Command('stop'));
                 } else if(value == 100) {
                     commands.push(new Command('deploy'));
@@ -72,7 +70,7 @@ class Window extends Generic {
             case 'UpDownRollerShutter':
             case 'UpDownScreen':
             case 'UpDownVenetianBlind':
-                if(this.isCommandInProgress()) {
+                if(this.device.isCommandInProgress()) {
                     commands.push(new Command('stop'));
                 } else if(value == 100) {
                     commands.push(new Command('open'));
@@ -84,7 +82,7 @@ class Window extends Generic {
             break;
 
             case 'RTSGeneric':
-                if(this.isCommandInProgress()) {
+                if(this.device.isCommandInProgress()) {
                     commands.push(new Command('stop'));
                 } else if(value == 0) {
                     commands.push(new Command('down'));
@@ -208,11 +206,11 @@ class Window extends Generic {
 
         if(this.currentPosition != null && currentPosition != null)
             this.currentPosition.updateValue(currentPosition);
-        if(!this.isCommandInProgress() && this.targetPosition != null && targetPosition != null)
+        if(!this.device.isCommandInProgress() && this.targetPosition != null && targetPosition != null)
             this.targetPosition.updateValue(targetPosition);
         if(this.currentAngle != null && currentAngle != null)
             this.currentAngle.updateValue(currentAngle);
-        if(!this.isCommandInProgress() && this.targetAngle != null && targetAngle != null)
+        if(!this.device.isCommandInProgress() && this.targetAngle != null && targetAngle != null)
             this.targetAngle.updateValue(targetAngle);
     }
 }
