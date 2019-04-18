@@ -13,6 +13,17 @@ class AbstractService {
     getHapService() {
     	return this.service;
     }
+
+    refreshState(name) {
+    	this.device.getState(name, function(error, value) {
+    		if(!error) {
+                this.device.states[name] = value;
+    			this.onStateUpdate(name, value);
+    		} else {
+    			Log("Unable to refresh " + name + " state");
+    		}
+    	});
+    }
 }
 
 module.exports = AbstractService;
