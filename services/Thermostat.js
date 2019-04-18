@@ -23,14 +23,21 @@ class Thermostat extends AbstractService {
         this.targetTemperature = this.service.getCharacteristic(Characteristic.TargetTemperature);
 
         this.targetState.on('set', this.setTargetState.bind(this))
-
         this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
 
         switch(this.device.widget) {
             // EvoHome
             case 'HeatingSetPoint':
+                this.targetState.setProps({ validValues: [3] });
+				this.targetState.value = Characteristic.TargetHeatingCoolingState.AUTO;
+				this.currentState.value = Characteristic.CurrentHeatingCoolingState.HEAT;
+				this.targetTemperature.setProps({ minValue: 0, maxValue: 30, minStep: 1 });
+            break;
             case 'EvoHomeController':
                 this.targetState.setProps({ validValues: [0,3] });
+				this.targetTemperature.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
+				this.targetTemperature.value = this.tempComfort;
+				this.currentTemperature.value = this.tempComfort;
             break;
 
             case 'ProgrammableAndProtectableThermostatSetPoint':
@@ -72,7 +79,9 @@ class Thermostat extends AbstractService {
                 this.targetTemperature.setProps({ minValue: 0, maxValue: 50, minStep: 1 });
             break;
             case 'AtlanticPassAPCDHW':
+                this.targetTemperature.setProps({ minValue: 0, maxValue: 50, minStep: 1 });
             break;
+			
             default:
                 this.targetState.setProps({ validValues: [0,1,2,3] });
                 this.targetTemperature.setProps({ minValue: 0, maxValue: 30, minStep: 0.5 });
@@ -91,11 +100,11 @@ class Thermostat extends AbstractService {
                     case Characteristic.TargetHeatingCoolingState.AUTO:
                     case Characteristic.TargetHeatingCoolingState.HEAT:
                     case Characteristic.TargetHeatingCoolingState.COOL:
-                        command = new Command('setOperatingMode', 'auto');
+                        commands = new Command('setOperatingMode', 'auto');
                         break;
         
                     case Characteristic.TargetHeatingCoolingState.OFF:
-                        command = new Command('setOperatingMode', 'off');
+                        commands = new Command('setOperatingMode', 'off');
                         break;
                 }
             break;
@@ -282,31 +291,34 @@ class Thermostat extends AbstractService {
                 commands = new Command('setDHWOnOffState', value == Characteristic.TargetHeatingCoolingState.OFF ? 'off' : 'on');
             break;
         }
-        if(commands.length) {
-            this.device.executeCommand(commands, function(status, error, data) {
-                switch (status) {
-                    case ExecutionState.INITIALIZED: callback(error); break;
-                    case ExecutionState.IN_PROGRESS: break;
-                    case ExecutionState.COMPLETED:
-                        if(this.device.stateless) {
-                            this.currentState.updateValue(value);
-                        }
-                    break;
-                    case ExecutionState.FAILED:
-                        this.targetState.updateValue(this.currentState.value);
-                    break;
-                    default: break;
-                }
-            }.bind(this));
-        }
+		
+		this.device.executeCommand(commands, function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+				break;
+				case ExecutionState.IN_PROGRESS: break;
+				case ExecutionState.COMPLETED:
+					if(this.device.stateless) {
+						this.currentState.updateValue(value);
+					}
+				break;
+				case ExecutionState.FAILED:
+					this.targetState.updateValue(this.currentState.value);
+				break;
+				default: break;
+			}
+		}.bind(this));
     }
     
     setTargetTemperature(value, callback) {
         var commands = [];
         
         switch(this.device.widget) {
-            case 'HeatingSetPoint': // EvoHome
             case 'EvoHomeController': // EvoHome
+			break;
+			
+            case 'HeatingSetPoint': // EvoHome
             case 'ProgrammableAndProtectableThermostatSetPoint':
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
                 commands = new Command('setTargetTemperature', value);
@@ -334,11 +346,11 @@ class Thermostat extends AbstractService {
             break;
             
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-				if(this.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
+				if(this.device.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
 					commands.push(new Command('setDerogatedTargetTemperature', value));
 					commands.push(new Command('setDerogationOnOffState', 'on'));
 					commands.push(new Command('setDerogationTime', this.derogationDuration));
-				} else if(this.states['core:ThermalConfigurationState'] == 'heating') {
+				} else if(this.device.states['core:ThermalConfigurationState'] == 'heating') {
 					if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.device.states['io:PassAPCHeatingModeState'])) {
 						commands.push(new Command('setDerogatedTargetTemperature', value));
 						commands.push(new Command('setDerogationOnOffState', 'on'));
@@ -387,23 +399,24 @@ class Thermostat extends AbstractService {
         		commands = new Command('setComfortTargetDHWTemperature', value);
         	break;
         }
-        if(commands.length) {
-            this.device.executeCommand(commands, function(status, error, data) {
-                switch (status) {
-                    case ExecutionState.INITIALIZED: callback(error); break;
-                    case ExecutionState.IN_PROGRESS: break;
-                    case ExecutionState.COMPLETED:
-                        if(this.device.stateless) {
-                            this.currentTemperature.updateValue(value);
-                        }
-                    break;
-                    case ExecutionState.FAILED:
-                        this.targetTemperature.updateValue(this.currentTemperature.value);
-                    break;
-                    default: break;
-                }
-            }.bind(this));
-        }
+		
+		this.device.executeCommand(commands, function(status, error, data) {
+			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+				break;
+				case ExecutionState.IN_PROGRESS: break;
+				case ExecutionState.COMPLETED:
+					if(this.device.stateless) {
+						this.currentTemperature.updateValue(value);
+					}
+				break;
+				case ExecutionState.FAILED:
+					this.targetTemperature.updateValue(this.currentTemperature.value);
+				break;
+				default: break;
+			}
+		}.bind(this));
     }
 
     onStateUpdate(name, value) {
@@ -456,8 +469,6 @@ class Thermostat extends AbstractService {
 
             // AtlanticHeatingInterface
             case 'io:TargetHeatingLevelState':
-                zone.setPointMode = value;
-                zone.activeMode = null;
                 switch(value) {
                     case 'boost':
                     case 'comfort':
@@ -495,7 +506,7 @@ class Thermostat extends AbstractService {
 			case 'core:ThermalConfigurationState':
                 if(this.device.states['core:HeatingOnOffState'] == 'on') {
                     currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                } else if(zone.states['core:CoolingOnOffState'] == 'on') {
+                } else if(this.device.states['core:CoolingOnOffState'] == 'on') {
                     currentState = Characteristic.CurrentHeatingCoolingState.COOL;
                 } else {
                     currentState = Characteristic.CurrentHeatingCoolingState.OFF;
@@ -580,11 +591,11 @@ class Thermostat extends AbstractService {
             break;
             case 'ovp:ModeChangeState':
             case 'ovp:MainOperationState':
-                if(this.states['ovp:MainOperationState'] == 'off') {
+                if(this.device.states['ovp:MainOperationState'] == 'off') {
                     currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                     targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 } else {
-                    switch(this.states['ovp:ModeChangeState'].toLowerCase()) {
+                    switch(this.device.states['ovp:ModeChangeState'].toLowerCase()) {
                         case "auto cooling":
                             currentState = Characteristic.CurrentHeatingCoolingState.COOL;
                             targetState = Characteristic.TargetHeatingCoolingState.AUTO;

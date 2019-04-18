@@ -19,8 +19,8 @@ class SmokeSensor extends AbstractService {
         switch(name) {
             case 'core:SmokeState':
             switch(value) {
-                case 'notDetected': smokeState = Characteristic.SmokeDetected.SMOKE_NOT_DETECTED;
-                case 'detected': smokeState = Characteristic.SmokeDetected.SMOKE_DETECTED;
+                case 'notDetected': smokeState = Characteristic.SmokeDetected.SMOKE_NOT_DETECTED; break;
+                case 'detected': smokeState = Characteristic.SmokeDetected.SMOKE_DETECTED; break;
             }
             break;
         }

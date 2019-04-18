@@ -24,17 +24,12 @@ class Alarm extends AbstractService {
             this.currentState.updateValue(Characteristic.SecuritySystemCurrentState.DISARMED);
             this.targetState.updateValue(Characteristic.SecuritySystemTargetState.DISARM);
         }
-
-        if(this.occupancySensor) {
-			var altService = new Service.OccupancySensor(device.label);
-    		this.occupancyState = altService.getCharacteristic(Characteristic.OccupancyDetected);
-        }
         
         var values = [0,1,2,3];
-        for(state of device.definition.states) {
+        for(var state of device.definition.states) {
             if(state.qualifiedName == 'myfox:AlarmStatusState')	{
                 values = [];
-                for(type of state.values) {
+                for(var type of state.values) {
                     switch(type) {
                         case 'armed': values.push(1); break;
                         case 'disarmed': values.push(3); break;
@@ -111,6 +106,8 @@ class Alarm extends AbstractService {
     }
 
     onStateUpdate(name, value) {
+		var currentState = null, targetState = null;
+		
         switch(name) {
             case 'core:ActiveZonesState':
             switch(value) {
@@ -170,24 +167,10 @@ class Alarm extends AbstractService {
                 targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
                 break;
 			}
-            
-            case 'core:IntrusionState':
-            case 'core:IntrusionDetectedState':
-            switch(value) {
-                case 'detected':
-                occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
-                currentState = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED
-                default :
-                occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
-                break
-            }
-            break;
         }
 
         if(this.currentState != null && currentState != null && (this.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED || targetState == Characteristic.SecuritySystemCurrentState.DISARMED))
             this.currentState.updateValue(currentState);
-        if(this.occupancyState != null && occupancyState != null)
-            this.occupancyState.updateValue(occupancyState);
         if(targetState != null && !this.device.isCommandInProgress())
             this.targetState.updateValue(targetState);
     }

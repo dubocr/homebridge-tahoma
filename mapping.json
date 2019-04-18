@@ -19,13 +19,13 @@
 	"HumiditySensor": "HumiditySensor",
 	"Light": "Lightbulb",
 	"LightSensor": "LightSensor",
-	"MusicPlayer": "Switch",---
+	"MusicPlayer": "Switch",
 	"OccupancySensor": "OccupancySensor",
 	"OnOff": "Switch",
-	"Pergola": { "Window": { "blindMode": true } },
+	"Pergola": "Window",
 	"RollerShutter": "Window",
 	"Screen": "Window",
-	"Siren": "Switch",---
+	"Siren": "Switch",
 	"SmokeSensor": "SmokeSensor",
 	"TemperatureSensor": "TemperatureSensor",
 	"VenetianBlind": "Window",
@@ -42,6 +42,7 @@
 	"StatelessAlarmController": { "Alarm": { "stateless": true } },
 	"DHWSetPoint": "TemperatureSensor",
 	"DomesticHotWaterTank": "Switch",
-	"AtlanticPassAPCDHW": ["Thermostat", "Switch"]
+	"AtlanticPassAPCDHW": ["Thermostat", "Switch"],
+	"MyFoxAlarmController": ["Alarm", "OccupancySensor"]
 }
 

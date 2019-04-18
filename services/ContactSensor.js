@@ -20,9 +20,9 @@ class ContactSensor extends AbstractService {
             case 'core:ThreeWayHandleDirectionState':
             case 'core:ContactState':
             switch(value) {
-                case 'closed': contactState = Characteristic.ContactSensorState.CONTACT_DETECTED;
+                case 'closed': contactState = Characteristic.ContactSensorState.CONTACT_DETECTED; break;
                 case 'tilt':
-                case 'open': contactState = Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
+                case 'open': contactState = Characteristic.ContactSensorState.CONTACT_NOT_DETECTED; break;
             }
             break;
         }

@@ -5,6 +5,8 @@ class OverkizDevice {
     constructor(homebridge, log, api, device) {
     	Object.assign(this, device);
         this.services = [];
+		this.child = [];
+		this.merged = false;
         
 		Log = log;
 		this.api = api;
@@ -16,6 +18,9 @@ class OverkizDevice {
     }
     
     getAccessory(homebridge) {
+		if(this.merged) {
+			return null; // No accessory for subdevice
+		}
     	var device = this;
     	
 		var Service = homebridge.hap.Service;
@@ -88,13 +93,15 @@ class OverkizDevice {
     
     executeCommand(commands, callback) {
             var cmdName = '';
-            if(commands == null) {
+            if(commands == null || commands.length == 0) {
                 Log("No target command for " + this.name);
                 callback("No target command for " + this.name);
+				return;
             } else if(Array.isArray(commands)) {
             	if(commands.length == 0) {
                     Log("No target command for " + this.name);
                     callback("No target command for " + this.name);
+					return;
                 } else if(commands.length > 1) {
                     cmdName = commands[0].name + " +" + (commands.length-1) + " others";
                 } else {
@@ -170,17 +177,33 @@ class OverkizDevice {
         }
         return false;
     }
+	
+	attach(device) {
+		var target = null;
+		for(var child of this.child) {
+			if(child.merge(device))
+				target = child;
+		}
+		if(target != null)
+			Log(device.name + ' (' + device.widget + ') merged into ' + target.name + ' (' + target.widget + ')');
+		device.parent = this;
+		this.child.push(device);
+	}
     
     merge(device) {
-        switch(this.widget) {
-            case 'AtlanticPassAPCZoneControl': if(device.widget != 'AtlanticPassAPCHeatingAndCoolingZone') return;
-            case 'AtlanticPassAPCHeatingAndCoolingZone': if(device.widget != 'TemperatureSensor') return;
+		switch(device.widget + ' > ' + this.widget) {
+			case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
+			case 'TemperatureSensor > AtlanticPassAPCHeatingAndCoolingZone':
+			case 'TemperatureSensor > AtlanticPassAPCDHW':
+				device.services = this.services;
+				device.merged = true;
+				device.parent = this;
+				this.child.push(device);
+			return true;
+			
+			default:
+			return false;
         }
-        if(this.parent != null) {
-            this.parent.merge(device);
-        }
-        device.parent = this;
-        device.services = this.services;
     }
 }
 

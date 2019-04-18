@@ -12,8 +12,7 @@ class Window extends AbstractService {
         this.defaultPosition = config['defaultPosition'] !== undefined ? config['defaultPosition'] : 50;
         this.reverse = config['reverse'] || false;
         this.blindMode = config['blindMode'] || false;
-        this.blindMode = this.blindMode && device.uiClass.endsWith('Blind');
-
+        
         this.service = device.uiClass == 'Window' ? new Service.Window(device.getName()) : new Service.WindowCovering(device.getName());
 
         this.currentPosition = this.service.getCharacteristic(Characteristic.CurrentPosition);
@@ -31,7 +30,9 @@ class Window extends AbstractService {
             this.currentAngle = this.service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
             this.targetAngle = this.service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
             this.targetAngle.on('set', this.setAngle.bind(this));
-        }
+        } else {
+			this.blindMode = false;
+		}
 
         this.positionState = this.service.getCharacteristic(Characteristic.PositionState);
         this.positionState.updateValue(Characteristic.PositionState.STOPPED);
@@ -106,7 +107,7 @@ class Window extends AbstractService {
             break;
 
             case 'BioclimaticPergola':
-                commands.push(new Command('setOrientation', Math.round((value + 90)/1.8)));
+                commands.push(new Command('setOrientation', value));
             break;
 
             case 'PositionableExteriorVenetianBlind':
@@ -154,7 +155,7 @@ class Window extends AbstractService {
             commands.push(new Command('setOrientation', Math.round((value + 90)/1.8)));
             break;
         }
-		this.device.executeCommand(command, function(status, error, data) {
+		this.device.executeCommand(commands, function(status, error, data) {
         	switch (status) {
             	case ExecutionState.INITIALIZED: callback(error); break;
                 case ExecutionState.COMPLETED:
@@ -185,23 +186,31 @@ class Window extends AbstractService {
                 targetPosition = currentPosition;
             break;
 
-            case 'core:SlatsOrientationState':
             case 'core:SlateOrientationState':
                 currentAngle = Math.round(value * 1.8 - 90);
                 targetAngle = currentAngle;
             break;
+			
+			
+            case 'core:SlatsOrientationState':
+				currentPosition = this.reverse ? (100 - value) : value;
+                targetPosition = currentPosition;
+                currentAngle = Math.round(value * 1.8 - 90);
+                targetAngle = currentAngle;
+			break;
 
             default: break;
         }
 
         if(this.blindMode && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
-            if(this.states['core:OpenClosedState'] == 'closed') {
-				var orientation = this.states['core:SlateOrientationState'];
+            if(this.device.states['core:OpenClosedState'] == 'closed') {
+				var orientation = this.device.states['core:SlateOrientationState'];
 				if(Number.isInteger(orientation))
                     currentPosition = orientation;
 			} else {
 				currentPosition = 0;
 			}
+			targetPosition = currentPosition;
         }
 
         if(this.currentPosition != null && currentPosition != null)

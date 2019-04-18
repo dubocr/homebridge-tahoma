@@ -83,7 +83,7 @@ class Switch extends AbstractService {
                         onState = false;
                     break;
                 }
-            break:
+            break;
         }
 
         if (this.onState != null && onState != null)

@@ -18,10 +18,23 @@ class OccupancySensor extends AbstractService {
 
         switch(name) {
             case 'core:OccupancyState':
-            switch(value) {
-                case 'personInside': occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
-                case 'noPersonInside': occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
-            }
+				switch(value) {
+					case 'personInside': occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_DETECTED; break;
+					case 'noPersonInside': occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED; break;
+				}
+            break;
+			
+            case 'core:IntrusionState':
+            case 'core:IntrusionDetectedState':
+				switch(value) {
+					case 'detected':
+						occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
+						currentState = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED
+					break;
+					default :
+						occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
+					break
+				}
             break;
         }
 

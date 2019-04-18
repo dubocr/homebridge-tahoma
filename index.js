@@ -76,8 +76,8 @@ TahomaPlatform.prototype = {
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
-					//Log.info('Search extended : ' + baseURL);
-        	for (device of this.platformDevices) {
+			//Log.info('Search extended : ' + baseURL);
+        	for (var device of this.platformDevices) {
 				if(device.deviceURL == deviceURL) {
 					return null;
 				} else if (device.deviceURL == baseURL+'#1') { // accessory.deviceURL.startsWith(baseURL)
@@ -120,7 +120,7 @@ TahomaPlatform.prototype = {
 					var devicesComponents = [];
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						Log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ' > ' + device.widget + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						Log.info('[' + device.label + ']' + ' type: ' + device.uiClass + ' > ' + device.widget + ', protocol: ' + protocol);
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
 							device = new OverkizDevice(Homebridge, Log, this.api, device);
 							var deviceDefinition = mapping[device.widget];
@@ -130,31 +130,34 @@ TahomaPlatform.prototype = {
 							if(deviceDefinition == undefined) {
 								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget);
 							} else {
+								var forced = this.forceType[device.name];
 								var services = [];
-								if(deviceDefinition instanceof Array) {
+								if(forced != undefined) { 
+									services[forced] = that.config[forced] || {};
+								} else if(deviceDefinition instanceof Array) {
 									for(var s of deviceDefinition) {
 										services[s] = that.config[s] || {};
 									}
 								} else if(deviceDefinition instanceof Object) {
-									for(var service in deviceDefinition) {
+									for(var s in deviceDefinition) {
 										var config = that.config[s] || {};
-										Object.assign(config, deviceDefinition[service]);
+										Object.assign(config, deviceDefinition[s]);
 										services[s] = config;
 									}
 								} else if(deviceDefinition != undefined) {
 									services[deviceDefinition] = that.config[deviceDefinition] || {};
 								}
 								
+								Log.info('Instanciate ' + device.name + ' as ' + JSON.stringify(Object.keys(services)));
 								for(var service in services) {
 									if(Services[service] == undefined) {
 										Log.info('Service ' + service + ' not implemented');
 									} else {
 										var config = services[service];
 										device.services.push(new Services[service](Homebridge, Log, device, config));
-										Log.info('Instanciate ' + device.name + ' as ' + service);
-										this.platformDevices.push(device);
 									}
 								}
+								this.platformDevices.push(device);
 							}
 						} else {
 							Log.info('Device ' + device.uiClass + ' ignored');
@@ -164,17 +167,19 @@ TahomaPlatform.prototype = {
 					this.platformDevices.sort(function(a, b) {
 						return that.getDeviceComponentID(a.deviceURL) > that.getDeviceComponentID(b.deviceURL);
 					});
-					for (device of this.platformDevices) {
+					for (var device of this.platformDevices) {
 						var main = this.getMainDevice(device.deviceURL);
 						if(main != null) {
-							main.merge(device);
-							Log.info('Device ' + main.name + ' merged with ' + device.name);
+							main.attach(device);
+							Log.info('Device ' + device.name + ' ('+device.deviceURL+') attached to ' + main.name + ' ('+main.deviceURL+')');
 						}
 					}
 
-					for (device of this.platformDevices) {
+					for (var device of this.platformDevices) {
 						device.onStatesUpdate(device.states);
-						this.platformAccessories.push(device.getAccessory(Homebridge));
+						var accessory = device.getAccessory(Homebridge);
+						if(accessory != null)
+							this.platformAccessories.push(accessory);
 					}
 				}
 				callback(error);

@@ -127,7 +127,7 @@ function OverkizApi(log, config) {
     		setTimeout(function() {
     			that.getDevices(function(error, data) {
 					if (!error) {
-						for (device of data) {
+						for (var device of data) {
 							if (that.stateChangedEventListener != null) {
                     			that.stateChangedEventListener.onStatesChange(device.deviceURL, device.states);
                     		}
