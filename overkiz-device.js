@@ -123,6 +123,7 @@ class OverkizDevice {
             var label = this.name + ' - ' + cmdName + ' - HomeKit';
             var execution = new Execution(label, this.deviceURL, commands);
             
+            var highPriority = this.states['io:PriorityLockLevelState'] != undefined;
             this.api.executeCommand(execution, function(status, error, data) {
             	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
@@ -139,7 +140,7 @@ class OverkizDevice {
                     Log.debug('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
 
                 callback(status, error, data);
-            }.bind(this));
+            }.bind(this), highPriority);
     }
 
     /*

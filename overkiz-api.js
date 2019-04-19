@@ -321,8 +321,11 @@ OverkizApi.prototype = {
     	callback: Callback function executed when command sended
     	refresh: Callback function executed when command succeed
     */
-    executeCommand: function(execution, callback) {
-        this.execute('apply', execution, callback);
+    executeCommand: function(execution, callback, highPriority) {
+        if(highPriority)
+            this.execute('apply/highPriority', execution, callback);
+        else
+            this.execute('apply', execution, callback);
     },
     
     /*
