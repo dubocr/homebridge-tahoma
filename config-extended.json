@@ -17,20 +17,18 @@
 		"exposeScenarios": false,
 		"exclude": ["hue","rts","Garage Door"],
 		"forceType": {
-			"Device name 1": "HeatingSystem",
-			"Device name 2": "RollerShutter"
+			"Device name 1": "Thermostat",
+			"Device name 2": "WindowCovering"
 		},
 		"Alarm": {
 			"STAY_ARM": "A,C",
 			"NIGHT_ARM": "B"
 		},
-		"RollerShutter": {
-			"reverse": true
+		"WindowCovering": {
+			"reverse": true,
+			"blindMode": true,
 		},
-		"ExteriorScreen": {
-			"reverse": true
-		},
-		"HeatingSystem": {
+		"Thermostat": {
 			"Device name 1": {
 				"comfort":20,
 				"eco":17

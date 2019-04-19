@@ -116,8 +116,7 @@ TahomaPlatform.prototype = {
     	this.platformAccessories = [];
     	this.api.getDevices(function(error, data) {
     			if (!error) {
-					Log.debug('Device found: ' + data.length);
-					var devicesComponents = [];
+					Log.debug(data.length + ' device(s) found');
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
 						Log.info('[' + device.label + ']' + ' type: ' + device.uiClass + ' > ' + device.widget + ', protocol: ' + protocol);
@@ -128,7 +127,7 @@ TahomaPlatform.prototype = {
 								deviceDefinition = mapping[device.uiClass];
 							}
 							if(deviceDefinition == undefined) {
-								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget);
+								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
 							} else {
 								var forced = this.forceType[device.name];
 								var services = [];
@@ -148,7 +147,8 @@ TahomaPlatform.prototype = {
 									services[deviceDefinition] = that.config[deviceDefinition] || {};
 								}
 								
-								Log.info('Instanciate ' + device.name + ' as ' + JSON.stringify(Object.keys(services)));
+								var keys = Object.keys(services);
+								Log.info('Instanciate ' + device.name + ' as ' + (keys.length == 1 ? keys[0] : JSON.stringify(keys)));
 								for(var service in services) {
 									if(Services[service] == undefined) {
 										Log.info('Service ' + service + ' not implemented');
@@ -160,7 +160,7 @@ TahomaPlatform.prototype = {
 								this.platformDevices.push(device);
 							}
 						} else {
-							Log.info('Device ' + device.uiClass + ' ignored');
+							Log.info('Device ' + device.label + ' ignored');
 						}
 					}
 					
