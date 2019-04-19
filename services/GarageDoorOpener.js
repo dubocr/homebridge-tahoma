@@ -83,6 +83,7 @@ class GarageDoorOpener extends AbstractService {
         switch(name) {
             case 'core:OpenClosedPedestrianState':
             case 'core:OpenClosedUnknownState':
+            case 'core:OpenClosedState':
             switch(value) {
 				case 'unknown':
 				case 'open' :

@@ -95,12 +95,14 @@ class OverkizDevice {
             var cmdName = '';
             if(commands == null || commands.length == 0) {
                 Log("No target command for " + this.name);
-                callback("No target command for " + this.name);
+				callback(ExecutionState.INITIALIZED);
+				callback(ExecutionState.FAILED);
 				return;
             } else if(Array.isArray(commands)) {
             	if(commands.length == 0) {
                     Log("No target command for " + this.name);
-                    callback("No target command for " + this.name);
+                    callback(ExecutionState.INITIALIZED);
+                    callback(ExecutionState.FAILED);
 					return;
                 } else if(commands.length > 1) {
                     cmdName = commands[0].name + " +" + (commands.length-1) + " others";
@@ -123,7 +125,7 @@ class OverkizDevice {
             var label = this.name + ' - ' + cmdName + ' - HomeKit';
             var execution = new Execution(label, this.deviceURL, commands);
             
-            var highPriority = this.states['io:PriorityLockLevelState'] != undefined;
+            var highPriority = this.states != undefined && this.states['io:PriorityLockLevelState'] != undefined;
             this.api.executeCommand(execution, function(status, error, data) {
             	if (status == ExecutionState.INITIALIZED) {
                     if(error) {
@@ -181,14 +183,20 @@ class OverkizDevice {
 	
 	attach(device) {
 		var target = null;
+		if(this.merge(device))
+			target = this;
 		for(var child of this.child) {
 			if(child.merge(device))
 				target = child;
 		}
-		if(target != null)
-			Log(device.name + ' (' + device.widget + ') merged into ' + target.name + ' (' + target.widget + ')');
 		device.parent = this;
 		this.child.push(device);
+		if(target != null) {
+			Log(device.name + ' (' + device.widget + ') merged into ' + target.name + ' (' + target.widget + ')');
+			return false;
+		} else {
+			return true;
+		}
 	}
     
     merge(device) {
@@ -196,10 +204,15 @@ class OverkizDevice {
 			case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
 			case 'TemperatureSensor > AtlanticPassAPCHeatingAndCoolingZone':
 			case 'TemperatureSensor > AtlanticPassAPCDHW':
+			case 'TemperatureSensor > SomfyThermostat':
+			case 'RelativeHumiditySensor > SomfyThermostat':
 				device.services = this.services;
 				device.merged = true;
 				device.parent = this;
 				this.child.push(device);
+				for(var service of this.services) {
+					service.merge(device);
+				}
 			return true;
 			
 			default:

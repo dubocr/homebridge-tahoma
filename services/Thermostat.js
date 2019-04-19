@@ -13,6 +13,7 @@ class Thermostat extends AbstractService {
         this.temperature = config[this.name] || {};
         this.tempComfort = this.temperature.comfort || 19;
         this.tempEco = this.temperature.eco || 17;
+		this.tempDiff = (this.tempComfort-this.tempEco);
         this.derogationDuration = this.derogationDuration || 1;
         
         this.service = new Service.Thermostat(device.getName());
@@ -36,8 +37,6 @@ class Thermostat extends AbstractService {
             case 'EvoHomeController':
                 this.targetState.setProps({ validValues: [0,3] });
 				this.targetTemperature.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
-				this.targetTemperature.value = this.tempComfort;
-				this.currentTemperature.value = this.tempComfort;
             break;
 
             case 'ProgrammableAndProtectableThermostatSetPoint':
@@ -51,11 +50,11 @@ class Thermostat extends AbstractService {
             case 'AtlanticElectricalHeater':
                 // 3 modes only (comfort, eco, off)
                 this.targetState.setProps({ validValues: [0,1,2] });
-                this.targetTemperature.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
+				this.targetTemperature.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
             break;
 
             case 'SomfyThermostat':
-                this.targetState.setProps({ minValue: 15, maxValue: 26, minStep: 0.5 });
+                this.targetState.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
             break;
 
             case 'SomfyPilotWireHeatingInterface':
@@ -333,7 +332,7 @@ class Thermostat extends AbstractService {
             break;
 
             case 'SomfyHeatingTemperatureInterface':
-                command = new Command(this.device.states['core:OnOffState'] == 'off' ? 'setComfortTemperature' : 'setEcoTemperature', value);
+                commands = new Command(this.device.states['core:OnOffState'] == 'off' ? 'setComfortTemperature' : 'setEcoTemperature', value);
             break;
 
             case 'SomfyPilotWireHeatingInterface':
@@ -414,21 +413,25 @@ class Thermostat extends AbstractService {
 				case ExecutionState.FAILED:
 					this.targetTemperature.updateValue(this.currentTemperature.value);
 				break;
-				default: break;
+				default:break;
 			}
 		}.bind(this));
     }
 
     onStateUpdate(name, value) {
-        var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null;
+        var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null, currentHumidity = null;
 
         switch(name) {
             case 'core:TemperatureState':
+			case 'zwave:SetPointHeatingValueState':
                 currentTemperature = value > 273.15 ? (value - 273.15) : value;
             break;
             case 'core:TargetTemperatureState':
             case 'core:TargetDHWTemperatureState':
                 targetTemperature = value;
+            break;
+			case 'core:RelativeHumidityState':
+                currentHumidity = value;
             break;
 
             // DomesticHotWaterProduction
@@ -489,13 +492,11 @@ class Thermostat extends AbstractService {
                         currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                         targetState = Characteristic.TargetHeatingCoolingState.OFF;
                         currentTemperature = 7;
-                        targetTemperature = 7;
                     break;
                     default:
                         currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                         targetState = Characteristic.TargetHeatingCoolingState.OFF;
                         currentTemperature = 0;
-                        targetTemperature = 0;
                     break;
                 }
             break;
@@ -551,19 +552,19 @@ class Thermostat extends AbstractService {
             case 'somfythermostat:DerogationHeatingModeState':
                 var auto = this.device.states['core:DerogationActivationState'] == 'inactive';
                 switch(this.device.states['somfythermostat:DerogationHeatingModeState']) {
-                    case'atHomeMode':
-                    case'geofencingMode':
-                    case'manualMode':
+                    case 'atHomeMode':
+                    case 'geofencingMode':
+                    case 'manualMode':
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
                     break;
-                    case'sleepingMode':
-                    case'suddenDropMode':
+                    case 'sleepingMode':
+                    case 'suddenDropMode':
                         currentState = Characteristic.CurrentHeatingCoolingState.COOL;
                         targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.COOL;
                     break;
-                    case'awayMode':
-                    case'freezeMode':
+                    case 'awayMode':
+                    case 'freezeMode':
                         currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                         targetState = Characteristic.TargetHeatingCoolingState.OFF;
                     break;
@@ -576,16 +577,21 @@ class Thermostat extends AbstractService {
                     case 'auto':
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = Characteristic.TargetHeatingCoolingState.AUTO;
+                        currentTemperature = this.tempComfort;
+                        targetTemperature = this.tempComfort;
                     break;
                     case 'eco':
                         currentState = Characteristic.CurrentHeatingCoolingState.COOL;
                         targetState = Characteristic.TargetHeatingCoolingState.COOL;
+                        currentTemperature = this.tempEco;
+                        targetTemperature = this.tempEco;
                     break;
                     case 'holidays':
                     case 'off':
                     default:
                         currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                         targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                        currentTemperature = 0;
                     break;
                 }
             break;
@@ -632,7 +638,19 @@ class Thermostat extends AbstractService {
             this.currentTemperature.updateValue(currentTemperature);
         if(!this.device.isCommandInProgress() && this.targetTemperature != null && targetTemperature != null)
             this.targetTemperature.updateValue(targetTemperature);
+		if(this.currentHumidity != null && currentHumidity != null)
+            this.currentHumidity.updateValue(currentHumidity);
     }
+	
+	merge(device) {
+		switch(device.widget) {
+			case 'RelativeHumiditySensor':
+				this.currentHumidity = this.service.getCharacteristic(Characteristic.CurrentRelativeHumidity);
+			break;
+			default:
+			break;
+		}
+	}
 
     /* Device specific */
     getHitachiCommands(state, temperature) {
@@ -682,7 +700,7 @@ class Thermostat extends AbstractService {
 		}
 		
 		temperature = Math.round(temperature);
-		this.log("FROM " + this.currentState.value + '/' + this.currentTemperature.value + ' TO ' + state + '/' + temperature);
+		Log("FROM " + this.currentState.value + '/' + this.currentTemperature.value + ' TO ' + state + '/' + temperature);
 
 		return new Command('globalControl', [onOff, temperature, fanMode, heatMode, progMode]);
     }

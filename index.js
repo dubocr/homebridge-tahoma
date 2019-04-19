@@ -91,14 +91,18 @@ TahomaPlatform.prototype = {
     accessories: function(callback) {
         var that = this;
         if (that.platformAccessories.length == 0) {
-        	that.loadDevices(function() {
-            	if(that.exposeScenarios) {
-              		that.loadScenarios(function() {
-              			callback(that.platformAccessories);
-              		});
-              	} else {
-              		callback(that.platformAccessories);
-              	}
+        	that.loadDevices(function(error) {
+				if(error) {
+					callback(null);
+				} else {
+					if(that.exposeScenarios) {
+						that.loadScenarios(function() {
+							callback(that.platformAccessories);
+						});
+					} else {
+						callback(that.platformAccessories);
+					}
+				}
             });
         } else {
             callback(this.platformAccessories);
@@ -170,8 +174,9 @@ TahomaPlatform.prototype = {
 					for (var device of this.platformDevices) {
 						var main = this.getMainDevice(device.deviceURL);
 						if(main != null) {
-							main.attach(device);
-							Log.info('Device ' + device.name + ' ('+device.deviceURL+') attached to ' + main.name + ' ('+main.deviceURL+')');
+							var attached = main.attach(device);
+							if(attached)
+								Log.info('Device ' + device.name + ' ('+device.widget+') attached to ' + main.name + ' ('+main.widget+')');
 						}
 					}
 

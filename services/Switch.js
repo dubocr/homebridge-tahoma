@@ -38,6 +38,9 @@ class Switch extends AbstractService {
             case 'MusicPlayer':
                 commands = new Command(value ? 'play' : 'stop');
             break;
+			case 'DimplexVentilationInletOutlet':
+				commands = new Command(value ? 'max' : 'auto');
+			break;
             case 'Siren':
             default:
                 commands = new Command(value ? 'on' : 'off');

@@ -24,6 +24,10 @@ class AbstractService {
     		}
     	});
     }
+	
+	merge() {
+		
+	}
 }
 
 module.exports = AbstractService;

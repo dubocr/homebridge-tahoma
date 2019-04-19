@@ -42,6 +42,7 @@
 	"DHWSetPoint": "TemperatureSensor",
 	"DomesticHotWaterTank": "Switch",
 	"AtlanticPassAPCDHW": ["Thermostat", "Switch"],
-	"MyFoxAlarmController": ["Alarm", "OccupancySensor"]
+	"MyFoxAlarmController": ["Alarm", "OccupancySensor"],
+	"DimplexVentilationInletOutlet": "Switch"
 }
 

@@ -13,15 +13,32 @@ class HeaterCooler extends AbstractService {
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentHeaterCoolerState);
         this.targetState = this.service.getCharacteristic(Characteristic.TargetHeaterCoolerState);
         this.targetState.on('set', this.setStatus.bind(this));
+		
+		switch(device.widget) {
+            case 'DimplexVentilationInletOutlet'://COULD BE REMOVED
+				this.targetState.setProps({ validValues: [0,2] });
+			break;
+		}
     }
 
     /**
 	* Triggered when Homekit try to modify the Characteristic.TargetHeaterCoolerState
 	**/
     setStatus(value, callback) {
-        var commands = null;
+        var commands = [];
        
-        commands = new Command('setAirDemandMode');
+		switch(this.device.widget) {
+			case 'DimplexVentilationInletOutlet'://COULD BE REMOVED
+			switch(value) {
+				case Characteristic.TargetHeaterCoolerState.AUTO:
+					commands = new Command('auto');
+				break;
+				case Characteristic.TargetHeaterCoolerState.COOL:
+					commands = new Command('max');
+				break;
+			}
+			break;
+		}
         this.device.executeCommand(commands, function(status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED: callback(error); break;
