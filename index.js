@@ -1,20 +1,14 @@
-var Accessory, Service, Characteristic, UUIDGen, Types;
-
-var OverkizService = require('./overkiz-api');
+var Log, Services, mapping, Homebridge;
+var path = require('path');
+var fs = require('fs');
+var { Api } = require('./overkiz-api');
+var OverkizDevice = require('./overkiz-device');
 
 module.exports = function(homebridge) {
-    console.log("homebridge-tahoma API version: " + homebridge.version);
-
-    // Accessory must be created from PlatformAccessory Constructor
-    Accessory = homebridge.platformAccessory;
-
-    // Service and Characteristic are from hap-nodejs
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    UUIDGen = homebridge.hap.uuid;
-    Types = homebridge.hapLegacyTypes;
-
-    DeviceAccessory = require('./accessories/AbstractAccessory.js')(homebridge);
+	console.log("homebridge-tahoma API version: " + homebridge.version);
+	
+	Homebridge = homebridge;
+    mapping = JSON.parse(fs.readFileSync(__dirname + '/mapping.json'));
 
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
@@ -22,7 +16,8 @@ module.exports = function(homebridge) {
 }
 
 function TahomaPlatform(log, config, api) {
-    this.log = log;
+    Log = log;
+    Log = log;
     this.config = config;
     this.hapapi = api;
 
@@ -30,16 +25,29 @@ function TahomaPlatform(log, config, api) {
 	this.exclusions = config.exclude || [];
 	this.exclusions.push('internal'); // Exclude internal devices
 	this.forceType = config.forceType || {};
-	this.api = new OverkizService.Api(log, config);
+	this.api = new Api(log, config);
+	
+	Services = [];
+	// load up all services
+	var servicesDir = __dirname + '/services/';
+	var scriptName = path.basename(__filename);
 
+	fs.readdirSync(servicesDir).forEach(function(file) {
+		if (file != scriptName && file.indexOf('.js') > 0) {
+			var name = file.replace('.js', '');
+			Services[name] = require(path.join(servicesDir, file));
+		}
+	});
+	
     this.platformAccessories = [];
+    this.platformDevices = [];
 
     this.api.setDeviceStateChangedEventListener(this);
 }
 
 TahomaPlatform.prototype = {
-    getAccessory: function(deviceURL) {
-        for (accessory of this.platformAccessories) {
+    getDevice: function(deviceURL) {
+        for (accessory of this.platformDevices) {
         	if (accessory.deviceURL == deviceURL)
 				return accessory;
         }
@@ -47,8 +55,8 @@ TahomaPlatform.prototype = {
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
-					//this.log.info('Search extended : ' + baseURL);
-        	for (accessory of this.platformAccessories) {
+					//Log.info('Search extended : ' + baseURL);
+        	for (accessory of this.platformDevices) {
 				if (accessory.deviceURL != null && accessory.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
 				return accessory;
 			}
@@ -62,6 +70,22 @@ TahomaPlatform.prototype = {
         	return parseInt(deviceURL.substring(i1+1));
         }
         return 1;
+	},
+	
+	getMainDevice: function(deviceURL) {
+        var i1 = deviceURL.indexOf("#");
+        if(i1 != -1) {
+        	baseURL = deviceURL.substring(0, i1);
+			//Log.info('Search extended : ' + baseURL);
+        	for (var device of this.platformDevices) {
+				if(device.deviceURL == deviceURL) {
+					return null;
+				} else if (device.deviceURL == baseURL+'#1') { // accessory.deviceURL.startsWith(baseURL)
+					return device;
+				}
+			}
+        }
+        return null;
     },
 
     accessories: function(callback) {
@@ -83,82 +107,83 @@ TahomaPlatform.prototype = {
  
  /*
 	configureAccessory: function(accessory) {
-	  this.log(accessory.displayName, "Configure Accessory");
+	  Log(accessory.displayName, "Configure Accessory");
 	},
 */
-	instanciateDevice: function(device) {
-		var uiClass = device.uiClass;
-		if(this.forceType.hasOwnProperty(device.label)) {
-			uiClass = this.forceType[device.label];
-			this.log.info('Force type ' + device.uiClass + ' of ' + device.label + ' by ' + uiClass);
-		}
-		if(DeviceAccessory[uiClass] != null) {
-			var accessoryConfig = this.config[uiClass] || {};
-			var accessory = new DeviceAccessory[uiClass](this.log, this.api, device, accessoryConfig);
-			if(device.states != null) {
-				for (state of device.states) {
-					accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-				}
-			}
-			this.log.info('Instanciate device ' + device.label);
-			this.platformAccessories.push(accessory);
-			return accessory;
-		} else {
-			this.log.info('Device type ' + uiClass + ' unknown');
-			return null;
-		}
-	},
 	
     loadDevices: function(callback) {
     	var that = this;
     	this.platformAccessories = [];
     	this.api.getDevices(function(error, data) {
     			if (!error) {
-					that.log.debug('Device found: ' + data.length);
-					var devicesComponents = [];
+					Log.debug(data.length + ' device(s) found');
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						that.log.info('[' + device.label + ']' + ' device type: ' + device.uiClass + ', name: ' + device.controllableName + ', protocol: ' + protocol);
+						Log.info('[' + device.label + ']' + ' type: ' + device.uiClass + ' > ' + device.widget + ', protocol: ' + protocol);
 						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-							var componentID = that.getDeviceComponentID(device.deviceURL);
-							if(componentID == 1) {
-								var accessory = that.instanciateDevice(device);
-								//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [accessory]);
+							device = new OverkizDevice(Homebridge, Log, this.api, device);
+							var deviceDefinition = mapping[device.widget];
+							if(deviceDefinition == undefined) {
+								deviceDefinition = mapping[device.uiClass];
+							}
+							if(deviceDefinition == undefined) {
+								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
 							} else {
-								devicesComponents.push(device);
+								var forced = this.forceType[device.name];
+								var services = [];
+								if(forced != undefined) { 
+									services[forced] = that.config[forced] || {};
+								} else if(deviceDefinition instanceof Array) {
+									for(var s of deviceDefinition) {
+										services[s] = that.config[s] || {};
+									}
+								} else if(deviceDefinition instanceof Object) {
+									for(var s in deviceDefinition) {
+										var config = that.config[s] || {};
+										Object.assign(config, deviceDefinition[s]);
+										services[s] = config;
+									}
+								} else if(deviceDefinition != undefined) {
+									services[deviceDefinition] = that.config[deviceDefinition] || {};
+								}
+								
+								var keys = Object.keys(services);
+								Log.info('Instanciate ' + device.name + ' as ' + (keys.length == 1 ? keys[0] : JSON.stringify(keys)));
+								for(var service in services) {
+									if(Services[service] == undefined) {
+										Log.info('Service ' + service + ' not implemented');
+									} else {
+										var config = services[service];
+										device.services.push(new Services[service](Homebridge, Log, device, config));
+									}
+								}
+								this.platformDevices.push(device);
 							}
 						} else {
-							that.log.info('Device ' + device.uiClass + ' ignored');
+							Log.info('Device ' + device.label + ' ignored');
 						}
 					}
 					
-					devicesComponents.sort(function(a, b) {
+					this.platformDevices.sort(function(a, b) {
 						return that.getDeviceComponentID(a.deviceURL) > that.getDeviceComponentID(b.deviceURL);
 					});
-					for (device of devicesComponents) {
-						accessory = that.getAccessory(device.deviceURL);
-						if(accessory != null) {
-							var merged = accessory.merge(device);
-							if(merged) {
-								that.log.info('Device ' + device.label + ' merged with ' + accessory.name);
-								if(device.states != null) {
-									for (state of device.states) {
-										accessory.onStateUpdate(state.name, state.value, device.deviceURL);
-									}
-								}
-							} else {
-								var subAccessory = that.instanciateDevice(device);
-								if(subAccessory != null) {
-									accessory.addSubAccessory(subAccessory);
-								}
-							}
-						} else {
-							that.log.info('Unable to merge ' + device.label);
+					for (var device of this.platformDevices) {
+						var main = this.getMainDevice(device.deviceURL);
+						if(main != null) {
+							main.attach(device);
+							Log.info('Device ' + device.name + ' ('+device.deviceURL+') attached to ' + main.name + ' ('+main.deviceURL+')');
 						}
+					}
+
+					for (var device of this.platformDevices) {
+						device.onStatesUpdate(device.states);
+						var accessory = device.getAccessory(Homebridge);
+						if(accessory != null)
+							this.platformAccessories.push(accessory);
 					}
 				}
 				callback(error);
-			});
+			}.bind(this));
     },
     
     loadScenarios: function(callback) {
@@ -167,7 +192,7 @@ TahomaPlatform.prototype = {
 				if (!error) {
 					for (scenario of data) {
 						if(!Array.isArray(that.exposeScenarios) || that.exposeScenarios.indexOf(scenario.label) != -1) {
-							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.log, that.api);
+							var scenarioAccessory = new ScenarioAccessory(scenario.label, scenario.oid, that.api);
 							that.platformAccessories.push(scenarioAccessory);
 							//that.hapapi.registerPlatformAccessories("homebridge-tahoma", "Tahoma", [scenarioAccessory]);
 						}
@@ -178,19 +203,16 @@ TahomaPlatform.prototype = {
     },
     
     onStatesChange: function(deviceURL, states) {
-        accessory = this.getAccessory(deviceURL);
-        if (accessory != null) {
-        	if(states != null) {
-            	for (state of states) {
-            	    accessory.onStateUpdate(state.name, state.value, deviceURL);
-            	}
-            }
-        }
+		if(states != null) {
+			device = this.getDevice(deviceURL);
+			if (device != null) {
+				device.onStatesUpdate(states, deviceURL);
+			}
+		}
     }
 }
 
-function ScenarioAccessory(name, oid, log, api) {
-    this.log = log;
+function ScenarioAccessory(name, oid, api) {
     this.api = api;
     this.name = name;
     this.oid = oid;
@@ -220,7 +242,7 @@ ScenarioAccessory.prototype = {
 						if (status == ExecutionState.INITIALIZED)
 							that.lastExecId = data.execId;
 						if (status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
-							that.log.info('[Scenario] ' + that.name + ' ' + (error == null ? status : error));
+							Log.info('[Scenario] ' + that.name + ' ' + (error == null ? status : error));
 							that.state.updateValue(0);
 						}
 					}

@@ -5,6 +5,7 @@ Command = function(name, parameters) {
     this.type = 1;
     this.name = name;
     if (typeof(parameters)==='undefined') parameters = [];
+    if (!Array.isArray(parameters)) parameters = [parameters];
     this.parameters = parameters;
 }
 
@@ -126,7 +127,7 @@ function OverkizApi(log, config) {
     		setTimeout(function() {
     			that.getDevices(function(error, data) {
 					if (!error) {
-						for (device of data) {
+						for (var device of data) {
 							if (that.stateChangedEventListener != null) {
                     			that.stateChangedEventListener.onStatesChange(device.deviceURL, device.states);
                     		}
@@ -334,7 +335,7 @@ OverkizApi.prototype = {
         //this.log(command);
         this.post({
             url: that.urlForQuery('/exec/'+oid),
-            headers: {'User-Agent': 'TaHoma iPhone'},
+            //headers: {'User-Agent': 'TaHoma iPhone'},
             body: execution,
             json: true
         }, function(error, json) {
