@@ -1,4 +1,4 @@
-var Log, Service, Characteristic;
+var Log, Service, Characteristic, HAPServer;
 var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
@@ -7,7 +7,8 @@ class Thermostat extends AbstractService {
         super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
-		Characteristic = homebridge.hap.Characteristic;
+        Characteristic = homebridge.hap.Characteristic;
+        HAPServer = homebridge.hap.HAPServer;
 		
         this.currentHumidity = null;
         this.temperature = config[this.name] || {};
@@ -74,11 +75,11 @@ class Thermostat extends AbstractService {
             case 'DomesticHotWaterTank': break; // Not used as Thermostat
 
             case 'DomesticHotWaterProduction':
-                this.targetState.setProps({ validValues: [1,2,3] });
-                this.targetTemperature.setProps({ minValue: 0, maxValue: 50, minStep: 1 });
+                this.targetState.setProps({ validValues: [0,1,3] });
+                this.targetTemperature.setProps({ minValue: 0, maxValue: 65, minStep: 1 });
             break;
             case 'AtlanticPassAPCDHW':
-                this.targetTemperature.setProps({ minValue: 0, maxValue: 50, minStep: 1 });
+                this.targetTemperature.setProps({ minValue: 0, maxValue: 65, minStep: 1 });
             break;
 			
             default:
@@ -274,16 +275,32 @@ class Thermostat extends AbstractService {
             case 'DomesticHotWaterTank': break; // No thermostat command, used as boost switch
             
             case 'DomesticHotWaterProduction':
-                switch(value) {
-                    case Characteristic.TargetHeatingCoolingState.AUTO:
-                        commands = new Command('setDHWMode', 'autoMode');
-                    break;
-                    case Characteristic.TargetHeatingCoolingState.HEAT:
-                        commands = new Command('setDHWMode', 'manualEcoInactive');
-                    break;
-                    case Characteristic.TargetHeatingCoolingState.COOL:
-                        commands = new Command('setDHWMode', 'manualEcoActive');
-                    break;
+                if(this.device.states['io:DHWBoostModeState'] == undefined) {
+                    switch(value) {
+                        case Characteristic.TargetHeatingCoolingState.AUTO:
+                            commands.push(new Command('setBoostModeDuration', 0));
+                            commands.push(new Command('setAwayModeDuration', 0));
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.HEAT:
+                            commands = new Command('setBoostModeDuration', 60);
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.OFF:
+                            commands = new Command('setAwayModeDuration', 30);
+                        break;
+                    }
+                } else {
+                    switch(value) {
+                        case Characteristic.TargetHeatingCoolingState.AUTO:
+                            commands.push(new Command('setBoostMode', 'off'));
+                            commands.push(new Command('setAbsenceMode', 'off'));
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.HEAT:
+                            commands = new Command('setBoostMode', 'on');
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.OFF:
+                            commands = new Command('setAbsenceMode', 'on');
+                        break;
+                    }
                 }
             break;
             case 'AtlanticPassAPCDHW':
@@ -411,7 +428,8 @@ class Thermostat extends AbstractService {
 					}
 				break;
 				case ExecutionState.FAILED:
-					this.targetTemperature.updateValue(this.currentTemperature.value);
+                    this.targetTemperature.updateValue(this.currentTemperature.value);
+                    this.targetTemperature.updateValue(new Error(HAPServer.Status.SERVICE_COMMUNICATION_FAILURE));
 				break;
 				default:break;
 			}
@@ -423,10 +441,12 @@ class Thermostat extends AbstractService {
 
         switch(name) {
             case 'core:TemperatureState':
+            case 'core:WaterTemperatureState':
 			case 'zwave:SetPointHeatingValueState':
                 currentTemperature = value > 273.15 ? (value - 273.15) : value;
             break;
             case 'core:TargetTemperatureState':
+            case 'core:WaterTargetTemperatureState':
             case 'core:TargetDHWTemperatureState':
                 targetTemperature = value;
             break;
@@ -435,20 +455,30 @@ class Thermostat extends AbstractService {
             break;
 
             // DomesticHotWaterProduction
-            case 'io:DHWModeState':
-                switch(value) {
-                    case 'autoMode':
-                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                        targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                    break;
-                    case 'manualEcoActive':
-                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                        targetState = Characteristic.TargetHeatingCoolingState.COOL;
-                    break;
-                    case 'manualEcoInactive':
+            case 'io:DHWBoostModeState':
+            case 'io:DHWAbsenceModeState':
+            case 'core:BoostModeDurationState':
+            case 'io:AwayModeDurationState':
+            case 'core:HeatingStatusState':
+                if(this.device.states['io:DHWBoostModeState'] == undefined) {
+                    if(this.device.states['core:BoostModeDurationState'] > 0) {
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = Characteristic.TargetHeatingCoolingState.HEAT;
-                    break;
+                    } else if(this.device.states['io:AwayModeDurationState'] > 0) {
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                    } else {
+                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
+                        targetState = Characteristic.TargetHeatingCoolingState.AUTO;
+                    }
+                } else {
+                    if(this.device.states['io:DHWAbsenceModeState'] == 'on') {
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                    } else {
+                        currentState = this.device.states['core:HeatingStatusState'] == 'on' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+                        targetState = this.device.states['io:DHWBoostModeState'] == 'on' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.AUTO;
+                    }
                 }
             break;
 
