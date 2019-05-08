@@ -348,7 +348,7 @@ OverkizApi.prototype = {
                 if(!that.alwaysPoll)
                 	that.registerListener();
             } else {
-                callback(ExecutionState.INITIALIZED, error);
+                callback(ExecutionState.FAILED, error);
             }
         });
     },

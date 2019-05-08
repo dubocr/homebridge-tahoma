@@ -120,26 +120,24 @@ class WindowCovering extends AbstractService {
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {
+			if(status == ExecutionState.FAILED || status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
 			switch (status) {
-				case ExecutionState.INITIALIZED: callback(error); break;
 				case ExecutionState.IN_PROGRESS:
 					var positionState = (value == 100 || value > this.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
 					this.positionState.updateValue(positionState);
-					break;
+				break;
                 case ExecutionState.COMPLETED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     if(this.device.stateless)
                         this.currentPosition.updateValue(value);
-                    break;
+                break;
 				case ExecutionState.FAILED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
 					if(this.obstruction != null) {
 						this.obstruction.updateValue(error == 'WHILEEXEC_BLOCKED_BY_HAZARD');
                     }
                     this.targetPosition.updateValue(this.currentPosition.value); // Update target position in case of cancellation
-					break;
-				default:
-					break;
+				break;
 			}
 		}.bind(this));
     }
@@ -156,17 +154,16 @@ class WindowCovering extends AbstractService {
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {
+			if(status == ExecutionState.FAILED || status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
         	switch (status) {
-            	case ExecutionState.INITIALIZED: callback(error); break;
                 case ExecutionState.COMPLETED:
-                    if(this.device.stateless)
-                        this.currentAngle.updateValue(value);
-                    break;
+                    if(this.device.stateless) {
+						this.currentAngle.updateValue(value);
+					}
+                break;
                 case ExecutionState.FAILED:
                     this.targetAngle.updateValue(this.currentAngle.value); // Update target position in case of cancellation
-                    break;
-                default:
-                    break;
+                break;
             }
         }.bind(this));
     }

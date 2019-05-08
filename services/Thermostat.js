@@ -75,7 +75,11 @@ class Thermostat extends AbstractService {
             case 'DomesticHotWaterTank': break; // Not used as Thermostat
 
             case 'DomesticHotWaterProduction':
-                this.targetState.setProps({ validValues: [0,1,3] });
+				if(this.device.hasCommand('setBoostMode') || this.device.hasCommand('setBoostModeDuration')) {
+					this.targetState.setProps({ validValues: [0,1,3] });
+				} else {
+					this.targetState.setProps({ validValues: [3] });
+				}
                 this.targetTemperature.setProps({ minValue: 0, maxValue: 65, minStep: 1 });
             break;
             case 'AtlanticPassAPCDHW':
@@ -275,7 +279,7 @@ class Thermostat extends AbstractService {
             case 'DomesticHotWaterTank': break; // No thermostat command, used as boost switch
             
             case 'DomesticHotWaterProduction':
-                if(this.device.states['io:DHWBoostModeState'] == undefined) {
+                if(this.device.hasCommand('setBoostModeDuration')) {
                     switch(value) {
                         case Characteristic.TargetHeatingCoolingState.AUTO:
                             commands.push(new Command('setBoostModeDuration', 0));
@@ -288,7 +292,7 @@ class Thermostat extends AbstractService {
                             commands = new Command('setAwayModeDuration', 30);
                         break;
                     }
-                } else {
+                } else if(this.device.hasCommand('setBoostMode')) {
                     switch(value) {
                         case Characteristic.TargetHeatingCoolingState.AUTO:
                             commands.push(new Command('setBoostMode', 'off'));
@@ -299,6 +303,18 @@ class Thermostat extends AbstractService {
                         break;
                         case Characteristic.TargetHeatingCoolingState.OFF:
                             commands = new Command('setAbsenceMode', 'on');
+                        break;
+                    }
+                } else if(this.device.hasCommand('setCurrentOperatingMode')) {
+                    switch(value) {
+                        case Characteristic.TargetHeatingCoolingState.AUTO:
+                            commands.push(new Command('setCurrentOperatingMode', 'auto'));
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.HEAT:
+                            commands = new Command('setCurrentOperatingMode', 'on');
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.OFF:
+                            commands = new Command('setCurrentOperatingMode', 'off');
                         break;
                     }
                 }
@@ -320,7 +336,8 @@ class Thermostat extends AbstractService {
 					}
 				break;
 				case ExecutionState.FAILED:
-					this.targetState.updateValue(this.currentState.value);
+					//this.targetState.updateValue(this.currentState.value);
+					this.targetState.updateValue(new Error(HAPServer.Status.SERVICE_COMMUNICATION_FAILURE));
 				break;
 				default: break;
 			}
@@ -417,11 +434,8 @@ class Thermostat extends AbstractService {
         }
 		
 		this.device.executeCommand(commands, function(status, error, data) {
+			if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
 			switch (status) {
-				case ExecutionState.INITIALIZED:
-					callback(error);
-				break;
-				case ExecutionState.IN_PROGRESS: break;
 				case ExecutionState.COMPLETED:
 					if(this.device.stateless) {
 						this.currentTemperature.updateValue(value);
@@ -429,9 +443,7 @@ class Thermostat extends AbstractService {
 				break;
 				case ExecutionState.FAILED:
                     this.targetTemperature.updateValue(this.currentTemperature.value);
-                    this.targetTemperature.updateValue(new Error(HAPServer.Status.SERVICE_COMMUNICATION_FAILURE));
 				break;
-				default:break;
 			}
 		}.bind(this));
     }

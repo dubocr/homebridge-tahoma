@@ -95,14 +95,14 @@ class OverkizDevice {
             var cmdName = '';
             if(commands == null || commands.length == 0) {
                 Log("No target command for " + this.name);
-				callback(ExecutionState.INITIALIZED);
-				callback(ExecutionState.FAILED);
+				callback(ExecutionState.INITIALIZED, "No target command for " + this.name);
+				callback(ExecutionState.FAILED, "No target command for " + this.name);
 				return;
             } else if(Array.isArray(commands)) {
             	if(commands.length == 0) {
                     Log("No target command for " + this.name);
-                    callback(ExecutionState.INITIALIZED);
-                    callback(ExecutionState.FAILED);
+                    callback(ExecutionState.INITIALIZED, "No target command for " + this.name);
+                    callback(ExecutionState.FAILED, "No target command for " + this.name);
 					return;
                 } else if(commands.length > 1) {
                     cmdName = commands[0].name + " +" + (commands.length-1) + " others";
@@ -128,15 +128,8 @@ class OverkizDevice {
             var highPriority = this.states != undefined && this.states['io:PriorityLockLevelState'] != undefined;
             this.api.executeCommand(execution, function(status, error, data) {
             	if (status == ExecutionState.INITIALIZED) {
-                    if(error) {
-                    	// API Error
-                    	this.updateReachability(false);
-                	} else {
-                		this.lastExecId = data.execId;
-                    }
-                }
-                
-                if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
+                    this.lastExecId = data.execId;
+                } else if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
                     Log('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
                 else
                     Log.debug('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));

@@ -42,13 +42,7 @@ class Lightbulb extends AbstractService {
         }
         if(commands.length) {
             this.device.executeCommand(commands, function(status, error, data) {
-                switch (status) {
-                    case ExecutionState.INITIALIZED: callback(error); break;
-                    case ExecutionState.IN_PROGRESS:
-                    case ExecutionState.COMPLETED:
-                    case ExecutionState.FAILED:
-                    default: break;
-                }
+				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
             }.bind(this));
         }
     }
@@ -60,13 +54,7 @@ class Lightbulb extends AbstractService {
         var commands = new Command('setIntensity', value);
         if(commands) {
             this.device.executeCommand(commands, function(status, error, data) {
-                switch (status) {
-                    case ExecutionState.INITIALIZED: callback(error); break;
-                    case ExecutionState.IN_PROGRESS:
-                    case ExecutionState.COMPLETED:
-                    case ExecutionState.FAILED:
-                    default: break;
-                }
+				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
             }.bind(this));
         }
     }
@@ -75,13 +63,7 @@ class Lightbulb extends AbstractService {
         var commands = new Command('setHueAndSaturation', [hue, saturation]);
         if(commands) {
             this.device.executeCommand(commands, function(status, error, data) {
-                switch (status) {
-                    case ExecutionState.INITIALIZED: callback(error); break;
-                    case ExecutionState.IN_PROGRESS:
-                    case ExecutionState.COMPLETED:
-                    case ExecutionState.FAILED:
-                    default: break;
-                }
+				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
             }.bind(this));
         }
     }

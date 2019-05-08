@@ -25,14 +25,11 @@ class LockMechanism extends AbstractService {
        
         commands = new Command(value == Characteristic.LockTargetState.SECURED ? 'lock' : 'unlock');
         this.device.executeCommand(commands, function(status, error, data) {
+			if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
             switch (status) {
-                case ExecutionState.INITIALIZED: callback(error); break;
-                case ExecutionState.IN_PROGRESS: break;
-                case ExecutionState.COMPLETED: break;
                 case ExecutionState.FAILED:
                     this.targetState.updateValue(this.currentState.value);
                 break;
-                default: break;
             }
         }.bind(this));
     }
