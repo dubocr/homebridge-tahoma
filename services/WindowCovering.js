@@ -44,7 +44,7 @@ class WindowCovering extends AbstractService {
 	* HomeKit '100' (Open) => 0% Closure
 	**/
     setTarget(value, callback) {
-        var commands = [];
+    	var commands = [];
 
         switch(this.device.widget) {
             case 'PositionableHorizontalAwning':
@@ -120,7 +120,7 @@ class WindowCovering extends AbstractService {
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {
-			if(status == ExecutionState.FAILED || status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
+			if(status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
 			switch (status) {
 				case ExecutionState.IN_PROGRESS:
 					var positionState = (value == 100 || value > this.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
@@ -140,7 +140,7 @@ class WindowCovering extends AbstractService {
                     this.targetPosition.updateValue(this.currentPosition.value); // Update target position in case of cancellation
 				break;
 			}
-		}.bind(this));
+		}.bind(this), callback);
     }
 
     /**
@@ -155,7 +155,7 @@ class WindowCovering extends AbstractService {
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {
-			if(status == ExecutionState.FAILED || status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
+			if(status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
         	switch (status) {
                 case ExecutionState.COMPLETED:
                     if(this.device.stateless) {
@@ -166,7 +166,7 @@ class WindowCovering extends AbstractService {
                     this.targetAngle.updateValue(this.currentAngle.value); // Update target position in case of cancellation
                 break;
             }
-        }.bind(this));
+        }.bind(this), callback);
     }
     
     onStateUpdate(name, value) {

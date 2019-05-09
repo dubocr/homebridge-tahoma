@@ -91,51 +91,57 @@ class OverkizDevice {
         this.api.requestState(this.deviceURL, state, callback);
     }
     
-    executeCommand(commands, callback) {
-            var cmdName = '';
-            if(commands == null || commands.length == 0) {
-                Log("No target command for " + this.name);
-				callback(ExecutionState.INITIALIZED, "No target command for " + this.name);
-				callback(ExecutionState.FAILED, "No target command for " + this.name);
+    executeCommand(commands, processing, callback) {
+    	var cmdName = '';
+		if(commands == null || commands.length == 0) {
+			Log("No target command for " + this.name);
+			processing(ExecutionState.FAILED, "No target command for " + this.name);
+			this.triggerCallback("No target command for " + this.name);
+			return;
+		} else if(Array.isArray(commands)) {
+			if(commands.length == 0) {
+				Log("No target command for " + this.name);
+				processing(ExecutionState.FAILED, "No target command for " + this.name);
+				this.triggerCallback("No target command for " + this.name);
 				return;
-            } else if(Array.isArray(commands)) {
-            	if(commands.length == 0) {
-                    Log("No target command for " + this.name);
-                    callback(ExecutionState.INITIALIZED, "No target command for " + this.name);
-                    callback(ExecutionState.FAILED, "No target command for " + this.name);
-					return;
-                } else if(commands.length > 1) {
-                    cmdName = commands[0].name + " +" + (commands.length-1) + " others";
-                } else {
-                    cmdName = commands[0].name;
-                }
-                for(var c of commands) {
-                	Log('['+this.name+'] ' + c.name + JSON.stringify(c.parameters));
-                }
-            } else {
-                Log('['+this.name+'] ' + commands.name +JSON.stringify(commands.parameters));
-                cmdName = commands.name;
-                commands = [commands];
-            }
-            
-            if (this.isCommandInProgress()) {
-                    this.api.cancelCommand(this.lastExecId, function() {});
-            }
-    
-            var label = this.name + ' - ' + cmdName + ' - HomeKit';
-            var execution = new Execution(label, this.deviceURL, commands);
-            
-            var highPriority = this.states != undefined && this.states['io:PriorityLockLevelState'] != undefined;
-            this.api.executeCommand(execution, function(status, error, data) {
-            	if (status == ExecutionState.INITIALIZED) {
-                    this.lastExecId = data.execId;
-                } else if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED)
-                    Log('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
-                else
-                    Log.debug('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+			} else if(commands.length > 1) {
+				cmdName = commands[0].name + " +" + (commands.length-1) + " others";
+			} else {
+				cmdName = commands[0].name;
+			}
+			for(var c of commands) {
+				Log('['+this.name+'] ' + c.name + JSON.stringify(c.parameters));
+			}
+		} else {
+			Log('['+this.name+'] ' + commands.name +JSON.stringify(commands.parameters));
+			cmdName = commands.name;
+			commands = [commands];
+		}
+		
+		if (this.isCommandInProgress()) {
+			this.api.cancelCommand(this.lastExecId, function() {});
+		}
 
-                callback(status, error, data);
-            }.bind(this), highPriority);
+		var label = this.name + ' - ' + cmdName + ' - HomeKit';
+		var execution = new Execution(label, this.deviceURL, commands);
+		
+		var highPriority = this.states != undefined && this.states['io:PriorityLockLevelState'] != undefined;
+		this.api.executeCommand(execution, function(status, error, data) {
+			if (status == ExecutionState.INITIALIZED) {
+				this.lastExecId = data.execId;
+			} else if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
+				Log('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+				try {
+					callback(error);
+				} catch(err) {
+					Log('Callback already triggered');
+				}
+			} else {
+				Log.debug('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+			}
+
+			processing(status, error, data);
+		}.bind(this), highPriority);
     }
 
     /*

@@ -61,7 +61,7 @@ class GarageDoorOpener extends AbstractService {
             break;
         }
         this.device.executeCommand(commands, function(status, error, data) {
-			if(status == ExecutionState.FAILED || status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
+			if(status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
             switch (status) {
                 case ExecutionState.COMPLETED:
                     if(this.device.statelesse) {
@@ -72,7 +72,7 @@ class GarageDoorOpener extends AbstractService {
                     this.targetState.updateValue(this.currentState.value);
                 break;
             }
-        }.bind(this));
+        }.bind(this), callback);
     }
 
     onStateUpdate(name, value) {
