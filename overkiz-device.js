@@ -74,7 +74,7 @@ class OverkizDevice {
     }
     
     onStatesUpdate(states) {
-        if(states == null) return;
+        if(states == null || this.states == undefined) return;
 
         for (var state of states) {
             this.states[state.name] = state.value;

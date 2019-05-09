@@ -206,9 +206,9 @@ OverkizApi.prototype = {
                 callback(err);
             } else if (response != undefined && (response.statusCode < 200 || response.statusCode >= 300)) {
             	var msg = 'Error ' + response.statusCode;
-            	if(json.error != null)
+            	if(json && json.error != null)
             		msg += ' ' + json.error;
-                if(json.errorCode != null)
+                if(json && json.errorCode != null)
             		msg += ' (' + json.errorCode + ')';
             	that.log(msg);
                 callback(msg);
@@ -239,12 +239,12 @@ OverkizApi.prototype = {
                     	that.networkRetries = 0;
 						callback(err);
 					}
-                } else if (json.success) {
+                } else if (json && json.success) {
                     that.isLoggedIn = true;
                     myRequest(authCallback);
                     if(that.alwaysPoll)
                 		that.registerListener();
-                } else if (json.error) {
+                } else if (json && json.error) {
                     that.log.warn("Login fail: " + json.error);
 					callback(json.error);
                 } else {

@@ -128,8 +128,9 @@ class WindowCovering extends AbstractService {
 				break;
                 case ExecutionState.COMPLETED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
-                    if(this.device.stateless)
+                    if(this.device.stateless) {
                         this.currentPosition.updateValue(value);
+                    }
                 break;
 				case ExecutionState.FAILED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
