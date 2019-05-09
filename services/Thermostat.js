@@ -279,14 +279,26 @@ class Thermostat extends AbstractService {
             case 'DomesticHotWaterTank': break; // No thermostat command, used as boost switch
             
             case 'DomesticHotWaterProduction':
-                if(this.device.hasCommand('setBoostModeDuration')) {
+                if(this.device.hasCommand('setCurrentOperatingMode')) {
+                    switch(value) {
+                        case Characteristic.TargetHeatingCoolingState.AUTO:
+                            commands.push(new Command('setCurrentOperatingMode', {"relaunch":"off","absence":"off"}));
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.HEAT:
+                            commands = new Command('setCurrentOperatingMode', {"relaunch":"on","absence":"off"});
+                        break;
+                        case Characteristic.TargetHeatingCoolingState.OFF:
+                            commands = new Command('setCurrentOperatingMode', {"relaunch":"off","absence":"on"});
+                        break;
+                    }
+                } else if(this.device.hasCommand('setBoostModeDuration')) {
                     switch(value) {
                         case Characteristic.TargetHeatingCoolingState.AUTO:
                             commands.push(new Command('setBoostModeDuration', 0));
                             commands.push(new Command('setAwayModeDuration', 0));
                         break;
                         case Characteristic.TargetHeatingCoolingState.HEAT:
-                            commands = new Command('setBoostModeDuration', 60);
+                            commands = new Command('setBoostModeDuration', 1);
                         break;
                         case Characteristic.TargetHeatingCoolingState.OFF:
                             commands = new Command('setAwayModeDuration', 30);
@@ -303,18 +315,6 @@ class Thermostat extends AbstractService {
                         break;
                         case Characteristic.TargetHeatingCoolingState.OFF:
                             commands = new Command('setAbsenceMode', 'on');
-                        break;
-                    }
-                } else if(this.device.hasCommand('setCurrentOperatingMode')) {
-                    switch(value) {
-                        case Characteristic.TargetHeatingCoolingState.AUTO:
-                            commands.push(new Command('setCurrentOperatingMode', 'auto'));
-                        break;
-                        case Characteristic.TargetHeatingCoolingState.HEAT:
-                            commands = new Command('setCurrentOperatingMode', 'on');
-                        break;
-                        case Characteristic.TargetHeatingCoolingState.OFF:
-                            commands = new Command('setCurrentOperatingMode', 'off');
                         break;
                     }
                 }
@@ -472,6 +472,8 @@ class Thermostat extends AbstractService {
             case 'core:BoostModeDurationState':
             case 'io:AwayModeDurationState':
             case 'core:HeatingStatusState':
+            case 'io:OperatingModeCapabilitiesState':
+            case 'io:OperatingModeState':
                 if(this.device.states['io:DHWBoostModeState'] == undefined) {
                     if(this.device.states['core:BoostModeDurationState'] > 0) {
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
@@ -482,6 +484,14 @@ class Thermostat extends AbstractService {
                     } else {
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = Characteristic.TargetHeatingCoolingState.AUTO;
+                    }
+                } else if(this.device.states['io:OperatingModeCapabilitiesState'] == undefined) {
+                    if(this.device.states['io:OperatingModeState']['absence'] == 'on') {
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                    } else {
+                        currentState = this.device.states['io:OperatingModeCapabilitiesState']['energyDemandStatus'] == 1 ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+                        targetState = this.device.states['core:OperatingModeState']['relaunch'] == 'on' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.AUTO;
                     }
                 } else {
                     if(this.device.states['io:DHWAbsenceModeState'] == 'on') {
