@@ -1,13 +1,15 @@
-var Log, Services, mapping, Homebridge;
+var Log, Service, Characteristic, Services, mapping, Homebridge;
 var path = require('path');
 var fs = require('fs');
-var { Api } = require('./overkiz-api');
+var { Api, ExecutionState } = require('./overkiz-api');
 var OverkizDevice = require('./overkiz-device');
 
 module.exports = function(homebridge) {
 	console.log("homebridge-tahoma API version: " + homebridge.version);
 	
 	Homebridge = homebridge;
+	Service = homebridge.hap.Service;
+	Characteristic = homebridge.hap.Characteristic;
     mapping = JSON.parse(fs.readFileSync(__dirname + '/mapping.json'));
 
     // For platform plugin to be considered as dynamic platform plugin,
