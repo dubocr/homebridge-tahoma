@@ -43,7 +43,7 @@ class Alarm extends AbstractService {
     }
 
     setState(value, callback) {
-        var commands = null;
+        var commands = [];
         
         switch(this.device.widget) {
             case 'MyFoxAlarmController':
