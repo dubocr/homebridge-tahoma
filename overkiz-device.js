@@ -91,6 +91,10 @@ class OverkizDevice {
         this.api.requestState(this.deviceURL, state, callback);
     }
     
+    cancelCommand(callback) {
+    	this.api.cancelCommand(this.lastExecId, callback);
+    }
+    
     executeCommand(commands, processing, callback) {
     	var cmdName = '';
 		if(commands == null || commands.length == 0) {

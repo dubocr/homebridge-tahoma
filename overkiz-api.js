@@ -311,7 +311,7 @@ OverkizApi.prototype = {
             url: this.urlForQuery("/exec/current/setup/" + execId),
             json: true
         }, function(error, json) {
-            callback();
+            callback(error);
         });
     },
 

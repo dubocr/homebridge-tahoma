@@ -54,7 +54,7 @@ class WindowCovering extends AbstractService {
 
             case 'UpDownHorizontalAwning':
                 if(this.device.isCommandInProgress()) {
-                    commands.push(new Command('stop'));
+                    return this.device.cancelCommand(callback);
                 } else if(value == 100) {
                     commands.push(new Command('deploy'));
                 } else if(value == 0) {
@@ -72,7 +72,7 @@ class WindowCovering extends AbstractService {
             case 'UpDownScreen':
             case 'UpDownVenetianBlind':
                 if(this.device.isCommandInProgress()) {
-                    commands.push(new Command('stop'));
+                    return this.device.cancelCommand(callback);
                 } else if(value == 100) {
                     commands.push(new Command('open'));
                 } else if(value == 0) {
@@ -84,7 +84,7 @@ class WindowCovering extends AbstractService {
 
             case 'RTSGeneric':
                 if(this.device.isCommandInProgress()) {
-                    commands.push(new Command('stop'));
+                    return this.device.cancelCommand(callback);
                 } else if(value == 0) {
                     commands.push(new Command('down'));
                 } else {
