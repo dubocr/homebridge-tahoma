@@ -49,7 +49,7 @@ class GarageDoorOpener extends AbstractService {
             case 'UpDownGarageDoor':
             case 'DiscretePositionableGarageDoor':
                 if(this.device.isCommandInProgress()) {
-                    commands.push(new Command('stop'));
+                    return this.device.cancelCommand(callback);
                 } else {
                     commands.push(new Command(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close'));
                 }
