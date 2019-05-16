@@ -450,8 +450,7 @@ class Thermostat extends AbstractService {
 
     onStateUpdate(name, value) {
         var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null, currentHumidity = null;
-
-        switch(name) {
+		switch(name) {
             case 'core:TemperatureState':
             case 'core:WaterTemperatureState':
 			case 'zwave:SetPointHeatingValueState':
@@ -473,8 +472,16 @@ class Thermostat extends AbstractService {
             case 'io:AwayModeDurationState':
             case 'core:HeatingStatusState':
             case 'io:OperatingModeCapabilitiesState':
-            case 'io:OperatingModeState':
-                if(this.device.states['io:DHWBoostModeState'] == undefined) {
+            case 'core:OperatingModeState':
+            	if(this.device.states['io:OperatingModeCapabilitiesState'] != undefined && this.device.states['core:OperatingModeState'] != undefined) {
+                	if(this.device.states['core:OperatingModeState']['absence'] == 'on') {
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                    } else {
+                    	currentState = this.device.states['io:OperatingModeCapabilitiesState']['energyDemandStatus'] == 1 ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+                        targetState = this.device.states['core:OperatingModeState']['relaunch'] == 'on' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.AUTO;
+                    }
+                } else if(this.device.states['io:DHWBoostModeState'] == undefined) {
                     if(this.device.states['core:BoostModeDurationState'] > 0) {
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = Characteristic.TargetHeatingCoolingState.HEAT;
@@ -484,14 +491,6 @@ class Thermostat extends AbstractService {
                     } else {
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                    }
-                } else if(this.device.states['io:OperatingModeCapabilitiesState'] == undefined) {
-                    if(this.device.states['io:OperatingModeState']['absence'] == 'on') {
-                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                    } else {
-                        currentState = this.device.states['io:OperatingModeCapabilitiesState']['energyDemandStatus'] == 1 ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
-                        targetState = this.device.states['core:OperatingModeState']['relaunch'] == 'on' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.AUTO;
                     }
                 } else {
                     if(this.device.states['io:DHWAbsenceModeState'] == 'on') {
