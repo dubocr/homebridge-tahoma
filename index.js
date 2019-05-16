@@ -49,18 +49,18 @@ function TahomaPlatform(log, config, api) {
 
 TahomaPlatform.prototype = {
     getDevice: function(deviceURL) {
-        for (accessory of this.platformDevices) {
-        	if (accessory.deviceURL == deviceURL)
-				return accessory;
+        for (device of this.platformDevices) {
+        	if (device.deviceURL == deviceURL)
+				return device;
         }
         
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
-					//Log.info('Search extended : ' + baseURL);
-        	for (accessory of this.platformDevices) {
-				if (accessory.deviceURL != null && accessory.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
-				return accessory;
+			//Log.info('Search extended : ' + baseURL);
+        	for (device of this.platformDevices) {
+				if (device.deviceURL != null && device.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
+				return device;
 			}
         }
         return null;
