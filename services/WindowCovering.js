@@ -17,7 +17,7 @@ class WindowCovering extends AbstractService {
 
         this.currentPosition = this.service.getCharacteristic(Characteristic.CurrentPosition);
         this.targetPosition = this.service.getCharacteristic(Characteristic.TargetPosition);
-		this.targetPosition.on('set', this.postpone.bind(this, this.setTarget.bind(this)));
+		this.targetPosition.on('set', this.device.postpone.bind(this, this.setTarget.bind(this)));
 
         if(device.stateless) {
             this.currentPosition.updateValue(this.defaultPosition);
