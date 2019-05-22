@@ -179,7 +179,7 @@ class WindowCovering extends AbstractService {
 
             case 'core:TargetClosureState':
             case 'core:ClosureState':
-                if(value == 99) value == 100; // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
+                if(value == 99) value = 100; // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
                 currentPosition = this.reverse ? value : (100 - value);
                 targetPosition = currentPosition;
             break;
