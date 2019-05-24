@@ -47,37 +47,39 @@ class Alarm extends AbstractService {
         
         switch(this.device.widget) {
             case 'MyFoxAlarmController':
-        	switch(value) {
-				default:
-				case Characteristic.SecuritySystemTargetState.STAY_ARM:
-                    commands.push(new Command('partial'));
-				break;
-				case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
-                    commands.push(new Command('partial'));
-				break;
-				case Characteristic.SecuritySystemTargetState.AWAY_ARM:
-                    commands.push(new Command('arm'));
-				break;
-				case Characteristic.SecuritySystemTargetState.DISARM:
-                    commands.push(new Command('disarm'));
-				break;
-			}
+                switch(value) {
+                    default:
+                    case Characteristic.SecuritySystemTargetState.STAY_ARM:
+                        commands.push(new Command('partial'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+                        commands.push(new Command('partial'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+                        commands.push(new Command('arm'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.DISARM:
+                        commands.push(new Command('disarm'));
+                    break;
+                }
+            break;
             default:
-			switch(value) {
-				default:
-				case Characteristic.SecuritySystemTargetState.STAY_ARM:
-                    commands.push(new Command('alarmZoneOn', [this.stayZones]));
-				break;
-				case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
-                    commands.push(new Command('alarmZoneOn', [this.nightZones]));
-				break;
-				case Characteristic.SecuritySystemTargetState.AWAY_ARM:
-                    commands.push(new Command('alarmOn'));
-				break;
-				case Characteristic.SecuritySystemTargetState.DISARM:
-                    commands.push(new Command('alarmOff'));
-				break;
-			}
+                switch(value) {
+                    default:
+                    case Characteristic.SecuritySystemTargetState.STAY_ARM:
+                        commands.push(new Command('alarmZoneOn', [this.stayZones]));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+                        commands.push(new Command('alarmZoneOn', [this.nightZones]));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+                        commands.push(new Command('alarmOn'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.DISARM:
+                        commands.push(new Command('alarmOff'));
+                    break;
+                }
+            break;
         }
         
         if(commands != null) {
@@ -107,63 +109,67 @@ class Alarm extends AbstractService {
 		
         switch(name) {
             case 'core:ActiveZonesState':
-            switch(value) {
-                default:
-                case '': 
-                currentState = Characteristic.SecuritySystemCurrentState.DISARMED;
-                targetState = Characteristic.SecuritySystemTargetState.DISARM;
-                break;
-                case this.stayZones: 
-                currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM;
-                targetState = Characteristic.SecuritySystemTargetState.STAY_ARM;
-                break;
-                case 'A,B,C': 
-                currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
-                currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
-                break;
-                case this.nightZones: 
-                currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM;
-                targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
-                break;
-                case 'triggered': 
-                currentState = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED;
-                break;
-            }
+                switch(value) {
+                    default:
+                    case '': 
+                    currentState = Characteristic.SecuritySystemCurrentState.DISARMED;
+                    targetState = Characteristic.SecuritySystemTargetState.DISARM;
+                    break;
+                    case this.stayZones: 
+                    currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM;
+                    targetState = Characteristic.SecuritySystemTargetState.STAY_ARM;
+                    break;
+                    case 'A,B,C': 
+                    currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
+                    currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
+                    break;
+                    case this.nightZones: 
+                    currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM;
+                    targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
+                    break;
+                    case 'triggered': 
+                    currentState = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED;
+                    break;
+                }
+            break;
 
             case 'internal:CurrentAlarmModeState':
-            switch(value) {
-                default:
-                case 'off': currentState = Characteristic.SecuritySystemCurrentState.DISARMED; break;
-				case 'partial1': currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
-				case 'total': currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
-				case 'partial2': currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
-            }
+                switch(value) {
+                    default:
+                    case 'off': currentState = Characteristic.SecuritySystemCurrentState.DISARMED; break;
+                    case 'partial1': currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
+                    case 'total': currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
+                    case 'partial2': currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
+                }
+            break;
             
             case 'internal:TargetAlarmModeState':
-            switch(value) {
-                default:
-                case 'off': targetState = Characteristic.SecuritySystemTargetState.DISARM; break;
-				case 'partial1': targetState = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
-				case 'total': targetState = Characteristic.SecuritySystemTargetState.AWAY_ARM; break;
-				case 'partial2': targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM; break;
-            }
+                switch(value) {
+                    default:
+                    case 'off': targetState = Characteristic.SecuritySystemTargetState.DISARM; break;
+                    case 'partial1': targetState = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
+                    case 'total': targetState = Characteristic.SecuritySystemTargetState.AWAY_ARM; break;
+                    case 'partial2': targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM; break;
+                }
+            break;
             
             case 'myfox:AlarmStatusState':
-            switch(value) {
-                default:
-                case 'disarmed':
-                currentState = Characteristic.SecuritySystemCurrentState.DISARMED;
-                targetState = Characteristic.SecuritySystemTargetState.DISARM;
-                break;
-                case 'partial':
-                currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM;
-                targetState = Characteristic.SecuritySystemTargetState.STAY_ARM;
-                break;
-                case 'armed':
-                currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
-                targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
-                break;
-			}
+                switch(value) {
+                    default:
+                    case 'disarmed':
+                    currentState = Characteristic.SecuritySystemCurrentState.DISARMED;
+                    targetState = Characteristic.SecuritySystemTargetState.DISARM;
+                    break;
+                    case 'partial':
+                    currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM;
+                    targetState = Characteristic.SecuritySystemTargetState.STAY_ARM;
+                    break;
+                    case 'armed':
+                    currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
+                    targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
+                    break;
+                }
+            break;
         }
 
         if(this.currentState != null && currentState != null && (this.currentState.value != Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED || targetState == Characteristic.SecuritySystemCurrentState.DISARMED))

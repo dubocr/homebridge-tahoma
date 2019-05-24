@@ -25,7 +25,9 @@ function TahomaPlatform(log, config, api) {
 
 	this.exposeScenarios = config.exposeScenarios || false;
 	this.exclusions = config.exclude || [];
-	//this.exclusions.push('internal'); // Exclude internal devices
+	if(!this.exclusions.includes('!internal')) {
+		this.exclusions.push('internal'); // Exclude internal devices
+	}
 	this.forceType = config.forceType || {};
 	this.api = new Api(log, config);
 	
