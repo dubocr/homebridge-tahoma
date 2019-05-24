@@ -50,7 +50,6 @@ class Alarm extends AbstractService {
                 switch(value) {
                     default:
                     case Characteristic.SecuritySystemTargetState.STAY_ARM:
-                        commands.push(new Command('partial'));
                     break;
                     case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
                         commands.push(new Command('partial'));
@@ -106,7 +105,7 @@ class Alarm extends AbstractService {
 
     onStateUpdate(name, value) {
 		var currentState = null, targetState = null;
-		
+		Log("Update " + name + " => " + value);
         switch(name) {
             case 'core:ActiveZonesState':
                 switch(value) {
@@ -161,12 +160,12 @@ class Alarm extends AbstractService {
                     targetState = Characteristic.SecuritySystemTargetState.DISARM;
                     break;
                     case 'partial':
-                    currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM;
-                    targetState = Characteristic.SecuritySystemTargetState.STAY_ARM;
+                    currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM;
+                    targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
                     break;
                     case 'armed':
                     currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
-                    targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM;
+                    targetState = Characteristic.SecuritySystemTargetState.AWAY_ARM;
                     break;
                 }
             break;
