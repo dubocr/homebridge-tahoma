@@ -28,6 +28,7 @@ class GarageDoorOpener extends AbstractService {
        
         switch(this.device.widget) {
             case 'CyclicSwingingGateOpener':
+            case 'OpenCloseSlidingGate4T':
             case 'OpenCloseGate4T':
             case 'UpDownGarageDoor4T':
             case 'CyclicGarageDoor':
