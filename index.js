@@ -25,9 +25,9 @@ function TahomaPlatform(log, config, api) {
 
 	this.exposeScenarios = config.exposeScenarios || false;
 	this.exclusions = config.exclude || [];
-	if(!this.exclusions.includes('!internal')) {
+	/*if(!this.exclusions.includes('!internal')) {
 		this.exclusions.push('internal'); // Exclude internal devices
-	}
+	}*/
 	this.forceType = config.forceType || {};
 	this.api = new Api(log, config);
 	
@@ -138,21 +138,29 @@ TahomaPlatform.prototype = {
 								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
 							} else {
 								var forced = this.forceType[device.name];
+								var widgetConfig = this.config[device.widget] || {};
 								var services = [];
 								if(forced != undefined) { 
-									services[forced] = that.config[forced] || {};
+									var config = that.config[forced] || {};
+									Object.assign(config, widgetConfig);
+									services[forced] = config;
 								} else if(deviceDefinition instanceof Array) {
 									for(var s of deviceDefinition) {
-										services[s] = that.config[s] || {};
+										var config = that.config[s] || {};
+										Object.assign(config, widgetConfig);
+										services[s] = config;
 									}
 								} else if(deviceDefinition instanceof Object) {
 									for(var s in deviceDefinition) {
 										var config = that.config[s] || {};
 										Object.assign(config, deviceDefinition[s]);
+										Object.assign(config, widgetConfig);
 										services[s] = config;
 									}
 								} else if(deviceDefinition != undefined) {
-									services[deviceDefinition] = that.config[deviceDefinition] || {};
+									var config = that.config[deviceDefinition] || {};
+									Object.assign(config, widgetConfig);
+									services[deviceDefinition] = config;
 								}
 								
 								var keys = Object.keys(services);
