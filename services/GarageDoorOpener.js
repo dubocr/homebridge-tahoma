@@ -35,10 +35,10 @@ class GarageDoorOpener extends AbstractService {
             case 'RTSGeneric4T':
             case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
-                setTimeout(5000, function() {
+                setTimeout(function() {
                 	this.currentState.update(!value);
                 	this.targetState.update(!value);
-                }.bind(this));
+                }.bind(this), 5000);
             break;
 
             case 'OpenCloseSlidingGate':

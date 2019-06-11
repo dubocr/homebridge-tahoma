@@ -62,6 +62,23 @@ class Alarm extends AbstractService {
                     break;
                 }
             break;
+            case 'TSKAlarmController':
+                switch(value) {
+                    default:
+                    case Characteristic.SecuritySystemTargetState.STAY_ARM:
+                        commands.push(new Command('alarmPartial1'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+                        commands.push(new Command('alarmPartial2'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.AWAY_ARM:
+                        commands.push(new Command('alarmOn'));
+                    break;
+                    case Characteristic.SecuritySystemTargetState.DISARM:
+                        commands.push(new Command('alarmOff'));
+                    break;
+                }
+            break;
             default:
                 switch(value) {
                     default:
