@@ -36,8 +36,8 @@ class GarageDoorOpener extends AbstractService {
             case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
                 setTimeout(function() {
-                	this.currentState.update(!value);
-                	this.targetState.update(!value);
+                	this.currentState.updateValue(!value);
+                	this.targetState.updateValue(!value);
                 }.bind(this), 5000);
             break;
 
