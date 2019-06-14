@@ -153,9 +153,11 @@ class Alarm extends AbstractService {
                 switch(value) {
                     default:
                     case 'off': currentState = Characteristic.SecuritySystemCurrentState.DISARMED; break;
-                    case 'partial1': currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
+                    case 'partial1':
+                    case 'zone1': currentState = Characteristic.SecuritySystemCurrentState.STAY_ARM; break;
                     case 'total': currentState = Characteristic.SecuritySystemCurrentState.AWAY_ARM; break;
-                    case 'partial2': currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
+                    case 'partial2':
+                    case 'zone2': currentState = Characteristic.SecuritySystemCurrentState.NIGHT_ARM; break;
                 }
             break;
             
@@ -163,9 +165,11 @@ class Alarm extends AbstractService {
                 switch(value) {
                     default:
                     case 'off': targetState = Characteristic.SecuritySystemTargetState.DISARM; break;
-                    case 'partial1': targetState = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
+                    case 'partial1':
+                    case 'zone1': targetState = Characteristic.SecuritySystemTargetState.STAY_ARM; break;
                     case 'total': targetState = Characteristic.SecuritySystemTargetState.AWAY_ARM; break;
-                    case 'partial2': targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM; break;
+                    case 'partial2':
+                    case 'zone2': targetState = Characteristic.SecuritySystemTargetState.NIGHT_ARM; break;
                 }
             break;
             
