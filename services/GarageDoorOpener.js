@@ -25,7 +25,8 @@ class GarageDoorOpener extends AbstractService {
 	**/
     setState(value, callback) {
         var commands = [];
-       
+       	var cycle = false;
+       	
         switch(this.device.widget) {
             case 'CyclicSwingingGateOpener':
             case 'OpenCloseSlidingGate4T':
@@ -35,10 +36,7 @@ class GarageDoorOpener extends AbstractService {
             case 'RTSGeneric4T':
             case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
-                setTimeout(function() {
-                	this.currentState.updateValue(!value);
-                	this.targetState.updateValue(!value);
-                }.bind(this), 5000);
+                cycle = true;
             break;
 
             case 'OpenCloseSlidingGate':
@@ -65,8 +63,14 @@ class GarageDoorOpener extends AbstractService {
 			if(status == ExecutionState.IN_PROGRESS) { callback(error); } // HomeKit callback
             switch (status) {
                 case ExecutionState.COMPLETED:
-                    if(this.device.statelesse) {
-                        this.currentState.update(value);
+                    if(this.device.stateless) {
+                        this.currentState.updateValue(value);
+                        if(cycle) {
+                        	setTimeout(function() {
+                				this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
+                				this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);
+                			}.bind(this), 5000);
+                		}
                     }
                 break;
                 case ExecutionState.FAILED:
