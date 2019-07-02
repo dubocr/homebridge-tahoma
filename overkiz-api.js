@@ -233,20 +233,27 @@ OverkizApi.prototype = {
                     that.log.warn("Unable to login: " + err);
                     if(that.networkRetries < 3) {
                     	that.networkRetries++;
-                    	setTimeout(myRequest, 1000, authCallback);
+                    	setTimeout(requestWithLogin, 1000, myRequest, callback);
                     	that.log.warn("Retry " + that.networkRetries + '/' + 3);
                     } else {
                     	that.networkRetries = 0;
 						callback(err);
 					}
                 } else if (json && json.success) {
+                    that.networkRetries = 0;
                     that.isLoggedIn = true;
                     myRequest(authCallback);
                     if(that.alwaysPoll)
                 		that.registerListener();
                 } else if (json && json.error) {
                     that.log.warn("Login fail: " + json.error);
-					callback(json.error);
+                    if(json.error.startsWith("Too many requests")) {
+                        that.log.warn(json.error);
+                        that.log.info("Retry in 2 min");
+                        setTimeout(requestWithLogin, 120000, myRequest, callback);
+                    } else {
+                        callback(json.error);
+                    }
                 } else {
                     that.log.error("Unable to login");
 					callback("Unable to login");
