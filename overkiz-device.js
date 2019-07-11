@@ -56,6 +56,14 @@ class OverkizDevice {
     getSerialNumber() {
         return this.deviceURL;
     }
+    
+    getComponentID() {
+        var i1 = this.deviceURL.indexOf("#");
+        if(i1 != -1) {
+        	return parseInt(this.deviceURL.substring(i1+1));
+        }
+        return 1;
+	}
 
     getManufacturer() {
         var manufacturer = this._look_state(State.STATE_MANUFACTURER);
@@ -193,16 +201,17 @@ class OverkizDevice {
 		device.parent = this;
 		this.child.push(device);
 		if(target != null) {
-			Log(device.name + ' (' + device.widget + ') merged into ' + target.name + ' (' + target.widget + ')');
+			Log('#' + device.getComponentID() + ' ' + device.name + ' (' + device.widget + ') merged into #' + target.getComponentID() + ' ' + target.name + ' (' + target.widget + ')');
 			return false;
 		} else {
+			Log.info('#' + device.getComponentID() + ' ' + device.name + ' ('+device.widget+') attached to #' + this.getComponentID() + ' ' + this.name + ' ('+this.widget+')');
 			return true;
 		}
 	}
     
     merge(device) {
 		switch(device.widget + ' > ' + this.widget) {
-			case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
+			//case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
 			case 'TemperatureSensor > AtlanticPassAPCHeatingAndCoolingZone':
 			case 'TemperatureSensor > AtlanticPassAPCDHW':
 			case 'TemperatureSensor > SomfyThermostat':

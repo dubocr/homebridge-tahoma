@@ -24,7 +24,8 @@ Minimal configuration sample:
 	"platforms":[
 		{
 			"platform": "Tahoma",
-			"name": "Tahoma",
+			"name": "My TaHoma Box",
+			
 			"user": "user@me.com",
 			"password": "MyPassw0rd",
 		}
@@ -73,7 +74,8 @@ Full configuration example:
 	"platforms":[
 		{
 			"platform": "Tahoma",
-			"name": "Tahoma",
+			"name": "My Tahoma",
+			
 			"user": "user@me.com",
 			"password": "MyPassw0rd",
 			"service": "TaHoma",

@@ -67,14 +67,6 @@ TahomaPlatform.prototype = {
         }
         return null;
     },
-    
-    getDeviceComponentID: function(deviceURL) {
-        var i1 = deviceURL.indexOf("#");
-        if(i1 != -1) {
-        	return parseInt(deviceURL.substring(i1+1));
-        }
-        return 1;
-	},
 	
 	getMainDevice: function(deviceURL) {
         var i1 = deviceURL.indexOf("#");
@@ -181,14 +173,13 @@ TahomaPlatform.prototype = {
 					}
 					
 					this.platformDevices.sort(function(a, b) {
-						return that.getDeviceComponentID(a.deviceURL) > that.getDeviceComponentID(b.deviceURL);
+						if(a.deviceURL == b.deviceURL) return 0;
+						if(a.getComponentID() > b.getComponentID()) return 1; else return -1;
 					});
 					for (var device of this.platformDevices) {
 						var main = this.getMainDevice(device.deviceURL);
 						if(main != null) {
-							var attached = main.attach(device);
-							if(attached)
-								Log.info('Device ' + device.name + ' ('+device.widget+') attached to ' + main.name + ' ('+main.widget+')');
+							main.attach(device);
 						}
 					}
 
