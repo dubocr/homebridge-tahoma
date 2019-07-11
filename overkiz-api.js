@@ -119,6 +119,7 @@ function OverkizApi(log, config) {
     });
 
     this.eventpoll.on("error", function(error) {
+    	that.log("Error with listener " + that.listenerId + " => " + error);
     	that.listenerId = null;
     });
     
@@ -265,6 +266,9 @@ OverkizApi.prototype = {
 			}, function(error, data) {
 				if(!error) {
 					that.listenerId = data.id;
+					that.log("Listener registered " + that.listenerId);
+				} else {
+					that.log("Error while registering listener");
 				}
 			});
 		}

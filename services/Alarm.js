@@ -122,7 +122,7 @@ class Alarm extends AbstractService {
 
     onStateUpdate(name, value) {
 		var currentState = null, targetState = null;
-		Log("Update " + name + " => " + value);
+		//Log("Update " + name + " => " + value);
         switch(name) {
             case 'core:ActiveZonesState':
                 switch(value) {
