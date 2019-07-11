@@ -272,8 +272,12 @@ OverkizApi.prototype = {
 				json: true
 			}, function(error, data) {
 				if(!error) {
-					that.listenerId = data.id;
-					that.log("Listener registered " + that.listenerId);
+					if(that.listenerId == null) {
+						that.listenerId = data.id;
+						that.log("Listener registered " + that.listenerId);
+					} else {
+						that.log("Listener already registered, drop " + data.id);
+					}
 				} else {
 					that.log("Error while registering listener");
 				}
