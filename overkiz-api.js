@@ -83,7 +83,7 @@ function OverkizApi(log, config) {
 
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
-    	if (that.listenerId != null) {
+    	if (that.listenerId != null && that.listenerId != 0) {
         	that.post({
                 url: that.urlForQuery("/events/" + that.listenerId + "/fetch"),
                 json: true
@@ -158,44 +158,49 @@ OverkizApi.prototype = {
     },
 
     post: function(options, callback) {
+    	//this.log("POST " + options.url);
         var fct = request.post.bind(request, options);
         this.requestWithLogin(fct, callback);
     },
 
     get: function(options, callback) {
+    	//this.log("GET " + options.url);
         var fct = request.get.bind(request, options);
         this.requestWithLogin(fct, callback);
     },
 
     put: function(options, callback) {
+    	//this.log("PUT " + options.url);
         var fct = request.put.bind(request, options);
         this.requestWithLogin(fct, callback);
     },
 
     delete: function(options, callback) {
+    	//this.log("DELETE " + options.url);
         var fct = request.delete.bind(request, options);
         this.requestWithLogin(fct, callback);
     },
     
     getDevices(callback) {
     	this.get({
-				url: this.urlForQuery("/setup/devices"),
-				json: true
-			}, function(error, json) {
-				callback(error, json);
-			});
+			url: this.urlForQuery("/setup/devices"),
+			json: true
+		}, function(error, json) {
+			callback(error, json);
+		});
     },
     
     getActionGroups(callback) {
     	this.get({
-				url: this.urlForQuery("/actionGroups"),
-				json: true
-			}, function(error, json) {
-				callback(error, json);
-			});
+			url: this.urlForQuery("/actionGroups"),
+			json: true
+		}, function(error, json) {
+			callback(error, json);
+		});
     },
 
     requestWithLogin: function(myRequest, callback) {
+    	//this.log("requestWithLogin ? " + (this.isLoggedIn ? 'true' : 'false'));
         var that = this;
         var authCallback = function(err, response, json) {
             if (response != undefined && response.statusCode == 401) { // Reauthenticated
@@ -230,11 +235,12 @@ OverkizApi.prototype = {
                 },
                 json: true
             }, function(err, response, json) {
+            	that.log("RESP : " + JSON.stringify(json));
                 if (err) {
                     that.log.warn("Unable to login: " + err);
                     if(that.networkRetries < 3) {
                     	that.networkRetries++;
-                    	setTimeout(requestWithLogin, 1000, myRequest, callback);
+                    	setTimeout(that.requestWithLogin, 1000, myRequest, callback);
                     	that.log.warn("Retry " + that.networkRetries + '/' + 3);
                     } else {
                     	that.networkRetries = 0;
@@ -250,8 +256,8 @@ OverkizApi.prototype = {
                     that.log.warn("Login fail: " + json.error);
                     if(json.error.startsWith("Too many requests")) {
                         that.log.warn(json.error);
-                        that.log.info("Retry in 2 min");
-                        setTimeout(requestWithLogin, 120000, myRequest, callback);
+                        that.log.info("Retry in 5 min");
+                        setTimeout(that.requestWithLogin, 300000, myRequest, callback);
                     } else {
                         callback(json.error);
                     }
@@ -266,19 +272,17 @@ OverkizApi.prototype = {
     registerListener: function() {
         var that = this;
         if(this.listenerId == null) {
+        	this.listenerId = 0;
         	this.log.debug('Register listener');
 			this.post({
 				url: that.urlForQuery("/events/register"),
 				json: true
 			}, function(error, data) {
 				if(!error) {
-					if(that.listenerId == null) {
-						that.listenerId = data.id;
-						that.log("Listener registered " + that.listenerId);
-					} else {
-						that.log("Listener already registered, drop " + data.id);
-					}
+					that.listenerId = data.id;
+					that.log("Listener registered " + that.listenerId);
 				} else {
+					that.listenerId = null;
 					that.log("Error while registering listener");
 				}
 			});

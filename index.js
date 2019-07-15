@@ -85,6 +85,7 @@ TahomaPlatform.prototype = {
     },
 
     accessories: function(callback) {
+    	Log("Fetch accessories...");
         var that = this;
         if (that.platformAccessories.length == 0) {
         	that.loadDevices(function(error) {
