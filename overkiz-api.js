@@ -220,8 +220,8 @@ OverkizApi.prototype = {
         if (this.isLoggedIn) {
             myRequest(authCallback);
         } else {
-            this.log.debug("Connecting " + this.service + " server...");
             var that = this;
+            that.log.debug("Connecting " + this.service + " server...");
             request.post({
                 url: this.urlForQuery("/login"),
                 form: {
@@ -234,7 +234,7 @@ OverkizApi.prototype = {
                     that.log.warn("Unable to login: " + err);
                     if(that.networkRetries < 3) {
                     	that.networkRetries++;
-                    	setTimeout(requestWithLogin, 1000, myRequest, callback);
+                    	setTimeout(requestWithLogin.bind(that), 1000, myRequest, callback);
                     	that.log.warn("Retry " + that.networkRetries + '/' + 3);
                     } else {
                     	that.networkRetries = 0;
@@ -251,7 +251,7 @@ OverkizApi.prototype = {
                     if(json.error.startsWith("Too many requests")) {
                         that.log.warn(json.error);
                         that.log.info("Retry in 2 min");
-                        setTimeout(requestWithLogin, 120000, myRequest, callback);
+                        setTimeout(requestWithLogin.bind(that), 120000, myRequest, callback);
                     } else {
                         callback(json.error);
                     }
