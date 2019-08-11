@@ -8,6 +8,8 @@ class GarageDoorOpener extends AbstractService {
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
+		
+		this.cycle = config['cycle'];
 
         this.service = new Service.GarageDoorOpener(device.getName());
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentDoorState);
@@ -36,7 +38,6 @@ class GarageDoorOpener extends AbstractService {
             case 'RTSGeneric4T':
             case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
-                cycle = true;
             break;
 
             case 'OpenCloseSlidingGate':
@@ -65,7 +66,7 @@ class GarageDoorOpener extends AbstractService {
                 case ExecutionState.COMPLETED:
                     if(this.device.stateless) {
                         this.currentState.updateValue(value);
-                        if(cycle) {
+                        if(this.cycle) {
                         	setTimeout(function() {
                 				this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);
                 				this.targetState.updateValue(Characteristic.TargetDoorState.CLOSED);

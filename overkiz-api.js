@@ -83,7 +83,7 @@ function OverkizApi(log, config) {
 
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
-    	if (that.listenerId != null && that.listenerId != 0) {
+    	if (that.isLoggedIn && that.listenerId != null && that.listenerId != 0) {
         	that.post({
                 url: that.urlForQuery("/events/" + that.listenerId + "/fetch"),
                 json: true
@@ -124,20 +124,22 @@ function OverkizApi(log, config) {
     });
     
     var refreshpoll = pollingtoevent(function(done) {
-    	that.refreshStates(function(error, data) {
-    		setTimeout(function() {
-    			that.getDevices(function(error, data) {
-					if (!error) {
-						for (var device of data) {
-							if (that.stateChangedEventListener != null) {
-                    			that.stateChangedEventListener.onStatesChange(device.deviceURL, device.states);
-                    		}
+    	if(that.isLoggedIn) {
+			that.refreshStates(function(error, data) {
+				setTimeout(function() {
+					that.getDevices(function(error, data) {
+						if (!error) {
+							for (var device of data) {
+								if (that.stateChangedEventListener != null) {
+									that.stateChangedEventListener.onStatesChange(device.deviceURL, device.states);
+								}
+							}
 						}
-					}
-				});
-    		}, 10 * 1000); // Read devices states after 10s
-    		done(error, data);
-    	});
+					});
+				}, 10 * 1000); // Read devices states after 10s
+				done(error, data);
+			});
+		}
     }, {
         longpolling: true,
         interval: (1000 * this.refreshPeriod)
@@ -225,8 +227,9 @@ OverkizApi.prototype = {
         if (this.isLoggedIn) {
             myRequest(authCallback);
         } else {
-            this.log.debug("Connecting " + this.service + " server...");
             var that = this;
+            that.listenerId = null;
+            that.log("Logging in to " + this.service + " server...");
             request.post({
                 url: this.urlForQuery("/login"),
                 form: {
@@ -240,7 +243,7 @@ OverkizApi.prototype = {
                     that.log.warn("Unable to login: " + err);
                     if(that.networkRetries < 3) {
                     	that.networkRetries++;
-                    	setTimeout(that.requestWithLogin, 1000, myRequest, callback);
+                    	setTimeout(requestWithLogin.bind(that), 1000, myRequest, callback);
                     	that.log.warn("Retry " + that.networkRetries + '/' + 3);
                     } else {
                     	that.networkRetries = 0;
@@ -256,8 +259,8 @@ OverkizApi.prototype = {
                     that.log.warn("Login fail: " + json.error);
                     if(json.error.startsWith("Too many requests")) {
                         that.log.warn(json.error);
-                        that.log.info("Retry in 5 min");
-                        setTimeout(that.requestWithLogin, 300000, myRequest, callback);
+                        that.log.info("Retry in 2 min");
+                        setTimeout(requestWithLogin.bind(that), 120000, myRequest, callback);
                     } else {
                         callback(json.error);
                     }
