@@ -3,6 +3,7 @@ var path = require('path');
 var fs = require('fs');
 var { Api, ExecutionState } = require('./overkiz-api');
 var OverkizDevice = require('./overkiz-device');
+var DEFAULT_RETRY_DELAY = 30;
 
 module.exports = function(homebridge) {
 	console.log("homebridge-tahoma API version: " + homebridge.version);
@@ -19,10 +20,10 @@ module.exports = function(homebridge) {
 
 function TahomaPlatform(log, config, api) {
     Log = log;
-    Log = log;
     this.config = config;
     this.hapapi = api;
 
+	this.retryDelay = DEFAULT_RETRY_DELAY;
 	this.exposeScenarios = config.exposeScenarios || false;
 	this.exclusions = config.exclude || [];
 	/*if(!this.exclusions.includes('!internal')) {
@@ -90,8 +91,11 @@ TahomaPlatform.prototype = {
         if (that.platformAccessories.length == 0) {
         	that.loadDevices(function(error) {
 				if(error) {
-					callback(null);
+					setTimeout(that.accessories.bind(that), that.retryDelay * 1000, callback);
+                    Log.warn("Fail to retrieve accessories, retry in " + that.retryDelay + " sec...");
+                    that.retryDelay = that.retryDelay * 2;
 				} else {
+					that.retryDelay = DEFAULT_RETRY_DELAY;
 					if(that.exposeScenarios) {
 						that.loadScenarios(function() {
 							callback(that.platformAccessories);

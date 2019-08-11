@@ -79,8 +79,7 @@ function OverkizApi(log, config) {
     this.executionCallback = [];
     this.platformAccessories = [];
     this.stateChangedEventListener = null;
-    this.networkRetries = 0;
-
+    
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
     	if (that.isLoggedIn && that.listenerId != null && that.listenerId != 0) {
@@ -238,32 +237,18 @@ OverkizApi.prototype = {
                 },
                 json: true
             }, function(err, response, json) {
-            	that.log("RESP : " + JSON.stringify(json));
+            	that.log.debug("RESP : " + JSON.stringify(json));
                 if (err) {
                     that.log.warn("Unable to login: " + err);
-                    if(that.networkRetries < 3) {
-                    	that.networkRetries++;
-                    	setTimeout(requestWithLogin.bind(that), 1000, myRequest, callback);
-                    	that.log.warn("Retry " + that.networkRetries + '/' + 3);
-                    } else {
-                    	that.networkRetries = 0;
-						callback(err);
-					}
+                    callback(err);
                 } else if (json && json.success) {
-                    that.networkRetries = 0;
                     that.isLoggedIn = true;
                     myRequest(authCallback);
                     if(that.alwaysPoll)
                 		that.registerListener();
                 } else if (json && json.error) {
                     that.log.warn("Login fail: " + json.error);
-                    if(json.error.startsWith("Too many requests")) {
-                        that.log.warn(json.error);
-                        that.log.info("Retry in 2 min");
-                        setTimeout(requestWithLogin.bind(that), 120000, myRequest, callback);
-                    } else {
-                        callback(json.error);
-                    }
+                    callback(json.error);
                 } else {
                     that.log.error("Unable to login");
 					callback("Unable to login");
