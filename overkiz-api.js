@@ -120,6 +120,7 @@ function OverkizApi(log, config) {
     this.eventpoll.on("error", function(error) {
     	that.log("Error with listener " + that.listenerId + " => " + error);
     	that.listenerId = null;
+    	that.registerListener();
     });
     
     var refreshpoll = pollingtoevent(function(done) {

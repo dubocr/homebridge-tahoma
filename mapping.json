@@ -27,6 +27,7 @@
 	"Screen": "WindowCovering",
 	"Siren": "Switch",
 	"SmokeSensor": "SmokeSensor",
+	"SwingingShutter": "WindowCovering",
 	"TemperatureSensor": "TemperatureSensor",
 	"VenetianBlind": "WindowCovering",
 	"VentilationSystem": "HeaterCooler",

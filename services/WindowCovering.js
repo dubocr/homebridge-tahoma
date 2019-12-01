@@ -43,13 +43,13 @@ class WindowCovering extends AbstractService {
 	* HomeKit '0' (Close) => 100% Closure
 	* HomeKit '100' (Open) => 0% Closure
 	**/
-    setTarget(value, callback) {
+    setTarget(requestedValue, callback) {
     	var commands = [];
-
+		var value = this.reverse ? (100 - requestedValue) : requestedValue;
+		
         switch(this.device.widget) {
             case 'PositionableHorizontalAwning':
-                var newValue = this.reverse ? (100 - value) : value;
-                commands.push(new Command('setDeployment', newValue));
+                commands.push(new Command('setDeployment', value));
             break;
 
             case 'UpDownHorizontalAwning':
@@ -71,6 +71,7 @@ class WindowCovering extends AbstractService {
             case 'UpDownRollerShutter':
             case 'UpDownScreen':
             case 'UpDownVenetianBlind':
+            case 'UpDownSwingingShutter':
                 if(this.device.isCommandInProgress() && (value == 100 || value == 0)) {
                     return this.device.cancelCommand(callback);
                 } else if(value == 100) {
@@ -102,8 +103,7 @@ class WindowCovering extends AbstractService {
             case 'PositionableTiltedWindow':
             case 'PositionableGarageDoor':
             default:
-                var newValue = this.reverse ? value : (100 - value);
-                commands.push(new Command('setClosure', newValue));
+                commands.push(new Command('setClosure', value));
             break;
 
             case 'BioclimaticPergola':
@@ -111,11 +111,10 @@ class WindowCovering extends AbstractService {
             break;
 
             case 'PositionableExteriorVenetianBlind':
-                var newValue = this.reverse ? value : (100 - value);
                 if(this.blindMode && value < 100) {
-                    commands.push(new Command('setClosureAndOrientation', [100, value]));
+                    commands.push(new Command('setClosureAndOrientation', [100, requestedValue]));
                 } else {
-                    commands.push(new Command('setClosure', newValue));
+                    commands.push(new Command('setClosure', value));
                 }
             break;
         }
@@ -129,7 +128,7 @@ class WindowCovering extends AbstractService {
                 case ExecutionState.COMPLETED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     if(this.device.stateless) {
-                        this.currentPosition.updateValue(value);
+                        this.currentPosition.updateValue(requestedValue);
                     }
                 break;
 				case ExecutionState.FAILED:
