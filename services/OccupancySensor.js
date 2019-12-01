@@ -29,7 +29,6 @@ class OccupancySensor extends AbstractService {
 				switch(value) {
 					case 'detected':
 						occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
-						currentState = Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED
 					break;
 					default :
 						occupancyState = Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
