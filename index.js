@@ -167,6 +167,8 @@ TahomaPlatform.prototype = {
 										Log.info('Service ' + service + ' not implemented');
 									} else {
 										var config = services[service];
+										var deviceConfig = that.config[device.name] || {};
+										Object.assign(config, deviceConfig);
 										device.services.push(new Services[service](Homebridge, Log, device, config));
 									}
 								}

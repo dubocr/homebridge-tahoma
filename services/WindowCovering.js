@@ -102,7 +102,7 @@ class WindowCovering extends AbstractService {
             case 'PositionableTiltedScreen':
             case 'PositionableTiltedWindow':
             case 'PositionableGarageDoor':
-            default:
+            case 'DiscretePositionableGarageDoor':
                 commands.push(new Command('setClosure', (100-value)));
             break;
 
@@ -116,6 +116,22 @@ class WindowCovering extends AbstractService {
                 } else {
                     commands.push(new Command('setClosure', (100-value)));
                 }
+            break;
+
+            // Garage doors
+            case 'CyclicSlidingGarageOpener':
+            case 'CyclicSwingingGateOpener':
+            case 'OpenCloseSlidingGate4T':
+            case 'OpenCloseGate4T':
+            case 'UpDownGarageDoor4T':
+            case 'CyclicGarageDoor':
+            case 'RTSGeneric4T':
+            case 'CyclicGeneric':
+                commands.push(new Command('cycle'));
+            break;
+
+            default:
+                commands.push(new Command(value ? 'close' : 'open'));
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {

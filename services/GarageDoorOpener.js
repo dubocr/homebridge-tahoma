@@ -9,7 +9,8 @@ class GarageDoorOpener extends AbstractService {
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
 		
-		this.cycle = config['cycle'];
+        this.cycle = config['cycle'] || false;
+        this.reverse = config['reverse'] || false;
 
         this.service = new Service.GarageDoorOpener(device.getName());
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentDoorState);
@@ -25,9 +26,9 @@ class GarageDoorOpener extends AbstractService {
     /**
 	* Triggered when Homekit try to modify the Characteristic.TargetDoorState
 	**/
-    setState(value, callback) {
+    setState(requestedValue, callback) {
         var commands = [];
-       	var cycle = false;
+        var value = this.reverse ? (requestedValue == Characteristic.TargetDoorState.OPEN ? Characteristic.TargetDoorState.CLOSED : Characteristic.TargetDoorState.OPEN) : requestedValue;
        	
         switch(this.device.widget) {
             case 'CyclicSlidingGarageOpener':
