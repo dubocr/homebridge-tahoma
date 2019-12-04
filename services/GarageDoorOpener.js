@@ -33,12 +33,13 @@ class GarageDoorOpener extends AbstractService {
         switch(this.device.widget) {
             case 'CyclicSlidingGarageOpener':
             case 'CyclicSwingingGateOpener':
+            case 'CyclicGarageDoor':
+            case 'CyclicGeneric':
+                //this.cycle = true;
             case 'OpenCloseSlidingGate4T':
             case 'OpenCloseGate4T':
             case 'UpDownGarageDoor4T':
-            case 'CyclicGarageDoor':
             case 'RTSGeneric4T':
-            case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
             break;
 
@@ -65,7 +66,7 @@ class GarageDoorOpener extends AbstractService {
             switch (status) {
                 case ExecutionState.COMPLETED:
                     if(this.device.stateless) {
-                        this.currentState.updateValue(value);
+                        this.currentState.updateValue(requestedValue);
                         if(this.cycle) {
                         	setTimeout(function() {
                 				this.currentState.updateValue(Characteristic.CurrentDoorState.CLOSED);

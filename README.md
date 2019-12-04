@@ -44,8 +44,8 @@ Configuration parameters:
 | `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false					| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
-| `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)																											 																																|
-| `WindowCovering`		     | Object		| {}				| optional, WindowCovering configuration object (see below)																											 																																|
+| `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)										|
+| `WindowCovering`		     | Object		| {}				| optional, WindowCovering configuration object (see below)											| `GarageDoorOpener`		 | Object		| {}				| optional, GarageDoorOpener configuration object (see below)																											 																																|
 
 | Alarm parameters           | Type			| Default			| Note                                                                                                                                                                  |
 |----------------------------|--------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -58,6 +58,12 @@ Configuration parameters:
 | `defaultPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
 | `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
 | `blindMode`	       		 | Boolean	| false			| optional, control horizonally adjustable blinds with just one slider. When setting ``blindMode: true`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light. |
+
+| GarageDoorOpener parameters| Type			| Default		| Note                                                                                                                                                                  |
+|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `cyclic`	         		| Boolean	| false			| optional, activate restoring initial state for cyclic device without							|
+| `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
+| `stateless`	       		 | Boolean	| false			| optional, force stateless device detection (if your device hasn't state reports but don't react as it in HomeKit) |
 
 
 Full configuration example:

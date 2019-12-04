@@ -12,6 +12,7 @@ class WindowCovering extends AbstractService {
         this.defaultPosition = config['defaultPosition'] !== undefined ? config['defaultPosition'] : 50;
         this.reverse = config['reverse'] || false;
         this.blindMode = config['blindMode'] || false;
+        this.cycle = config['cycle'] || false;
         
         this.service = new Service[this.constructor.name](device.getName());
 
@@ -121,12 +122,13 @@ class WindowCovering extends AbstractService {
             // Garage doors
             case 'CyclicSlidingGarageOpener':
             case 'CyclicSwingingGateOpener':
+            case 'CyclicGarageDoor':
+            case 'CyclicGeneric':
+                //this.cycle = true;
             case 'OpenCloseSlidingGate4T':
             case 'OpenCloseGate4T':
             case 'UpDownGarageDoor4T':
-            case 'CyclicGarageDoor':
             case 'RTSGeneric4T':
-            case 'CyclicGeneric':
                 commands.push(new Command('cycle'));
             break;
 
@@ -145,6 +147,12 @@ class WindowCovering extends AbstractService {
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     if(this.device.stateless) {
                         this.currentPosition.updateValue(requestedValue);
+                        if(this.cycle) {
+                        	setTimeout(function() {
+                				this.currentPosition.updateValue(0);
+                				this.targetPosition.updateValue(0);
+                			}.bind(this), 5000);
+                		}
                     }
                 break;
 				case ExecutionState.FAILED:

@@ -169,6 +169,7 @@ TahomaPlatform.prototype = {
 										var config = services[service];
 										var deviceConfig = that.config[device.name] || {};
 										Object.assign(config, deviceConfig);
+										device.stateless = config['stateless'] || device.stateless;
 										device.services.push(new Services[service](Homebridge, Log, device, config));
 									}
 								}
