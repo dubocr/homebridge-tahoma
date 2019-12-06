@@ -216,6 +216,7 @@ class OverkizDevice {
 			case 'TemperatureSensor > AtlanticPassAPCDHW':
 			case 'TemperatureSensor > SomfyThermostat':
 			case 'RelativeHumiditySensor > SomfyThermostat':
+			case 'TemperatureSensor > ValveHeatingTemperatureInterface':
 				device.services = this.services;
 				device.merged = true;
 				device.parent = this;

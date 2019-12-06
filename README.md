@@ -45,7 +45,8 @@ Configuration parameters:
 | `exposeScenarios`	         | Boolean	| false					| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
 | `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)										|
-| `WindowCovering`		     | Object		| {}				| optional, WindowCovering configuration object (see below)											| `GarageDoorOpener`		 | Object		| {}				| optional, GarageDoorOpener configuration object (see below)																											 																																|
+| `WindowCovering`		     | Object		| {}				| optional, WindowCovering configuration object (see below)								|
+| `GarageDoorOpener`		 | Object		| {}				| optional, GarageDoorOpener configuration object (see below)							|																			 																																|
 
 | Alarm parameters           | Type			| Default			| Note                                                                                                                                                                  |
 |----------------------------|--------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|

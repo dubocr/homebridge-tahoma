@@ -138,6 +138,26 @@ class Thermostat extends AbstractService {
                 }
             break;
 
+            case 'ValveHeatingTemperatureInterface':
+                switch(value) {
+                case Characteristic.TargetHeatingCoolingState.AUTO:
+                    commands.push(new Command('exitDerogation'));
+                    break;
+                
+                case Characteristic.TargetHeatingCoolingState.HEAT:
+                    commands.push(new Command('setDerogation', ['comfort', 'further_notice']));
+                    break;
+                
+                case Characteristic.TargetHeatingCoolingState.COOL:
+                    commands.push(new Command('setDerogation', ['eco', 'further_notice']));
+                    break;
+                
+                case Characteristic.TargetHeatingCoolingState.OFF:
+                    commands.push(new Command('setDerogation', ['away', 'further_notice']));
+                    break;
+            }
+            break;
+
             case 'SomfyPilotWireHeatingInterface':
                 switch(value) {
                     case Characteristic.TargetHeatingCoolingState.AUTO:
@@ -362,6 +382,7 @@ class Thermostat extends AbstractService {
             break;
 
             case 'SomfyThermostat':
+            case 'ValveHeatingTemperatureInterface':
                 commands = new Command('setDerogation', [value, 'further_notice']);
             break;
 
@@ -459,6 +480,7 @@ class Thermostat extends AbstractService {
             case 'core:TargetTemperatureState':
             case 'core:WaterTargetTemperatureState':
             case 'core:TargetDHWTemperatureState':
+            case 'core:TargetRoomTemperatureState':
                 targetTemperature = value;
             break;
 			case 'core:RelativeHumidityState':
@@ -616,6 +638,28 @@ class Thermostat extends AbstractService {
                     break;
                     case 'awayMode':
                     case 'freezeMode':
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                    break;
+                }
+            break;
+
+            // ValveHeatingTemperatureInterface
+            case 'io:CurrentHeatingModeState':
+            case 'core:OperatingModeState':
+                var auto = ['prog', 'program'].includes(this.device.states['core:OperatingModeState']);
+                switch(this.device.states['io:CurrentHeatingModeState']) {
+                    case 'manual':
+                    case 'comfort':
+                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
+                        targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
+                    break;
+                    case 'eco':
+                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
+                        targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.COOL;
+                    break;
+                    case 'awayMode':
+                    case 'frostprotection':
                         currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                         targetState = Characteristic.TargetHeatingCoolingState.OFF;
                     break;
