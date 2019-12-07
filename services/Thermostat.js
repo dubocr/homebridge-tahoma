@@ -647,7 +647,7 @@ class Thermostat extends AbstractService {
             // ValveHeatingTemperatureInterface
             case 'io:CurrentHeatingModeState':
             case 'core:OperatingModeState':
-                var auto = ['prog', 'program'].includes(this.device.states['core:OperatingModeState']);
+                var auto = ['auto','prog', 'program'].includes(this.device.states['core:OperatingModeState']);
                 switch(this.device.states['io:CurrentHeatingModeState']) {
                     case 'manual':
                     case 'comfort':
