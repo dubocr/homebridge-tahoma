@@ -605,18 +605,20 @@ class Thermostat extends AbstractService {
             case 'core:HeatingOnOffState':
             case 'ovp:HeatingTemperatureInterfaceActiveModeState':
             case 'ovp:HeatingTemperatureInterfaceSetPointModeState':
-                if(this.device.states['core:OnOffState'] == 'on' || this.device.states['core:HeatingOnOffState'] == 'on') {
-                    var auto = this.device.states['ovp:HeatingTemperatureInterfaceActiveModeState'] == 'auto';
-                    if(this.device.states['ovp:HeatingTemperatureInterfaceSetPointModeState'] == 'comfort') {
-                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                        targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
+                if(this.device.states['ovp:HeatingTemperatureInterfaceSetPointModeState'] != undefined) {
+                    if(this.device.states['core:OnOffState'] == 'on' || this.device.states['core:HeatingOnOffState'] == 'on') {
+                        var auto = this.device.states['ovp:HeatingTemperatureInterfaceActiveModeState'] == 'auto';
+                        if(this.device.states['ovp:HeatingTemperatureInterfaceSetPointModeState'] == 'comfort') {
+                            currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
+                            targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
+                        } else {
+                            currentState = Characteristic.CurrentHeatingCoolingState.COOL;
+                            targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO: Characteristic.TargetHeatingCoolingState.COOL;
+                        }
                     } else {
-                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                        targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO: Characteristic.TargetHeatingCoolingState.COOL;
+                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
                     }
-                } else {
-                    currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                    targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 }
             break;
 

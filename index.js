@@ -134,7 +134,7 @@ TahomaPlatform.prototype = {
 							if(deviceDefinition == undefined) {
 								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
 							} else {
-								var forced = this.forceType[device.name];
+								var forced = this.forceType[device.name] || this.forceType[device.widget];
 								var widgetConfig = this.config[device.widget] || {};
 								var services = [];
 								if(forced != undefined) { 
