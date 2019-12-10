@@ -104,6 +104,7 @@ class WindowCovering extends AbstractService {
             case 'PositionableTiltedWindow':
             case 'PositionableGarageDoor':
             case 'DiscretePositionableGarageDoor':
+            case 'AwningValance':
                 commands.push(new Command('setClosure', (100-value)));
             break;
 
