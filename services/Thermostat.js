@@ -391,8 +391,19 @@ class Thermostat extends AbstractService {
             break;
 
             case 'SomfyPilotWireHeatingInterface':
+                if(value > this.currentTemperature.value) {
+                    commands = new Command('setSetPointMode', ['comfort']);
+                } else {
+                    commands = new Command('setSetPointMode', ['eco']);
+                }
+            break;
             case 'SomfyPilotWireElectricalHeater':
             case 'AtlanticElectricalHeater':
+                if(value > this.currentTemperature.value) {
+                    commands = new Command('setHeatingLevel', ['comfort']);
+                } else {
+                    commands = new Command('setHeatingLevel', ['eco']);
+                }
             break;
 
             case 'AtlanticPassAPCHeatPump':
