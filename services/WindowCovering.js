@@ -134,7 +134,7 @@ class WindowCovering extends AbstractService {
             break;
 
             default:
-                commands.push(new Command(value ? 'close' : 'open'));
+                commands.push(new Command(value ? 'open' : 'close'));
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {
