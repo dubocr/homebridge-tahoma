@@ -56,7 +56,8 @@ Configuration parameters:
 
 | WindowCovering parameters   | Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `defaultPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
+| `initPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
+| `defaultPosition`	         | Integer	| 0				| optional, final position for UpDown rollershutter after any command												|
 | `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
 | `blindMode`	       		 | Boolean	| false			| optional, control horizonally adjustable blinds with just one slider. When setting ``blindMode: true`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light. |
 

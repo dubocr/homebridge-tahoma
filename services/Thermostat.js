@@ -705,7 +705,7 @@ class Thermostat extends AbstractService {
             break;
             case 'ovp:ModeChangeState':
             case 'ovp:MainOperationState':
-                if(this.device.states['ovp:MainOperationState'] == 'off') {
+                if(this.device.states['ovp:MainOperationState'] == 'Off' || this.device.states['ovp:MainOperationState'] == 'off') {
                     currentState = Characteristic.CurrentHeatingCoolingState.OFF;
                     targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 } else {

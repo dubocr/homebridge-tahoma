@@ -9,7 +9,8 @@ class WindowCovering extends AbstractService {
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
 		
-        this.defaultPosition = config['defaultPosition'] !== undefined ? config['defaultPosition'] : 50;
+        this.defaultPosition = config['defaultPosition'] || 0;
+        this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
         this.reverse = config['reverse'] || false;
         this.blindMode = config['blindMode'] || false;
         this.cycle = config['cycle'] || false;
@@ -21,8 +22,8 @@ class WindowCovering extends AbstractService {
 		this.targetPosition.on('set', this.device.postpone.bind(this, this.setTarget.bind(this)));
 
         if(device.stateless) {
-            this.currentPosition.updateValue(this.defaultPosition);
-    	    this.targetPosition.updateValue(this.defaultPosition);
+            this.currentPosition.updateValue(this.initPosition);
+    	    this.targetPosition.updateValue(this.initPosition);
         } else {
             this.obstruction = this.service.addCharacteristic(Characteristic.ObstructionDetected);
         }
@@ -96,6 +97,7 @@ class WindowCovering extends AbstractService {
 
             case 'PositionableScreen':            
             case 'PositionableScreenUno':
+            case 'PositionableHorizontalAwningUno':
             case 'PositionableRollerShutter':
             case 'PositionableRollerShutterWithLowSpeedManagement':
             case 'PositionableTiltedRollerShutter':
@@ -114,7 +116,7 @@ class WindowCovering extends AbstractService {
 
             case 'PositionableExteriorVenetianBlind':
                 if(this.blindMode && value < 100) {
-                    commands.push(new Command('setClosureAndOrientation', [100, requestedValue]));
+                    commands.push(new Command('setClosureAndOrientation', [100, value]));
                 } else {
                     commands.push(new Command('setClosure', (100-value)));
                 }
@@ -147,13 +149,18 @@ class WindowCovering extends AbstractService {
                 case ExecutionState.COMPLETED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);
                     if(this.device.stateless) {
-                        this.currentPosition.updateValue(requestedValue);
-                        if(this.cycle) {
-                        	setTimeout(function() {
-                				this.currentPosition.updateValue(0);
-                				this.targetPosition.updateValue(0);
-                			}.bind(this), 5000);
-                		}
+                        if(this.defaultPosition) {
+                            this.currentPosition.updateValue(this.defaultPosition);
+                            this.targetPosition.updateValue(this.defaultPosition);
+                        } else {
+                            this.currentPosition.updateValue(requestedValue);
+                            if(this.cycle) {
+                                setTimeout(function() {
+                                    this.currentPosition.updateValue(this.defaultPosition);
+                                    this.targetPosition.updateValue(this.defaultPosition);
+                                }.bind(this), 5000);
+                            }
+                        }
                     }
                 break;
 				case ExecutionState.FAILED:

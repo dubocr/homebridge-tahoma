@@ -229,7 +229,7 @@ OverkizApi.prototype = {
         } else {
             var that = this;
             that.listenerId = null;
-            that.log("Logging in to " + this.service + " server...");
+            that.log("Login " + this.service + " server...");
             request.post({
                 url: this.urlForQuery("/login"),
                 form: {
@@ -245,8 +245,9 @@ OverkizApi.prototype = {
                 } else if (json && json.success) {
                     that.isLoggedIn = true;
                     myRequest(authCallback);
-                    if(that.alwaysPoll)
+                    if(that.alwaysPoll) {
                 		that.registerListener();
+                    }
                 } else if (json && json.error) {
                     that.log.warn("Login fail: " + json.error);
                     callback(json.error);
@@ -260,9 +261,9 @@ OverkizApi.prototype = {
 
     registerListener: function() {
         var that = this;
-        if(this.listenerId == null) {
+        if(this.listenerId === null) {
         	this.listenerId = 0;
-        	this.log.debug('Register listener');
+        	this.log.log('Register listener');
 			this.post({
 				url: that.urlForQuery("/events/register"),
 				json: true
@@ -353,8 +354,9 @@ OverkizApi.prototype = {
             if (error == null) {
                 callback(ExecutionState.INITIALIZED, error, json); // Init OK
                 that.executionCallback[json.execId] = callback;
-                if(!that.alwaysPoll)
-                	that.registerListener();
+                if(!that.alwaysPoll) {
+                    that.registerListener();
+                }
             } else {
                 callback(ExecutionState.FAILED, error);
             }
