@@ -61,6 +61,7 @@ function OverkizApi(log, config) {
 	this.log = log;
     
     // Default values
+    this.debug = config['debug'] || false;
     this.debugUrl = config['debugUrl'] || false;
     this.alwaysPoll = config['alwaysPoll'] || false;
     this.pollingPeriod = config['pollingPeriod'] || 2; // Poll for events every 2 seconds by default
@@ -82,6 +83,9 @@ function OverkizApi(log, config) {
     
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
+        if(that.debug) {
+            that.log('Polling ('+that.isLoggedIn+'/'+that.listenerId+')');
+        }
     	if (that.isLoggedIn && that.listenerId != null && that.listenerId != 0) {
         	that.post({
                 url: that.urlForQuery("/events/" + that.listenerId + "/fetch"),
@@ -100,8 +104,14 @@ function OverkizApi(log, config) {
     this.eventpoll.on("longpoll", function(data) {
         for (event of data) {
             if (event.name == 'DeviceStateChangedEvent') {
-                if (that.stateChangedEventListener != null)
+                if (that.stateChangedEventListener != null) {
                     that.stateChangedEventListener.onStatesChange(event.deviceURL, event.deviceStates);
+                    if(that.debug) {
+                        for(var state of event.deviceStates) {
+                            that.log(state.name + ' -> ' + state.value);
+                        }
+                    }
+                }
             } else if (event.name == 'ExecutionStateChangedEvent') {
                 var cb = that.executionCallback[event.execId];
                 if (cb != null) {
@@ -124,6 +134,9 @@ function OverkizApi(log, config) {
     });
     
     var refreshpoll = pollingtoevent(function(done) {
+        if(that.debug) {
+            that.log('Refresh ALL ('+that.isLoggedIn+')');
+        }
     	if(that.isLoggedIn) {
 			that.refreshStates(function(error, data) {
 				setTimeout(function() {

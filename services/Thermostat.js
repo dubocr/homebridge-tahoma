@@ -47,6 +47,7 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+            break;
             case 'SomfyPilotWireElectricalHeater':
             case 'AtlanticElectricalHeater':
                 // 3 modes only (comfort, eco, off)
@@ -219,6 +220,24 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+                switch(value) {
+                    case Characteristic.TargetHeatingCoolingState.AUTO:
+                        commands = new Command('setOperatingMode', ['auto']);
+                        break;
+                    
+                    case Characteristic.TargetHeatingCoolingState.HEAT:
+                        commands = new Command('setOperatingMode', ['normal']);
+                        break;
+                    
+                    case Characteristic.TargetHeatingCoolingState.COOL:
+                        commands = new Command('setOperatingMode', ['eco']);
+                        break;
+                    
+                    case Characteristic.TargetHeatingCoolingState.OFF:
+                        commands = new Command('setOperatingMode', ['off']);
+                        break;
+                }
+            break;
             case 'SomfyPilotWireElectricalHeater':
             case 'AtlanticElectricalHeater':
                 switch(value) {
@@ -554,37 +573,6 @@ class Thermostat extends AbstractService {
                 }
             break;
 
-            // AtlanticHeatingInterface
-            case 'io:TargetHeatingLevelState':
-                switch(value) {
-                    case 'boost':
-                    case 'comfort':
-                    case 'comfort-1':
-                    case 'comfort-2':
-                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                        targetState = Characteristic.TargetHeatingCoolingState.HEAT;
-                        currentTemperature = this.tempComfort;
-                        targetTemperature = this.tempComfort;
-                    break;
-                    case 'eco':
-                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                        targetState = Characteristic.TargetHeatingCoolingState.COOL;
-                        currentTemperature = this.tempEco;
-                        targetTemperature = this.tempEco;
-                    break;
-                    case 'frostprotection':
-                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                        currentTemperature = 7;
-                    break;
-                    default:
-                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                        currentTemperature = 0;
-                    break;
-                }
-            break;
-
             // PASS APC
             case 'core:HeatingOnOffState':
 			case 'core:CoolingOnOffState':
@@ -657,25 +645,67 @@ class Thermostat extends AbstractService {
                 }
             break;
 
-            // ValveHeatingTemperatureInterface
+            case 'io:TargetHeatingLevelState':
             case 'io:CurrentHeatingModeState':
             case 'core:OperatingModeState':
                 var auto = ['auto','prog', 'program'].includes(this.device.states['core:OperatingModeState']);
-                switch(this.device.states['io:CurrentHeatingModeState']) {
-                    case 'manual':
-                    case 'comfort':
-                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                        targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
-                    break;
-                    case 'eco':
-                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                        targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.COOL;
-                    break;
-                    case 'awayMode':
-                    case 'frostprotection':
-                        currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                    break;
+                // ValveHeatingTemperatureInterface
+                if(this.device.states['io:CurrentHeatingModeState']) {
+                    switch(this.device.states['io:CurrentHeatingModeState']) {
+                        case 'manual':
+                        case 'comfort':
+                            currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
+                            targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
+                        break;
+                        case 'eco':
+                            currentState = Characteristic.CurrentHeatingCoolingState.COOL;
+                            targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.COOL;
+                        break;
+                        case 'off':
+                        case 'awayMode':
+                        case 'frostprotection':
+                            currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                            targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                        break;
+                    }
+                } else if(this.device.states['io:TargetHeatingLevelState']) {
+                    // AtlanticHeatingInterface
+                    // AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint
+                    switch(this.device.states['io:TargetHeatingLevelState']) {
+                        case 'boost':
+                        case 'comfort':
+                        case 'comfort-1':
+                        case 'comfort-2':
+                            currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
+                            targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
+                            if(this.device.states['core:TargetTemperatureState'] === undefined) {
+                                currentTemperature = this.tempComfort;
+                                targetTemperature = this.tempComfort;
+                            }
+                        break;
+                        case 'eco':
+                            currentState = Characteristic.CurrentHeatingCoolingState.COOL;
+                            targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.COOL;
+                            if(this.device.states['core:TargetTemperatureState'] === undefined) {
+                                currentTemperature = this.tempEco;
+                                targetTemperature = this.tempEco;
+                            }
+                        break;
+                        case 'frostprotection':
+                            currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                            targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                            if(this.device.states['core:TargetTemperatureState'] === undefined) {
+                                currentTemperature = 7;
+                            }
+                        break;
+                        default:
+                            currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                            targetState = Characteristic.TargetHeatingCoolingState.OFF;
+                            if(this.device.states['core:TargetTemperatureState'] === undefined) {
+                                currentTemperature = 0;
+                            }
+                        break;
+                    }
                 }
             break;
 
