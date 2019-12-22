@@ -205,11 +205,13 @@ class OverkizDevice {
 		if(target) {
 			Log.info('#' + device.getComponentID() + ' ' + device.name + ' (' + device.widget + ') merged into #' + target.getComponentID() + ' ' + target.name + ' (' + target.widget + ')');
 		} else {
-			Log.info('#' + device.getComponentID() + ' ' + device.name + ' ('+device.widget+') linked to #' + this.getComponentID() + ' ' + this.name + ' ('+this.widget+')');
+			Log.info('#' + device.getComponentID() + ' ' + device.name + ' ('+device.widget+') attached to #' + this.getComponentID() + ' ' + this.name + ' ('+this.widget+')');
 		}
 	}
     
     merge(device) {
+		device.parent = this;
+		this.child.push(device);
 		switch(device.widget + ' > ' + this.widget) {
 			//case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
 			case 'TemperatureSensor > AtlanticPassAPCHeatingAndCoolingZone':
@@ -219,8 +221,6 @@ class OverkizDevice {
 			case 'TemperatureSensor > ValveHeatingTemperatureInterface':
 			case 'TemperatureSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
 				device.merged = true;
-				device.parent = this;
-				this.child.push(device);
 				device.services = this.services; // Relink device services to parent's one
 				for(var service of this.services) {
 					service.merge(device);
@@ -232,8 +232,6 @@ class OverkizDevice {
 			case 'CumulativeElectricPowerConsumptionSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
 			case 'CumulativeElectricPowerConsumptionSensor > DomesticHotWaterProduction':
 				device.merged = true;
-				device.parent = this;
-				this.child.push(device);
 				for(var service of device.services) {
 					this.services.push(service);
 				}
