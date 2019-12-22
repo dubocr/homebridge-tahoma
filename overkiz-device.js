@@ -6,6 +6,7 @@ class OverkizDevice {
     	Object.assign(this, device);
         this.services = [];
 		this.child = [];
+		this.parent = null;
 		this.merged = false;
         
 		Log = log;
@@ -19,7 +20,7 @@ class OverkizDevice {
     
     getAccessory(homebridge) {
 		if(this.merged) {
-			return null; // No accessory for subdevice
+			return null; // No accessory for merged subdevice
 		}
     	var device = this;
     	
@@ -192,20 +193,19 @@ class OverkizDevice {
 	
 	attach(device) {
 		var target = null;
-		if(this.merge(device))
+		if(this.merge(device)) {
 			target = this;
-		for(var child of this.child) {
-			if(child.merge(device))
-				target = child;
-		}
-		device.parent = this;
-		this.child.push(device);
-		if(target != null) {
-			Log('#' + device.getComponentID() + ' ' + device.name + ' (' + device.widget + ') merged into #' + target.getComponentID() + ' ' + target.name + ' (' + target.widget + ')');
-			return false;
 		} else {
-			Log.info('#' + device.getComponentID() + ' ' + device.name + ' ('+device.widget+') attached to #' + this.getComponentID() + ' ' + this.name + ' ('+this.widget+')');
-			return true;
+			for(var child of this.child) {
+				if(child.merge(device))
+					target = child;
+			}
+		}
+		
+		if(target) {
+			Log.info('#' + device.getComponentID() + ' ' + device.name + ' (' + device.widget + ') merged into #' + target.getComponentID() + ' ' + target.name + ' (' + target.widget + ')');
+		} else {
+			Log.info('#' + device.getComponentID() + ' ' + device.name + ' ('+device.widget+') linked to #' + this.getComponentID() + ' ' + this.name + ' ('+this.widget+')');
 		}
 	}
     
@@ -218,12 +218,24 @@ class OverkizDevice {
 			case 'RelativeHumiditySensor > SomfyThermostat':
 			case 'TemperatureSensor > ValveHeatingTemperatureInterface':
 			case 'TemperatureSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
-				device.services = this.services;
 				device.merged = true;
 				device.parent = this;
 				this.child.push(device);
+				device.services = this.services; // Relink device services to parent's one
 				for(var service of this.services) {
 					service.merge(device);
+				}
+			return true;
+
+			case 'OccupancySensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+			case 'ContactSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+			case 'CumulativeElectricPowerConsumptionSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+			case 'CumulativeElectricPowerConsumptionSensor > DomesticHotWaterProduction':
+				device.merged = true;
+				device.parent = this;
+				this.child.push(device);
+				for(var service of device.services) {
+					this.services.push(service);
 				}
 			return true;
 			
