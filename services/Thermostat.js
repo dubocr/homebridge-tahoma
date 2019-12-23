@@ -37,7 +37,7 @@ class Thermostat extends AbstractService {
             break;
             case 'EvoHomeController':
                 this.targetState.setProps({ validValues: [0,3] });
-				this.targetTemperature.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
+				this.targetTemperature.setProps({ perms: ['pr', 'ev'] }); // Read and Notify only (remove write)
             break;
 
             case 'ProgrammableAndProtectableThermostatSetPoint':
@@ -47,23 +47,24 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+                this.targetTemperature.setProps({ minValue: 0, maxValue: 28, minStep: 0.5 });
             break;
+
+            case 'SomfyPilotWireHeatingInterface':
             case 'SomfyPilotWireElectricalHeater':
             case 'AtlanticElectricalHeater':
+            case 'AtlanticPassAPCHeatPump':
+            case 'AtlanticPassAPCZoneControl':
                 // 3 modes only (comfort, eco, off)
                 this.targetState.setProps({ validValues: [0,1,2] });
-				this.targetTemperature.setProps({ minValue: 0, maxValue: this.tempComfort, minStep: 1 });
+				this.targetTemperature.setProps({ perms: ['pr', 'ev'] }); // Read and Notify only (remove write)
             break;
 
             case 'SomfyThermostat':
                 this.targetState.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
             break;
 
-            case 'SomfyPilotWireHeatingInterface':
             case 'SomfyHeatingTemperatureInterface':
-
-            case 'AtlanticPassAPCHeatPump':
-            case 'AtlanticPassAPCZoneControl':
             case 'AtlanticPassAPCHeatingAndCoolingZone':
                 // 3 modes only (comfort, eco, off)
                 this.targetState.setProps({ validValues: [0,1,2] });
@@ -388,6 +389,11 @@ class Thermostat extends AbstractService {
         
         switch(this.device.widget) {
             case 'EvoHomeController': // EvoHome
+            case 'SomfyPilotWireHeatingInterface':
+            case 'SomfyPilotWireElectricalHeater':
+            case 'AtlanticElectricalHeater':
+            case 'AtlanticPassAPCHeatPump':
+            case 'AtlanticPassAPCZoneControl':
 			break;
 			
             case 'HeatingSetPoint': // EvoHome
@@ -407,26 +413,6 @@ class Thermostat extends AbstractService {
 
             case 'SomfyHeatingTemperatureInterface':
                 commands = new Command(this.device.states['core:OnOffState'] == 'off' ? 'setComfortTemperature' : 'setEcoTemperature', value);
-            break;
-
-            case 'SomfyPilotWireHeatingInterface':
-                if(value > this.currentTemperature.value) {
-                    commands = new Command('setSetPointMode', ['comfort']);
-                } else {
-                    commands = new Command('setSetPointMode', ['eco']);
-                }
-            break;
-            case 'SomfyPilotWireElectricalHeater':
-            case 'AtlanticElectricalHeater':
-                if(value > this.currentTemperature.value) {
-                    commands = new Command('setHeatingLevel', ['comfort']);
-                } else {
-                    commands = new Command('setHeatingLevel', ['eco']);
-                }
-            break;
-
-            case 'AtlanticPassAPCHeatPump':
-            case 'AtlanticPassAPCZoneControl':
             break;
             
             case 'AtlanticPassAPCHeatingAndCoolingZone':

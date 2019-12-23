@@ -108,12 +108,12 @@ class OverkizDevice {
     	var cmdName = '';
 		if(commands == null || commands.length == 0) {
 			Log("No target command for " + this.name);
-			processing(ExecutionState.FAILED, "No target command for " + this.name);
+			processing(ExecutionState.FAILED);
 			return;
 		} else if(Array.isArray(commands)) {
 			if(commands.length == 0) {
 				Log("No target command for " + this.name);
-				processing(ExecutionState.FAILED, "No target command for " + this.name);
+				processing(ExecutionState.FAILED);
 				return;
 			} else if(commands.length > 1) {
 				cmdName = commands[0].name + " +" + (commands.length-1) + " others";
