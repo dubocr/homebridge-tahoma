@@ -58,6 +58,7 @@ class GarageDoorOpener extends AbstractService {
 
             case 'PositionableGarageDoor':
             case 'SlidingDiscreteGateWithPedestrianPosition':
+            case 'PositionableGarageDoorWithPartialPosition':
                 commands.push(new Command(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close'));
             break;
         }
@@ -89,6 +90,7 @@ class GarageDoorOpener extends AbstractService {
             case 'core:OpenClosedPedestrianState':
             case 'core:OpenClosedUnknownState':
             case 'core:OpenClosedState':
+            case 'core:OpenClosedPartialState':
             switch(value) {
 				case 'unknown':
 				case 'open' :
@@ -96,6 +98,7 @@ class GarageDoorOpener extends AbstractService {
 					targetState = Characteristic.TargetDoorState.OPEN;
                 break;
 				case 'pedestrian' :
+                case 'partial' :
                     currentState = Characteristic.CurrentDoorState.STOPPED;
 					targetState = Characteristic.TargetDoorState.OPEN;
                 break;

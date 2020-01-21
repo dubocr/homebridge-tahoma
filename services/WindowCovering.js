@@ -116,7 +116,7 @@ class WindowCovering extends AbstractService {
 
             case 'PositionableExteriorVenetianBlind':
                 if(this.blindMode && value < 100) {
-                    commands.push(new Command('setClosureAndOrientation', [100, value]));
+                    commands.push(new Command('setClosureAndOrientation', [100, (100-value)]));
                 } else {
                     commands.push(new Command('setClosure', (100-value)));
                 }
