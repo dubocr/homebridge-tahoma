@@ -84,7 +84,7 @@ function OverkizApi(log, config) {
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
         if(that.debug) {
-            that.log('Polling ('+that.isLoggedIn+'/'+that.listenerId+')');
+            //that.log('Polling ('+that.isLoggedIn+'/'+that.listenerId+')');
         }
     	if (that.isLoggedIn && that.listenerId != null && that.listenerId != 0) {
         	that.post({
@@ -253,6 +253,7 @@ OverkizApi.prototype = {
             }, function(err, response, json) {
             	that.log.debug("RESP : " + JSON.stringify(json));
                 if (err) {
+                    that.isLoggedIn = false;
                     that.log.warn("Unable to login: " + err);
                     callback(err);
                 } else if (json && json.success) {
@@ -262,9 +263,11 @@ OverkizApi.prototype = {
                 		that.registerListener();
                     }
                 } else if (json && json.error) {
+                    that.isLoggedIn = false;
                     that.log.warn("Login fail: " + json.error);
                     callback(json.error);
                 } else {
+                    that.isLoggedIn = false;
                     that.log.error("Unable to login");
 					callback("Unable to login");
                 }
