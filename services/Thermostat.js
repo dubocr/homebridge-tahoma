@@ -235,7 +235,8 @@ class Thermostat extends AbstractService {
                         break;
                     
                     case Characteristic.TargetHeatingCoolingState.OFF:
-                        commands = new Command('setOperatingMode', ['off']);
+                        //commands = new Command('setOperatingMode', ['off']);
+                        commands = new Command('setOperatingMode', ['standby']);
                         break;
                 }
             break;

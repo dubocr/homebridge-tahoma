@@ -78,6 +78,7 @@ function OverkizApi(log, config) {
     
     this.isLoggedIn = false;
     this.listenerId = null;
+    this.runningCommands = 0;
     this.executionCallback = [];
     this.platformAccessories = [];
     this.stateChangedEventListener = null;
@@ -103,6 +104,7 @@ function OverkizApi(log, config) {
     });
 
     this.eventpoll.on("longpoll", function(data) {
+        that.log(data);
         for (event of data) {
             if (event.name == 'DeviceStateChangedEvent') {
                 if (that.stateChangedEventListener != null) {
@@ -119,6 +121,11 @@ function OverkizApi(log, config) {
                     cb(event.newState, event.failureType == undefined ? null : event.failureType);
                     if (event.timeToNextState == -1) { // No more state expected for this execution
                         delete that.executionCallback[event.execId];
+                        if(that.executionCallback.length == 0) {
+                            that.runningCommands = 0;
+                        } else {
+                            that.runningCommands--;
+                        }
                         if(!that.alwaysPoll && Object.keys(that.executionCallback).length == 0) { // Unregister listener when no more execution running
                         	that.unregisterListener();
                         }
@@ -153,7 +160,9 @@ function OverkizApi(log, config) {
 				}, 10 * 1000); // Read devices states after 10s
 				done(error, data);
 			});
-		}
+		} else {
+            that.log('Unable to refresh states (not logged in)');
+        }
     }, {
         longpolling: true,
         interval: (1000 * this.refreshPeriod)
@@ -361,7 +370,13 @@ OverkizApi.prototype = {
     */
     execute: function(oid, execution, callback) {
         var that = this;
+        if(this.runningCommands >= 10) {
+            // Avoid EXEC_QUEUE_FULL (max 10 commands simultaneous)
+            setTimeout(that.execute.bind(that), 10 * 1000, oid, execution, callback); // Postpone in 10 sec
+            return;
+        }
         //this.log(command);
+        this.runningCommands++;
         this.post({
             url: that.urlForQuery('/exec/'+oid),
             //headers: {'User-Agent': 'TaHoma iPhone'},
@@ -375,6 +390,7 @@ OverkizApi.prototype = {
                     that.registerListener();
                 }
             } else {
+                this.runningCommands--;
                 callback(ExecutionState.FAILED, error);
             }
         });
