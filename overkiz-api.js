@@ -18,6 +18,25 @@ Execution = function(name, deviceURL, commands) {
     }];
 }
 
+Queue = function(execution, callback) {
+    this.execution = execution;
+    this.callbacks = [ callback ];
+}
+
+Queue.prototype = {
+    callback: function(status, error, data) {
+    	for(const callback of this.callbacks) {
+            callback(status, error, data);
+        }
+    },
+
+    push: function(execution, callback) {
+        this.execution.label = "Execute scene - HomeKit"
+        this.execution.actions.push(execution.actions[0]);
+        this.callbacks.push(callback);
+    }
+}
+
 ExecutionState = {
     INITIALIZED: 'INITIALIZED',
     IN_PROGRESS: 'IN_PROGRESS',
@@ -104,7 +123,7 @@ function OverkizApi(log, config) {
     });
 
     this.eventpoll.on("longpoll", function(data) {
-        that.log(data);
+        //that.log(data);
         for (event of data) {
             if (event.name == 'DeviceStateChangedEvent') {
                 if (that.stateChangedEventListener != null) {
@@ -169,7 +188,7 @@ function OverkizApi(log, config) {
     });
     
     refreshpoll.on("error", function(error) {
-        that.log(error);
+        that.log("Error: " + error);
     });
 }
 
@@ -359,8 +378,19 @@ OverkizApi.prototype = {
     executeCommand: function(execution, callback, highPriority) {
         if(highPriority)
             this.execute('apply/highPriority', execution, callback);
-        else
-            this.execute('apply', execution, callback);
+        else {
+            var that = this;
+            if(this.pendingQueue == null) {
+                this.pendingQueue = new Queue(execution, callback);
+                setTimeout(function() {
+                    var queue = that.pendingQueue;
+                    that.pendingQueue = null;
+                    that.execute('apply', queue.execution, queue.callback.bind(queue));
+                }, 100);
+            } else {
+                this.pendingQueue.push(execution, callback);
+            }
+        }
     },
     
     /*
@@ -368,7 +398,7 @@ OverkizApi.prototype = {
     	execution: Body parameters
     	callback: Callback function executed when command sended
     */
-    execute: function(oid, execution, callback) {
+   execute: function(oid, execution, callback) {
         var that = this;
         if(this.runningCommands >= 10) {
             // Avoid EXEC_QUEUE_FULL (max 10 commands simultaneous)
