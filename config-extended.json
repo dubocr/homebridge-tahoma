@@ -14,7 +14,7 @@
 		"user": "user@me.com",
 		"password": "MyPassw0rd",
 		"service": "TaHoma",
-		"exposeScenarios": false,
+		"exposeScenarios": true,
 		"exclude": ["hue","rts","Garage Door"],
 		"forceType": {
 			"Device name 1": "Thermostat",
