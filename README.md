@@ -101,7 +101,7 @@ Full configuration example:
 # Limitation
 
 Some devices or configurations could not operate properly due to limited tests. Don't hesitate to open an issue if your device doesn't work properly.
-Before opening issue, please submit your config with [this form](https://dev.duboc.pro/tools/setup)
+Before opening issue, please submit your config with [this form](http://dev.duboc.pro/tahoma)
 
 # Contribute
 
