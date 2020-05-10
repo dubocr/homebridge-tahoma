@@ -162,6 +162,9 @@ class WindowCovering extends AbstractService {
                             }
                         }
                     }
+                    if(this.obstruction != null && this.obstruction.value == true) {
+                        this.obstruction.updateValue(false);
+                    }
                 break;
 				case ExecutionState.FAILED:
                     this.positionState.updateValue(Characteristic.PositionState.STOPPED);

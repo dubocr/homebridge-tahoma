@@ -39,6 +39,7 @@
 	"SomfyPilotWireElectricalHeater": "Switch",
     "AtlanticPassAPCZoneControl": "Switch",
     "AtlanticPassAPCHeatPump": "Switch",
+    "AtlanticPassAPCBoiler": "Switch",
     "DimmerOnOff": "Lightbulb",
 	"DHWSetPoint": "TemperatureSensor",
 	"DomesticHotWaterTank": "Switch",

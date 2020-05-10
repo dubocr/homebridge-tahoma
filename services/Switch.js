@@ -7,9 +7,13 @@ class Switch extends AbstractService {
         super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
-		Characteristic = homebridge.hap.Characteristic;
-		
-        this.service = new Service.Switch(device.getName());
+        Characteristic = homebridge.hap.Characteristic;
+        
+        if(this.device.widget == 'AtlanticPassAPCDHW' || this.device.widget == 'DomesticHotWaterTank') {
+            this.service = new Service.Switch('BOOST');
+        } else {
+            this.service = new Service.Switch(device.getName());
+        }
         this.onState = this.service.getCharacteristic(Characteristic.On);
         this.onState.on('set', Switch.prototype.setOn.bind(this));
     }
@@ -22,6 +26,7 @@ class Switch extends AbstractService {
         switch(this.device.widget) {
             case 'AtlanticPassAPCHeatPump':
             case 'AtlanticPassAPCZoneControl':
+            case 'AtlanticPassAPCBoiler':
                 commands = new Command('setPassAPCOperatingMode', value ? 'heating' : 'stop');
             break;
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':

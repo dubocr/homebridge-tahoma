@@ -215,6 +215,7 @@ class OverkizDevice {
 		switch(device.widget + ' > ' + this.widget) {
 			//case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
 			case 'TemperatureSensor > AtlanticPassAPCHeatingAndCoolingZone':
+			case 'TemperatureSensor > AtlanticPassAPCHeatingZone':
 			case 'TemperatureSensor > AtlanticPassAPCDHW':
 			case 'TemperatureSensor > SomfyThermostat':
 			case 'RelativeHumiditySensor > SomfyThermostat':
