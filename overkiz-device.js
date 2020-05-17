@@ -133,26 +133,39 @@ class OverkizDevice {
 			this.api.cancelCommand(this.lastExecId, function() {});
 		}
 
-		var label = this.name + ' - ' + cmdName + ' - HomeKit';
-		var execution = new Execution(label, this.deviceURL, commands);
-		
-		var highPriority = this.states != undefined && this.states['io:PriorityLockLevelState'] != undefined;
-		this.api.executeCommand(execution, function(status, error, data) {
+		var command = {
+			label: this.name + ' - ' + cmdName + ' - HomeKit',
+			deviceURL: this.deviceURL,
+			commands: commands,
+			highPriority: this.states != undefined && this.states['io:PriorityLockLevelState'] != undefined
+		};
+		command.callback = function(status, error, data) {
+			var deviceError = null;
+			if(error) {
+                for(const fail of data.failedCommands) {
+                    if(fail.deviceURL == this.deviceURL) {
+                        deviceError = fail.failureType;
+                    }
+                }
+            }
+			
 			if (status == ExecutionState.INITIALIZED) {
 				this.lastExecId = data.execId;
 			} else if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
-				Log('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+				Log('[' + this.name + '] ' + cmdName + ' ' + (deviceError == null ? status : deviceError));
 				try {
-					callback(error);
+					callback(deviceError);
 				} catch(err) {
 					Log('Callback already triggered');
 				}
 			} else {
-				Log.debug('[' + this.name + '] ' + cmdName + ' ' + (error == null ? status : error));
+				Log.debug('[' + this.name + '] ' + cmdName + ' ' + (deviceError == null ? status : deviceError));
 			}
 
-			processing(status, error, data);
-		}.bind(this), highPriority);
+			processing(status, deviceError, data);
+		}.bind(this);
+
+		this.api.executeCommand(command);
     }
 
     /*

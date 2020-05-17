@@ -12,28 +12,55 @@ Command = function(name, parameters) {
 Execution = function(name, deviceURL, commands) {
     this.label = name;
     this.metadata = null;
-    this.actions = [{
-        deviceURL: deviceURL,
-        commands: commands
-    }];
+    this.actions = [];
+    if(deviceURL && commands) {
+        this.actions.push({
+            deviceURL: deviceURL,
+            commands: commands
+        });
+    }
 }
 
-Queue = function(execution, callback) {
-    this.execution = execution;
-    this.callbacks = [ callback ];
+Queue = function(command) {
+    this.commands = [command];
 }
 
 Queue.prototype = {
     callback: function(status, error, data) {
-    	for(const callback of this.callbacks) {
-            callback(status, error, data);
+        if(error && data.failedCommands != 'undefined') {
+            for(const command of this.commands) {
+                var failed = false;
+                for(const fail of data.failedCommands) {
+                    if(fail.deviceURL == command.deviceURL) {
+                        command.callback(status, fail.failureType, data);
+                        failed = true;
+                        break;
+                    }
+                }
+                if(!failed) {
+                    command.callback(ExecutionState.COMPLETED, null, data);
+                }
+            }
+        } else {
+            for(const command of this.commands) {
+                command.callback(status, error, data);
+            }
         }
     },
 
-    push: function(execution, callback) {
-        this.execution.label = "Execute scene - HomeKit"
-        this.execution.actions.push(execution.actions[0]);
-        this.callbacks.push(callback);
+    getExecution: function() {
+        const execution = new Execution("Execute scene - HomeKit");
+        for(const command of this.commands) {
+            execution.actions.push({
+                deviceURL: command.deviceURL,
+                commands: command.commands
+            });
+        }
+        return execution;
+    },
+
+    push: function(command) {
+        this.commands.push(command);
     }
 }
 
@@ -123,8 +150,8 @@ function OverkizApi(log, config) {
     });
 
     this.eventpoll.on("longpoll", function(data) {
-        //that.log(data);
         for (event of data) {
+            //that.log(event);
             if (event.name == 'DeviceStateChangedEvent') {
                 if (that.stateChangedEventListener != null) {
                     that.stateChangedEventListener.onStatesChange(event.deviceURL, event.deviceStates);
@@ -135,9 +162,10 @@ function OverkizApi(log, config) {
                     }
                 }
             } else if (event.name == 'ExecutionStateChangedEvent') {
+                //that.log(event.failedCommands);
                 var cb = that.executionCallback[event.execId];
                 if (cb != null) {
-                    cb(event.newState, event.failureType == undefined ? null : event.failureType);
+                    cb(event.newState, event.failureType == undefined ? null : event.failureType, event);
                     if (event.timeToNextState == -1) { // No more state expected for this execution
                         delete that.executionCallback[event.execId];
                         if(that.executionCallback.length == 0) {
@@ -370,25 +398,22 @@ OverkizApi.prototype = {
     },
 
     /*
-    	cmdName: The command to execute
-    	params: Parameter of the command
-    	callback: Callback function executed when command sended
-    	refresh: Callback function executed when command succeed
+    	command: The command to execute
     */
-    executeCommand: function(execution, callback, highPriority) {
-        if(highPriority)
-            this.execute('apply/highPriority', execution, callback);
+    executeCommand: function(command) {
+        if(command.highPriority)
+            this.execute('apply/highPriority', new Execution(command.label, command.deviceURL, command.commands), command.callback);
         else {
             var that = this;
             if(this.pendingQueue == null) {
-                this.pendingQueue = new Queue(execution, callback);
+                this.pendingQueue = new Queue(command);
                 setTimeout(function() {
                     var queue = that.pendingQueue;
                     that.pendingQueue = null;
-                    that.execute('apply', queue.execution, queue.callback.bind(queue));
+                    that.execute('apply', queue.getExecution(), queue.callback.bind(queue));
                 }, 100);
             } else {
-                this.pendingQueue.push(execution, callback);
+                this.pendingQueue.push(command);
             }
         }
     },
