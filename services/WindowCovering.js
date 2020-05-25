@@ -31,7 +31,7 @@ class WindowCovering extends AbstractService {
         if(device.hasCommand('setOrientation')) {
             this.currentAngle = this.service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
             this.targetAngle = this.service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
-            this.targetAngle.on('set', this.setAngle.bind(this));
+            this.targetAngle.on('set', this.device.postpone.bind(this, this.setAngle.bind(this)));
         } else {
 			this.blindMode = false;
 		}
@@ -118,7 +118,9 @@ class WindowCovering extends AbstractService {
                 if(this.blindMode && value < 100) {
                     commands.push(new Command('setClosureAndOrientation', [100, (100-value)]));
                 } else {
-                    commands.push(new Command('setClosure', (100-value)));
+                    var closure = 100-value;
+                    var orientation = Math.round((this.targetAngle.value + 90)/1.8);
+                    commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
                 }
             break;
 
@@ -185,7 +187,9 @@ class WindowCovering extends AbstractService {
 
         switch(this.device.widget) {
             default:
-            commands.push(new Command('setOrientation', Math.round((value + 90)/1.8)));
+            var closure = 100-this.targetPosition.value;
+            var orientation = Math.round((value + 90)/1.8);
+            commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {

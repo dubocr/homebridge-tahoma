@@ -13,6 +13,7 @@ class GarageDoorOpener extends AbstractService {
         this.reverse = config['reverse'] || false;
 
         this.service = new Service.GarageDoorOpener(device.getName());
+        this.obstruction = this.service.getCharacteristic(Characteristic.ObstructionDetected);
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentDoorState);
         this.targetState = this.service.getCharacteristic(Characteristic.TargetDoorState)
         this.targetState.on('set', this.setState.bind(this));
@@ -75,9 +76,15 @@ class GarageDoorOpener extends AbstractService {
                 			}.bind(this), 5000);
                 		}
                     }
+                    if(this.obstruction != null && this.obstruction.value == true) {
+                        this.obstruction.updateValue(false);
+                    }
                 break;
                 case ExecutionState.FAILED:
                     this.targetState.updateValue(this.currentState.value);
+                    if(this.obstruction != null) {
+						this.obstruction.updateValue(error == 'WHILEEXEC_OTHER');
+                    }
                 break;
             }
         }.bind(this), callback);
