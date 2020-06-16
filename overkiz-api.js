@@ -350,7 +350,7 @@ OverkizApi.prototype = {
 				} else {
 					that.listenerId = null;
                     that.log("Error while registering listener");
-                    setTimeout(that.registerListener.bind(that), that.pollingPeriod);
+                    setTimeout(that.registerListener.bind(that), 1000 * that.pollingPeriod);
 				}
 			});
 		}
