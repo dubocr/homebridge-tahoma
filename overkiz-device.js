@@ -8,10 +8,11 @@ class OverkizDevice {
 		this.child = [];
 		this.parent = null;
 		this.merged = false;
+		this.timeout = null;
         
 		Log = log;
 		this.api = api;
-        this.name = device.label;
+		this.name = device.label;
         
         if(this.states == undefined) {
         	this.stateless = true;
@@ -179,7 +180,7 @@ class OverkizDevice {
             }
         }
         return null;
-    }
+	}
 
     isCommandInProgress() {
         return (this.lastExecId in this.api.executionCallback);
@@ -190,7 +191,7 @@ class OverkizDevice {
             clearTimeout(this.timeout);
         }
         this.timeout = setTimeout(function() {
-        	todo(value, function(err) { });
+        	todo(value, function(err) {});
         }, 2000);
         callback();
     }

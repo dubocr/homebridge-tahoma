@@ -31,6 +31,7 @@ class WindowCovering extends AbstractService {
         if(device.hasCommand('setOrientation')) {
             this.currentAngle = this.service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
             this.targetAngle = this.service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
+            this.targetAngle.setProps({ minStep: 10 });
             this.targetAngle.on('set', this.device.postpone.bind(this, this.setAngle.bind(this)));
         } else {
 			this.blindMode = false;
@@ -115,12 +116,19 @@ class WindowCovering extends AbstractService {
             break;
 
             case 'PositionableExteriorVenetianBlind':
-                if(this.blindMode && value < 100) {
-                    commands.push(new Command('setClosureAndOrientation', [100, (100-value)]));
+                if(this.blindMode) {
+                    if(value < 100) {
+                        commands.push(new Command('setClosureAndOrientation', [100, (100-value)]));
+                    } else {
+                        commands.push(new Command('setClosure', 0));
+                    }
                 } else {
                     var closure = 100-value;
-                    var orientation = Math.round((this.targetAngle.value + 90)/1.8);
-                    commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
+                    /*
+                        var orientation = Math.round((this.targetAngle.value + 90)/1.8);
+                        commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
+                    */
+                    commands.push(new Command('setClosure', closure));
                 }
             break;
 
@@ -187,9 +195,13 @@ class WindowCovering extends AbstractService {
 
         switch(this.device.widget) {
             default:
-            var closure = 100-this.targetPosition.value;
             var orientation = Math.round((value + 90)/1.8);
-            commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
+            if(this.targetPosition.value != this.currentPosition.value) {
+                var closure = 100-this.targetPosition.value;
+                commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
+            } else {
+                commands.push(new Command('setOrientation', orientation));
+            }
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {

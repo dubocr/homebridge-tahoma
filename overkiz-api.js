@@ -142,6 +142,9 @@ function OverkizApi(log, config) {
             	done(error, data);
             });
         } else {
+            if(that.alwaysPoll && that.debug) {
+                that.log('No listener registered while in always poll mode');
+            } 
             done(null, []);
         }
     }, {
@@ -336,7 +339,7 @@ OverkizApi.prototype = {
         var that = this;
         if(this.listenerId === null) {
         	this.listenerId = 0;
-        	this.log.log('Register listener');
+        	this.log.log('Try to register listener...');
 			this.post({
 				url: that.urlForQuery("/events/register"),
 				json: true
@@ -346,7 +349,8 @@ OverkizApi.prototype = {
 					that.log("Listener registered " + that.listenerId);
 				} else {
 					that.listenerId = null;
-					that.log("Error while registering listener");
+                    that.log("Error while registering listener");
+                    setTimeout(that.registerListener.bind(that), that.pollingPeriod);
 				}
 			});
 		}
