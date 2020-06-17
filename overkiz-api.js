@@ -49,7 +49,8 @@ Queue.prototype = {
     },
 
     getExecution: function() {
-        const execution = new Execution("Execute scene - HomeKit");
+        const label = this.commands.length > 1 ? "Execute scene (" + this.commands.length + " devices) - HomeKit" : this.commands[0].label;
+        const execution = new Execution(label);
         for(const command of this.commands) {
             execution.actions.push({
                 deviceURL: command.deviceURL,
@@ -106,7 +107,7 @@ module.exports = {
 
 function OverkizApi(log, config) {
 	this.log = log;
-    
+
     // Default values
     this.debug = config['debug'] || false;
     this.debugUrl = config['debugUrl'] || false;
@@ -114,21 +115,21 @@ function OverkizApi(log, config) {
     this.pollingPeriod = config['pollingPeriod'] || 2; // Poll for events every 2 seconds by default
     this.refreshPeriod = config['refreshPeriod'] || (60 * 30); // Refresh device states every 30 minutes by default
     this.service = config['service'] || 'TaHoma';
-    
+
     this.user = config['user'];
     this.password = config['password'];
     this.server = Server[this.service];
-    
+
     if (!this.user || !this.password) throw new Error("You must provide credentials ('user'/'password')");
     if (!this.server) throw new Error("Invalid service name '"+this.service+"'");
-    
+
     this.isLoggedIn = false;
     this.listenerId = null;
     this.runningCommands = 0;
     this.executionCallback = [];
     this.platformAccessories = [];
     this.stateChangedEventListener = null;
-    
+
     var that = this;
     this.eventpoll = pollingtoevent(function(done) {
         if(that.debug) {
@@ -144,7 +145,7 @@ function OverkizApi(log, config) {
         } else {
             if(that.alwaysPoll && that.debug) {
                 that.log('No listener registered while in always poll mode');
-            } 
+            }
             done(null, []);
         }
     }, {
@@ -190,7 +191,7 @@ function OverkizApi(log, config) {
     	that.listenerId = null;
     	that.registerListener();
     });
-    
+
     var refreshpoll = pollingtoevent(function(done) {
         if(that.debug) {
             that.log('Refresh ALL ('+that.isLoggedIn+')');
@@ -217,7 +218,7 @@ function OverkizApi(log, config) {
         longpolling: true,
         interval: (1000 * this.refreshPeriod)
     });
-    
+
     refreshpoll.on("error", function(error) {
         that.log("Error: " + error);
     });
@@ -255,7 +256,7 @@ OverkizApi.prototype = {
         var fct = request.delete.bind(request, options);
         this.requestWithLogin(fct, callback);
     },
-    
+
     getDevices(callback) {
     	this.get({
 			url: this.urlForQuery("/setup/devices"),
@@ -264,7 +265,7 @@ OverkizApi.prototype = {
 			callback(error, json);
 		});
     },
-    
+
     getActionGroups(callback) {
     	this.get({
 			url: this.urlForQuery("/actionGroups"),
@@ -355,7 +356,7 @@ OverkizApi.prototype = {
 			});
 		}
     },
-    
+
     unregisterListener: function() {
         var that = this;
         if(this.listenerId != null) {
@@ -370,7 +371,7 @@ OverkizApi.prototype = {
 			});
         }
     },
-    
+
     refreshStates: function(callback) {
     	this.put({
 			url: this.urlForQuery("/setup/devices/states/refresh"),
@@ -421,7 +422,7 @@ OverkizApi.prototype = {
             }
         }
     },
-    
+
     /*
     	oid: The command OID or 'apply' if immediate execution
     	execution: Body parameters
