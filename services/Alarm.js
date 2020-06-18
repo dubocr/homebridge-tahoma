@@ -100,8 +100,7 @@ class Alarm extends AbstractService {
         
         if(commands != null) {
             this.device.executeCommand(commands, function(status, error, data) {
-				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
-                switch (status) {
+				switch (status) {
                     case ExecutionState.COMPLETED:
                         if(this.device.stateless) {
                             this.currentState.updateValue(value);
@@ -114,7 +113,7 @@ class Alarm extends AbstractService {
 						}
                     break;
                 }
-            }.bind(this));
+            }.bind(this), callback);
         } else {
             Log("No target command");
         }

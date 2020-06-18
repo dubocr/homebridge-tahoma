@@ -41,9 +41,7 @@ class Lightbulb extends AbstractService {
             break;
         }
         if(commands.length) {
-            this.device.executeCommand(commands, function(status, error, data) {
-				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
-            }.bind(this));
+            this.device.executeCommand(commands, function(status, error, data) {}.bind(this), callback);
         }
     }
     
@@ -53,18 +51,14 @@ class Lightbulb extends AbstractService {
     setBrightness(value, callback) {
         var commands = new Command('setIntensity', value);
         if(commands) {
-            this.device.executeCommand(commands, function(status, error, data) {
-				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
-            }.bind(this));
+            this.device.executeCommand(commands, function(status, error, data) {}.bind(this), callback);
         }
     }
     
     setHueSat(hue, saturation, callback) {
         var commands = new Command('setHueAndSaturation', [hue, saturation]);
         if(commands) {
-            this.device.executeCommand(commands, function(status, error, data) {
-				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
-            }.bind(this));
+            this.device.executeCommand(commands, function(status, error, data) {}.bind(this), callback);
         }
     }
     

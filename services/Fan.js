@@ -33,9 +33,7 @@ class Fan extends AbstractService {
             break;
         }
         if(commands.length) {
-            this.device.executeCommand(commands, function(status, error, data) {
-				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
-            }.bind(this));
+            this.device.executeCommand(commands, function(status, error, data) {}.bind(this), callback);
         }
     }
     
@@ -44,9 +42,7 @@ class Fan extends AbstractService {
 	**/
     setSpeed(value, callback) {
         var commands = new Command('setIntensity', [value]);
-        this.device.executeCommand(commands, function(status, error, data) {
-			if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
-        }.bind(this));
+        this.device.executeCommand(commands, function(status, error, data) {}.bind(this), callback);
     }
 
     onStateUpdate(name, value) {

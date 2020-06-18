@@ -152,15 +152,17 @@ class OverkizDevice {
 			
 			if (status == ExecutionState.INITIALIZED) {
 				this.lastExecId = data.execId;
-			} else if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
-				Log('[' + this.name + '] ' + cmdName + ' ' + (deviceError == null ? status : deviceError));
-				try {
-					callback(deviceError);
-				} catch(err) {
-					Log('Callback already triggered');
-				}
 			} else {
-				Log.debug('[' + this.name + '] ' + cmdName + ' ' + (deviceError == null ? status : deviceError));
+				if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) {
+					Log('[' + this.name + '] ' + cmdName + ' ' + (deviceError == null ? status : deviceError));
+					try {
+						callback(deviceError);
+					} catch(err) {
+						Log('Callback already triggered');
+					}
+				} else {
+					Log.debug('[' + this.name + '] ' + cmdName + ' ' + (deviceError == null ? status : deviceError));
+				}
 			}
 
 			processing(status, deviceError, data);

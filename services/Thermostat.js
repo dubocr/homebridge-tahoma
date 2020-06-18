@@ -431,7 +431,7 @@ class Thermostat extends AbstractService {
 				break;
 				default: break;
 			}
-		}.bind(this));
+		}.bind(this), callback);
     }
     
     setTargetTemperature(value, callback) {
@@ -538,8 +538,10 @@ class Thermostat extends AbstractService {
         }
 		
 		this.device.executeCommand(commands, function(status, error, data) {
-			if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
 			switch (status) {
+				case ExecutionState.INITIALIZED:
+					callback(error);
+				break;
 				case ExecutionState.COMPLETED:
 					if(this.device.stateless) {
 						this.currentTemperature.updateValue(value);
@@ -549,7 +551,7 @@ class Thermostat extends AbstractService {
                     this.targetTemperature.updateValue(this.currentTemperature.value);
 				break;
 			}
-		}.bind(this));
+		}.bind(this), callback);
     }
 
     onStateUpdate(name, value) {

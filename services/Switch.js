@@ -52,13 +52,12 @@ class Switch extends AbstractService {
             break;
         }
         this.device.executeCommand(commands, function(status, error, data) {
-			if(status == ExecutionState.FAILED || status == ExecutionState.COMPLETED) { callback(error); } // HomeKit callback
             switch (status) {
                 case ExecutionState.FAILED:
                     this.onState.updateValue(!value);
                 break;
             }
-        }.bind(this));
+        }.bind(this), callback);
     }
     
     onStateUpdate(name, value) {
