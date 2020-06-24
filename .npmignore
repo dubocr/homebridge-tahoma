@@ -1,8 +1,19 @@
-# Ignore compiled code
-dist
-old
+# Ignore source code
+src
 
 # ------------- Defaults ------------- #
+
+# eslint
+.eslintrc
+
+# typescript
+tsconfig.json
+
+# vscode
+.vscode
+
+# nodemon
+nodemon.json
 
 # Logs
 logs

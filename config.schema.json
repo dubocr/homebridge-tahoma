@@ -1,0 +1,27 @@
+{
+  "pluginAlias": "Tahoma",
+  "pluginType": "platform",
+  "singular": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "TaHoma"
+      },
+      "service": {
+        "title": "Service",
+        "type": "string",
+        "default": "tahoma",
+        "oneOf": [
+          { "title": "TaHoma", "enum": ["tahoma"] },
+          { "title": "Cozytouch", "enum": ["cozytouch"] },
+          { "title": "Connexoon", "enum": ["connexoon"] }
+        ],
+        "required": true
+      }
+    }
+  }
+}
