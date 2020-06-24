@@ -47,7 +47,6 @@ class WindowCovering extends AbstractService {
 	* HomeKit '100' (Open) => 0% Closure
 	**/
     setTarget(requestedValue, callback) {
-        Log('setTarget ' + this.targetPosition.value + '/' + this.targetAngle.value);
     	var commands = [];
 		var value = this.reverse ? (100 - requestedValue) : requestedValue;
 
@@ -198,7 +197,6 @@ class WindowCovering extends AbstractService {
 	* Triggered when Homekit try to modify the Characteristic.TargetAngle
 	**/
     setAngle(value, callback) {
-        Log('setAngle ' + this.targetPosition.value + '/' + this.targetAngle.value);
         var commands = [];
 
         switch(this.device.widget) {
@@ -232,7 +230,6 @@ class WindowCovering extends AbstractService {
 	* Helper
 	**/
     setClosureAndOrientation(callback) {
-        Log('setClosureAndOrientation ' + this.targetPosition.value + '/' + this.targetAngle.value);
         var commands = [];
 
         switch(this.device.widget) {
