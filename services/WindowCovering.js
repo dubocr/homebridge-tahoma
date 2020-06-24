@@ -8,13 +8,13 @@ class WindowCovering extends AbstractService {
 		Log = log;
 		Service = homebridge.hap.Service;
 		Characteristic = homebridge.hap.Characteristic;
-		
+
         this.defaultPosition = config['defaultPosition'] || 0;
         this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
         this.reverse = config['reverse'] || false;
         this.blindMode = config['blindMode'] || false;
         this.cycle = config['cycle'] || false;
-        
+
         this.service = new Service[this.constructor.name](device.getName());
 
         this.currentPosition = this.service.getCharacteristic(Characteristic.CurrentPosition);
@@ -47,9 +47,10 @@ class WindowCovering extends AbstractService {
 	* HomeKit '100' (Open) => 0% Closure
 	**/
     setTarget(requestedValue, callback) {
+        Log('setTarget ' + this.targetPosition.value + '/' + this.targetAngle.value);
     	var commands = [];
 		var value = this.reverse ? (100 - requestedValue) : requestedValue;
-		
+
         switch(this.device.widget) {
             case 'PositionableHorizontalAwning':
                 commands.push(new Command('setDeployment', value));
@@ -96,7 +97,7 @@ class WindowCovering extends AbstractService {
                 }
             break;
 
-            case 'PositionableScreen':            
+            case 'PositionableScreen':
             case 'PositionableScreenUno':
             case 'PositionableHorizontalAwningUno':
             case 'PositionableRollerShutter':
@@ -116,19 +117,23 @@ class WindowCovering extends AbstractService {
             break;
 
             case 'PositionableExteriorVenetianBlind':
-                if(this.blindMode) {
-                    if(value < 100) {
+
+                if(this.blindMode == 'orientation') {
+                    if(requestedValue < 100) {
                         commands.push(new Command('setClosureAndOrientation', [100, (100-value)]));
                     } else {
-                        commands.push(new Command('setClosure', 0));
+                        commands.push(new Command('setClosure', (100-value)));
                     }
-                } else {
+                } else if(this.blindMode == 'closure') {
                     var closure = 100-value;
-                    /*
+                    if(requestedValue > 0) {
                         var orientation = Math.round((this.targetAngle.value + 90)/1.8);
                         commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
-                    */
-                    commands.push(new Command('setClosure', closure));
+                    } else {
+                        commands.push(new Command('setClosure', closure));
+                    }
+                } else {
+                    return this.setClosureAndOrientation(callback);
                 }
             break;
 
@@ -155,7 +160,7 @@ class WindowCovering extends AbstractService {
                     callback(error);
                 break;
 				case ExecutionState.IN_PROGRESS:
-					var positionState = (value == 100 || value > this.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					var positionState = (this.targetPosition.value == 100 || this.targetPosition.value > this.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
 					this.positionState.updateValue(positionState);
 				break;
                 case ExecutionState.COMPLETED:
@@ -193,17 +198,17 @@ class WindowCovering extends AbstractService {
 	* Triggered when Homekit try to modify the Characteristic.TargetAngle
 	**/
     setAngle(value, callback) {
+        Log('setAngle ' + this.targetPosition.value + '/' + this.targetAngle.value);
         var commands = [];
 
         switch(this.device.widget) {
             default:
-            var orientation = Math.round((value + 90)/1.8);
-            if(this.targetPosition.value != this.currentPosition.value) {
-                var closure = 100-this.targetPosition.value;
-                commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
-            } else {
-                commands.push(new Command('setOrientation', orientation));
-            }
+                if(this.blindMode && this.targetPosition.value == this.currentPosition.value) {
+                    var orientation = Math.round((value + 90)/1.8);
+                    commands.push(new Command('setOrientation', orientation));
+                } else {
+                    return this.setClosureAndOrientation(callback);
+                }
             break;
         }
 		this.device.executeCommand(commands, function(status, error, data) {
@@ -222,7 +227,58 @@ class WindowCovering extends AbstractService {
             }
         }.bind(this), callback);
     }
-    
+
+    /**
+	* Helper
+	**/
+    setClosureAndOrientation(callback) {
+        Log('setClosureAndOrientation ' + this.targetPosition.value + '/' + this.targetAngle.value);
+        var commands = [];
+
+        switch(this.device.widget) {
+            default:
+            var orientation = Math.round((this.targetAngle.value + 90)/1.8);
+            var target = this.reverse ? (100 - this.targetPosition.value) : this.targetPosition.value;
+            var closure = 100 - target;
+            commands.push(new Command('setClosureAndOrientation', [closure, orientation]));
+            break;
+        }
+		this.device.executeCommand(commands, function(status, error, data) {
+        	switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                break;
+				case ExecutionState.IN_PROGRESS:
+					var positionState = (this.targetPosition.value == 100 || this.targetPosition.value > this.currentPosition.value) ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING;
+					this.positionState.updateValue(positionState);
+				break;
+                case ExecutionState.COMPLETED:
+                    this.positionState.updateValue(Characteristic.PositionState.STOPPED);
+                    if(this.device.stateless) {
+                        this.currentAngle.updateValue(this.targetAngle.value);
+                        if(this.defaultPosition) {
+                            this.currentPosition.updateValue(this.defaultPosition);
+                            this.targetPosition.updateValue(this.defaultPosition);
+                        } else {
+                            this.currentPosition.updateValue(this.targetPosition.value);
+                        }
+                    }
+                    if(this.obstruction != null && this.obstruction.value == true) {
+                        this.obstruction.updateValue(false);
+                    }
+                break;
+                case ExecutionState.FAILED:
+                    this.positionState.updateValue(Characteristic.PositionState.STOPPED);
+                    this.targetAngle.updateValue(this.currentAngle.value); // Update target position in case of cancellation
+                    this.targetPosition.updateValue(this.currentPosition.value); // Update target position in case of cancellation
+					if(this.obstruction != null) {
+						this.obstruction.updateValue(error == 'WHILEEXEC_BLOCKED_BY_HAZARD');
+                    }
+                break;
+            }
+        }.bind(this), callback);
+    }
+
     onStateUpdate(name, value) {
         var currentPosition = null, targetPosition = null, currentAngle = null, targetAngle = null;
         switch(name) {
@@ -242,8 +298,8 @@ class WindowCovering extends AbstractService {
                 currentAngle = Math.round(value * 1.8 - 90);
                 targetAngle = currentAngle;
             break;
-			
-			
+
+
             case 'core:SlatsOrientationState':
 				currentPosition = this.reverse ? (100 - value) : value;
                 targetPosition = currentPosition;
@@ -254,11 +310,15 @@ class WindowCovering extends AbstractService {
             default: break;
         }
 
-        if(this.blindMode && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
+        if(this.blindMode == 'orientation' && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
             if(this.device.states['core:OpenClosedState'] == 'closed') {
-				var orientation = this.device.states['core:SlateOrientationState'];
-				if(Number.isInteger(orientation))
+                var orientation = 100-this.device.states['core:SlateOrientationState'];
+				if(Number.isInteger(orientation)) {
                     currentPosition = orientation;
+                    if(Math.round(orientation/5) == Math.round(this.targetPosition.value/5)) {
+                        this.targetPosition.updateValue(orientation);
+                    }
+                }
 			} else {
 				currentPosition = 0;
 			}

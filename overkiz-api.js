@@ -111,8 +111,8 @@ function OverkizApi(log, config) {
     // Default values
     this.debug = config['debug'] || false;
     this.debugUrl = config['debugUrl'] || false;
-    this.alwaysPoll = config['alwaysPoll'] || false;
-    this.pollingPeriod = config['pollingPeriod'] || 2; // Poll for events every 2 seconds by default
+    this.execPollingPeriod = config['execPollingPeriod'] || 2; // Poll for execution events every 2 seconds by default
+    this.pollingPeriod = config['pollingPeriod'] || 0; // Don't continuously poll for events by default
     this.refreshPeriod = config['refreshPeriod'] || (60 * 30); // Refresh device states every 30 minutes by default
     this.service = config['service'] || 'TaHoma';
 
@@ -131,7 +131,8 @@ function OverkizApi(log, config) {
     this.stateChangedEventListener = null;
 
     var that = this;
-    this.eventpoll = pollingtoevent(function(done) {
+
+    var pollCallback = function(done) {
         if(that.debug) {
             //that.log('Polling ('+that.isLoggedIn+'/'+that.listenerId+')');
         }
@@ -143,17 +144,14 @@ function OverkizApi(log, config) {
             	done(error, data);
             });
         } else {
-            if(that.alwaysPoll && that.debug) {
+            if(that.pollingPeriod > 0 && that.debug) {
                 that.log('No listener registered while in always poll mode');
             }
             done(null, []);
         }
-    }, {
-        longpolling: true,
-        interval: (1000 * this.pollingPeriod)
-    });
+    };
 
-    this.eventpoll.on("longpoll", function(data) {
+    var longPollCallback = function(data) {
         for (event of data) {
             //that.log(event);
             if (event.name == 'DeviceStateChangedEvent') {
@@ -172,25 +170,52 @@ function OverkizApi(log, config) {
                     cb(event.newState, event.failureType == undefined ? null : event.failureType, event);
                     if (event.timeToNextState == -1) { // No more state expected for this execution
                         delete that.executionCallback[event.execId];
-                        if(that.executionCallback.length == 0) {
-                            that.runningCommands = 0;
-                        } else {
+                        if(that.hasExecution()) {
                             that.runningCommands--;
+                        } else {
+                            that.runningCommands = 0;
                         }
-                        if(!that.alwaysPoll && Object.keys(that.executionCallback).length == 0) { // Unregister listener when no more execution running
+                        if(that.pollingPeriod == 0 && !that.hasExecution()) { // Unregister listener when no more execution running
                         	that.unregisterListener();
                         }
                     }
                 }
             }
         }
-    });
+    };
 
-    this.eventpoll.on("error", function(error) {
-    	that.log("Error with listener " + that.listenerId + " => " + error);
+    this.execpoll = pollingtoevent(function(done) {
+        if(that.hasExecution()) {
+            pollCallback(done);
+        }
+    }, {
+        longpolling: true,
+        interval: (1000 * this.execPollingPeriod)
+    });
+    this.execpoll.on("longpoll", longPollCallback);
+
+    this.execpoll.on("error", function(error) {
+    	that.log("[EXECPOLLING] Error with listener " + that.listenerId + " => " + error);
     	that.listenerId = null;
     	that.registerListener();
     });
+
+    if(this.pollingPeriod > 0) {
+        this.eventpoll = pollingtoevent(function(done) {
+            if(!that.hasExecution()) {
+                pollCallback(done);
+            }
+        }, {
+            longpolling: true,
+            interval: (1000 * this.pollingPeriod)
+        });
+        this.eventpoll.on("longpoll", longPollCallback);
+        this.eventpoll.on("error", function(error) {
+            that.log("[POLLING] Error with listener " + that.listenerId + " => " + error);
+            that.listenerId = null;
+            that.registerListener();
+        });
+    }
 
     var refreshpoll = pollingtoevent(function(done) {
         if(that.debug) {
@@ -225,6 +250,10 @@ function OverkizApi(log, config) {
 }
 
 OverkizApi.prototype = {
+    hasExecution: function() {
+    	return Object.keys(this.executionCallback).length > 0;
+    },
+
     urlForQuery: function(query) {
     	if(this.debugUrl) {
     		return this.debugUrl + "&query=" + query;
@@ -320,7 +349,7 @@ OverkizApi.prototype = {
                 } else if (json && json.success) {
                     that.isLoggedIn = true;
                     myRequest(authCallback);
-                    if(that.alwaysPoll) {
+                    if(that.pollingPeriod > 0) {
                 		that.registerListener();
                     }
                 } else if (json && json.error) {
@@ -351,7 +380,7 @@ OverkizApi.prototype = {
 				} else {
 					that.listenerId = null;
                     that.log("Error while registering listener");
-                    setTimeout(that.registerListener.bind(that), 1000 * that.pollingPeriod);
+                    setTimeout(that.registerListener.bind(that), 1000 * 30);
 				}
 			});
 		}
@@ -446,7 +475,7 @@ OverkizApi.prototype = {
             if (error == null) {
                 callback(ExecutionState.INITIALIZED, error, json); // Init OK
                 that.executionCallback[json.execId] = callback;
-                if(!that.alwaysPoll) {
+                if(that.pollingPeriod == 0) {
                     that.registerListener();
                 }
             } else {

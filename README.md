@@ -25,7 +25,7 @@ Minimal configuration sample:
 		{
 			"platform": "Tahoma",
 			"name": "My TaHoma Box",
-			
+
 			"user": "user@me.com",
 			"password": "MyPassw0rd",
 		}
@@ -40,7 +40,8 @@ Configuration parameters:
 | `user`               		 | String		| null				| mandatory, your TaHoma/Connexoon/Cozytouch/E.Connect account username                                                                                                                     |
 | `password`             	 | String		| null				| mandatory, your TaHoma/Connexoon/Cozytouch/E.Connect account password                                                                                                                     |
 | `service`              	 | String		| 'TaHoma'			| optional, service name ('TaHoma', 'Connexoon', 'Connexoon RTS', 'Cozytouch' or 'Rexel')																																																											|
-| `refreshPeriod`            | Integer	| 600					| optional, device states refresh period in seconds							 																										 																										|
+| `refreshPeriod`            | Integer	| 1800					| optional, device states refresh period in seconds							 																										 																										|
+| `pollingPeriod`            | Integer	| 10					| optional, bridge polling period in seconds							 																										 																										|
 | `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false					| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
@@ -59,7 +60,8 @@ Configuration parameters:
 | `initPosition`	         | Integer	| 50			| optional, default position for UpDown rollershutter												|
 | `defaultPosition`	         | Integer	| 0				| optional, final position for UpDown rollershutter after any command												|
 | `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
-| `blindMode`	       		 | Boolean	| false			| optional, control horizonally adjustable blinds with just one slider. When setting ``blindMode: true`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light. |
+| `blindMode`	       		 | String	| null			| optional, define main slider action (slates orientation or closure). By default, both closure and orientation will be set. When setting ``blindMode: "orientation"`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light.
+When setting ``blindMode: "closure"`` the blinds work in the following way: Closing the blinds or setting them to 0% will fully close them. Opening the blinds or setting them to 100% will open them with specified orientation. |
 
 | GarageDoorOpener parameters| Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -83,7 +85,7 @@ Full configuration example:
 		{
 			"platform": "Tahoma",
 			"name": "My Tahoma",
-			
+
 			"user": "user@me.com",
 			"password": "MyPassw0rd",
 			"service": "TaHoma",
