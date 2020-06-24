@@ -302,6 +302,13 @@ class WindowCovering extends AbstractService {
                 targetPosition = currentPosition;
                 currentAngle = Math.round(value * 1.8 - 90);
                 targetAngle = currentAngle;
+            break;
+
+            case 'core:OpenClosedPedestrianState':
+            case 'core:OpenClosedUnknownState':
+            case 'core:OpenClosedPartialState':
+                currentPosition = value == 'closed' ? 0 : 100;
+                targetPosition = currentPosition;
 			break;
 
             default: break;
