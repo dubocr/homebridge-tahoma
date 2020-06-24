@@ -27,7 +27,7 @@ Queue = function(command) {
 
 Queue.prototype = {
     callback: function(status, error, data) {
-        if(error && data.failedCommands != 'undefined') {
+        if(error && data && data.failedCommands) {
             for(const command of this.commands) {
                 var failed = false;
                 for(const fail of data.failedCommands) {
