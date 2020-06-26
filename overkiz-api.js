@@ -92,6 +92,7 @@ State = {
 Server = {
 	'Cozytouch': 'ha110-1.overkiz.com',
 	'TaHoma': 'tahomalink.com',
+	'Tahoma': 'tahomalink.com',
 	'Connexoon': 'tahomalink.com',
 	'Connexoon RTS': 'ha201-1.overkiz.com',
 	'Rexel': 'ha112-1.overkiz.com'

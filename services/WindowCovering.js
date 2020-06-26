@@ -316,7 +316,7 @@ class WindowCovering extends AbstractService {
 
         if(this.blindMode == 'orientation' && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
             if(this.device.states['core:OpenClosedState'] == 'closed') {
-                var orientation = 100-this.device.states['core:SlateOrientationState'];
+                var orientation = this.reverse ? this.device.states['core:SlateOrientationState'] : (100-this.device.states['core:SlateOrientationState']);
 				if(Number.isInteger(orientation)) {
                     currentPosition = orientation;
                     if(Math.round(orientation/5) == Math.round(this.targetPosition.value/5)) {
