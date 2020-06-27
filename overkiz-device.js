@@ -142,12 +142,16 @@ class OverkizDevice {
 		};
 		command.callback = function(status, error, data) {
 			var deviceError = null;
-			if(error) {
-                for(const fail of data.failedCommands) {
-                    if(fail.deviceURL == this.deviceURL) {
-                        deviceError = fail.failureType;
-                    }
-                }
+			if(error && data && data.failedCommands) {
+				if(data && data.failedCommands) {
+					for(const fail of data.failedCommands) {
+						if(fail.deviceURL == this.deviceURL) {
+							deviceError = fail.failureType;
+						}
+					}
+				} else {
+					deviceError = error;
+				}
             }
 			
 			if (status == ExecutionState.INITIALIZED) {

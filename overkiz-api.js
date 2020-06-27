@@ -481,7 +481,7 @@ OverkizApi.prototype = {
                 }
             } else {
                 this.runningCommands--;
-                callback(ExecutionState.FAILED, error);
+                callback(ExecutionState.FAILED, error, json);
             }
         });
     },
