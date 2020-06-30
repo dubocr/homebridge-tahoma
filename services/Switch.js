@@ -9,7 +9,7 @@ class Switch extends AbstractService {
 		Service = homebridge.hap.Service;
         Characteristic = homebridge.hap.Characteristic;
         
-        if(this.device.widget == 'AtlanticPassAPCDHW' || this.device.widget == 'DomesticHotWaterTank') {
+        if(this.device.uiClass == 'WaterHeatingSystem' || this.device.widget == 'AtlanticElectricalTowelDryer') {
             this.service = new Service.Switch('BOOST');
         } else {
             this.service = new Service.Switch(device.getName());
@@ -36,6 +36,13 @@ class Switch extends AbstractService {
             break;
             case 'AtlanticPassAPCDHW':
                 commands = new Command('setBoostOnOffState', value ? 'on' : 'off');
+            break;
+            case 'AtlanticElectricalTowelDryer':
+                commands = [];
+                commands.push(new Command('setTowelDryerTemporaryState', value ? 'boost' : 'permanentHeating'));
+                if(value) {
+                    commands.push(new Command('setTowelDryerBoostModeDuration', 10));
+                }
             break;
             case 'DomesticHotWaterTank':
                 commands = new Command('setForceHeating', value ? 'on' : 'off');
@@ -68,6 +75,9 @@ class Switch extends AbstractService {
             case 'io:ForceHeatingState':
             case 'core:BoostOnOffState':
                 onState = value == 'on' ? true : false;
+            break;
+            case 'io:TowelDryerTemporaryStateState':
+                onState = value == 'boost' ? true : false;
             break;
             case 'io:TargetHeatingLevelState':
                 onState = value == 'comfort' ? true : false;

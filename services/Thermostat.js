@@ -47,6 +47,9 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+            case 'AtlanticElectricalTowelDryer':
+                // OFF, HEAT, AUTO
+                this.targetState.setProps({ validValues: [0,1,3] });
                 this.targetTemperature.setProps({ minValue: 0, maxValue: 28, minStep: 0.5 });
             break;
 
@@ -226,6 +229,21 @@ class Thermostat extends AbstractService {
                 }
             break;
 
+            case 'AtlanticElectricalTowelDryer':
+                switch(value) {
+                    case Characteristic.TargetHeatingCoolingState.AUTO:
+                        commands = new Command('setTowelDryerOperatingMode', ['internal']);
+                        break;
+
+                    case Characteristic.TargetHeatingCoolingState.HEAT:
+                        commands = new Command('setTowelDryerOperatingMode', ['external']);
+                        break;
+
+                    case Characteristic.TargetHeatingCoolingState.OFF:
+                        commands = new Command('setTowelDryerOperatingMode', ['standby']);
+                        break;
+                }
+            break;
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
                 switch(value) {
                     case Characteristic.TargetHeatingCoolingState.AUTO:
@@ -449,6 +467,7 @@ class Thermostat extends AbstractService {
             case 'HeatingSetPoint': // EvoHome
             case 'ProgrammableAndProtectableThermostatSetPoint':
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+            case 'AtlanticElectricalTowelDryer':
                 commands = new Command('setTargetTemperature', value);
             break;
 

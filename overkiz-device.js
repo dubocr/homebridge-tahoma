@@ -241,6 +241,7 @@ class OverkizDevice {
 			case 'RelativeHumiditySensor > SomfyThermostat':
 			case 'TemperatureSensor > ValveHeatingTemperatureInterface':
 			case 'TemperatureSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
+			case 'TemperatureSensor > AtlanticElectricalTowelDryer':
 				device.merged = true;
 				device.services = this.services; // Relink device services to parent's one
 				for(var service of this.services) {
@@ -252,6 +253,11 @@ class OverkizDevice {
 			case 'ContactSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
 			case 'CumulativeElectricPowerConsumptionSensor > AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
 			case 'CumulativeElectricPowerConsumptionSensor > DomesticHotWaterProduction':
+			case 'OccupancySensor > AtlanticElectricalTowelDryer':
+			case 'LuminanceSensor > AtlanticElectricalTowelDryer':
+			case 'RelativeHumiditySensor > AtlanticElectricalTowelDryer':
+			case 'WeatherForecastSensor > AtlanticElectricalTowelDryer':
+			case 'CumulativeElectricPowerConsumptionSensor > AtlanticElectricalTowelDryer':
 				device.merged = true;
 				for(var service of device.services) {
 					this.services.push(service);
