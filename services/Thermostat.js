@@ -411,17 +411,17 @@ class Thermostat extends AbstractService {
             case 'AtlanticPassAPCDHW':
         		switch(value) {
 					case Characteristic.TargetHeatingCoolingState.AUTO:
-						//commands.push(new Command('setDHWOnOffState', 'on'));
+						commands.push(new Command('setDHWOnOffState', 'on'));
 						commands.push(new Command('setPassAPCDHWMode', 'internalScheduling'));
 						break;
 
 					case Characteristic.TargetHeatingCoolingState.HEAT:
-						//commands.push(new Command('setDHWOnOffState', 'on'));
+						commands.push(new Command('setDHWOnOffState', 'on'));
 						commands.push(new Command('setPassAPCDHWMode', 'comfort'));
 						break;
 
 					case Characteristic.TargetHeatingCoolingState.COOL:
-						//commands.push(new Command('setDHWOnOffState', 'on'));
+						commands.push(new Command('setDHWOnOffState', 'on'));
 						commands.push(new Command('setPassAPCDHWMode', 'eco'));
 						break;
 
@@ -590,8 +590,11 @@ class Thermostat extends AbstractService {
             break;
             case 'core:TargetTemperatureState':
             case 'core:WaterTargetTemperatureState':
-            case 'core:TargetDHWTemperatureState':
             case 'core:TargetRoomTemperatureState':
+                targetTemperature = value;
+            break;
+            case 'core:TargetDHWTemperatureState':
+                currentTemperature = value;
                 targetTemperature = value;
             break;
 			case 'core:RelativeHumidityState':
@@ -641,7 +644,7 @@ class Thermostat extends AbstractService {
             case 'io:PassAPCDHWModeState':
                 if(this.device.states['core:DHWOnOffState'] == 'on') {
                     var auto = ['externalScheduling', 'internalScheduling'].includes(this.device.states['io:PassAPCDHWModeState']);
-                    if(this.device.states['io:PassAPCDHWProfileState'] == 'comfort') {
+                    if(this.device.states['io:PassAPCDHWModeState'] == 'comfort') {
                         currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
                         targetState = auto ? Characteristic.TargetHeatingCoolingState.AUTO : Characteristic.TargetHeatingCoolingState.HEAT;
                     } else {

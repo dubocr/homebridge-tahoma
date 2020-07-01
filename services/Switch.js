@@ -10,7 +10,11 @@ class Switch extends AbstractService {
         Characteristic = homebridge.hap.Characteristic;
         
         if(this.device.uiClass == 'WaterHeatingSystem' || this.device.widget == 'AtlanticElectricalTowelDryer') {
-            this.service = new Service.Switch('BOOST');
+            if(this.device._look_state('io:PassAPCDHWConfigurationState') == 'snapshot') {
+                this.service = new Service.Switch('N/A');
+            } else {
+                this.service = new Service.Switch('BOOST');
+            }
         } else {
             this.service = new Service.Switch(device.getName());
         }
