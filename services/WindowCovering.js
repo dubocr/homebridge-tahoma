@@ -29,10 +29,12 @@ class WindowCovering extends AbstractService {
         }
 
         if(device.hasCommand('setOrientation')) {
-            this.currentAngle = this.service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
-            this.targetAngle = this.service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
-            this.targetAngle.setProps({ minStep: 10 });
-            this.targetAngle.on('set', this.device.postpone.bind(this, this.setAngle.bind(this)));
+            if(this.blindMode != 'orientation') {
+                this.currentAngle = this.service.addCharacteristic(Characteristic.CurrentHorizontalTiltAngle);
+                this.targetAngle = this.service.addCharacteristic(Characteristic.TargetHorizontalTiltAngle);
+                this.targetAngle.setProps({ minStep: 10 });
+                this.targetAngle.on('set', this.device.postpone.bind(this, this.setAngle.bind(this)));
+            }
         } else {
 			this.blindMode = false;
 		}
