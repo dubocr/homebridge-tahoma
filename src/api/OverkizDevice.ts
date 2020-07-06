@@ -12,6 +12,7 @@ export default class OverkizDevice {
     baseURL = '';
 
     constructor(device) {
+        console.log('Instanciate ' + this.constructor.name + ' ' + device.label);
         Object.assign(this, device);
         this.services = [];
         this.child = [];

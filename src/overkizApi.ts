@@ -2,7 +2,7 @@ import axios from 'axios';
 import events from 'events';
 import pollingtoevent from 'polling-to-event';
 import { URLSearchParams } from 'url';
-import OverkizDevice from './overkizDevice';
+import OverkizDevice from './api/OverkizDevice';
 
 let Log;
 
@@ -367,6 +367,20 @@ export default class OverkizClient {
     getDevices() {
         return this.get('/setup/devices');
     }
+
+    async getDeviceModels() {
+        const devices = await this.get('/setup/devices');
+        for(const device of devices) {
+            Log(device.uiClass + ' > ' + device.widget);
+            const c = await import('./api/uiClass/' + device.uiClass)
+                .catch(() => import('./api/widget/' + device.widget))
+                .then((c) => c.default)
+                .catch(() => OverkizDevice);
+            new c(device);
+        }
+    }
+
+
 
     getActionGroups() {
         return this.get('/actionGroups');

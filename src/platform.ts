@@ -51,6 +51,7 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
    */
   async discoverDevices() {
       const devices = await this.client.getDevices();
+      const models = await this.client.getDeviceModels();
       /*const devices: OverkizDevice[] = [];
       widgets.array.forEach(device => {
           const main = devices.find((d) => d.baseURL === device.deviceURL);
