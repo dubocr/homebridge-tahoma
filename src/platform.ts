@@ -1,7 +1,7 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { OverkizAccessory } from './platformAccessory';
+import OverkizAccessory from './accessories/OverkizAccessory';
 import OverkizClient from './overkizApi';
 
 /**
@@ -50,8 +50,8 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
-      const devices = await this.client.getDevices();
-      const models = await this.client.getDeviceModels();
+      const accessories: OverkizAccessory[] = [];
+      const devices = await this.client.getDeviceModels();
       /*const devices: OverkizDevice[] = [];
       widgets.array.forEach(device => {
           const main = devices.find((d) => d.baseURL === device.deviceURL);
@@ -64,12 +64,23 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
       return devices;*/
 
       // loop over the discovered devices and register each one if it has not already been registered
+      const uuids: string[] = [];
       for (const device of devices) {
+          this.log.debug(device.uiClass + ' > ' + device.widget);
+          const classConstructor = await import('./accessories/widget/' + device.widget)
+              .catch(() => import('./accessories/uiClass/' + device.uiClass))
+              .then((c) => c.default)
+              .catch(() => OverkizAccessory);
 
           // generate a unique id for the accessory this should be generated from
           // something globally unique, but constant, for example, the device serial
           // number or MAC address
-          const uuid = this.api.hap.uuid.generate(device.deviceURL);
+          const uuid = this.api.hap.uuid.generate(device.baseURL);
+          uuids.push(uuid);
+
+          if(!device.isMainDevice()) {
+              continue;
+          }
 
           // see if an accessory with the same uuid has already been registered and restored from
           // the cached devices we stored in the `configureAccessory` method above
@@ -85,14 +96,14 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
 
               // create the accessory handler for the restored accessory
               // this is imported from `platformAccessory.ts`
-              new OverkizAccessory(this, existingAccessory);
+              accessories.push(new classConstructor(this, device, existingAccessory));
 
           } else {
               // the accessory does not yet exist, so we need to create it
-              this.log.info('Adding new accessory:', device.label);
+              this.log.info('Adding new accessory:', device.name);
 
               // create a new accessory
-              const accessory = new this.api.platformAccessory(device.label, uuid);
+              const accessory = new this.api.platformAccessory(device.name, uuid);
 
               // store a copy of the device object in the `accessory.context`
               // the `context` property can be used to store any data about the accessory you may need
@@ -100,15 +111,13 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
 
               // create the accessory handler for the newly create accessory
               // this is imported from `platformAccessory.ts`
-              new OverkizAccessory(this, accessory);
+              accessories.push(new classConstructor(this, device, accessory));
 
               // link the accessory to your platform
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           }
-
-      // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-      // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
-
+      const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
   }
 }

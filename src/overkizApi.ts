@@ -370,14 +370,7 @@ export default class OverkizClient {
 
     async getDeviceModels() {
         const devices = await this.get('/setup/devices');
-        for(const device of devices) {
-            Log(device.uiClass + ' > ' + device.widget);
-            const c = await import('./api/uiClass/' + device.uiClass)
-                .catch(() => import('./api/widget/' + device.widget))
-                .then((c) => c.default)
-                .catch(() => OverkizDevice);
-            new c(device);
-        }
+        return devices.map((device) => new OverkizDevice(device));
     }
 
 

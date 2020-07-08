@@ -1,18 +1,18 @@
 export default class OverkizDevice {
+    uiClass;
     services: OverkizDevice[] = [];
     child: OverkizDevice[] = [];
     parent: OverkizDevice|null = null;
     name: string;
     merged = false;
     stateless = false;
-    states = [];
+    states;
     timeout: number|null = null;
 
     deviceURL = '';
     baseURL = '';
 
     constructor(device) {
-        console.log('Instanciate ' + this.constructor.name + ' ' + device.label);
         Object.assign(this, device);
         this.services = [];
         this.child = [];
@@ -30,6 +30,10 @@ export default class OverkizDevice {
 
     getSerialNumber() {
         return this.deviceURL;
+    }
+
+    isMainDevice() {
+        return this.getComponentID() === 1;
     }
 
     getComponentID() {
@@ -52,5 +56,26 @@ export default class OverkizDevice {
 
     addChild(device: OverkizDevice) {
         this.child.push(device);
+    }
+
+    getManufacturer() {
+        const manufacturer = this._look_state('core:ManufacturerNameState');
+        return manufacturer !== null ? manufacturer : 'Somfy';
+    }
+
+    getModel() {
+        const model = this._look_state('core:ModelState');
+        return model !== null ? model : this.uiClass;
+    }
+
+    _look_state(stateName) {
+        if(this.states !== null) {
+            for (const state of this.states) {
+                if (state.name === stateName) {
+                    return state.value;
+                }
+            }
+        }
+        return null;
     }
 }
