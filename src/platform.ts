@@ -2,7 +2,8 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import OverkizAccessory from './accessories/OverkizAccessory';
-import OverkizClient from './overkizApi';
+import OverkizDevice from './api/models/OverkizDevice';
+import OverkizClient from './api/OverkizClient';
 
 /**
  * HomebridgePlatform
@@ -37,11 +38,17 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory) {
-      this.log.info('Loading accessory from cache:', accessory.displayName);
-
+  async configureAccessory(accessory: PlatformAccessory) {
+      const device = new OverkizDevice(this.client, accessory.context.device);
+      const classConstructor = await import('./accessories/widget/' + device.widget)
+          .catch(() => import('./accessories/uiClass/' + device.uiClass))
+          .then((c) => c.default)
+          .catch(() => OverkizAccessory);
+      new classConstructor(this, device, accessory);
       // add the restored accessory to the accessories cache so we can track if it has already been registered
-      this.accessories.push(accessory);
+      if(!this.accessories.map((a) => a.UUID).includes(accessory.UUID)) {
+          this.accessories.push(accessory);
+      }
   }
 
   /**
@@ -50,73 +57,40 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
-      const accessories: OverkizAccessory[] = [];
       const devices = await this.client.getDeviceModels();
-      /*const devices: OverkizDevice[] = [];
-      widgets.array.forEach(device => {
-          const main = devices.find((d) => d.baseURL === device.deviceURL);
-          if(main) {
-              main.addChild(new OverkizDevice(device));
-          } else {
-              devices.push(new OverkizDevice(device));
-          }
-      });
-      return devices;*/
 
       // loop over the discovered devices and register each one if it has not already been registered
-      const uuids: string[] = [];
       for (const device of devices) {
-          this.log.debug(device.uiClass + ' > ' + device.widget);
-          const classConstructor = await import('./accessories/widget/' + device.widget)
-              .catch(() => import('./accessories/uiClass/' + device.uiClass))
-              .then((c) => c.default)
-              .catch(() => OverkizAccessory);
-
-          // generate a unique id for the accessory this should be generated from
-          // something globally unique, but constant, for example, the device serial
-          // number or MAC address
-          const uuid = this.api.hap.uuid.generate(device.baseURL);
-          uuids.push(uuid);
-
-          if(!device.isMainDevice()) {
-              continue;
-          }
-
           // see if an accessory with the same uuid has already been registered and restored from
           // the cached devices we stored in the `configureAccessory` method above
-          const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+          let accessory = this.accessories.find(accessory => accessory.UUID === device.oid);
 
-          if (existingAccessory) {
+          if (accessory) {
               // the accessory already exists
-              this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-
-              // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-              // existingAccessory.context.device = device;
-              // this.api.updatePlatformAccessories([existingAccessory]);
-
-              // create the accessory handler for the restored accessory
-              // this is imported from `platformAccessory.ts`
-              accessories.push(new classConstructor(this, device, existingAccessory));
-
+              //this.log.info('Updating accessory:', accessory.displayName);
+              /*
+              const newaccessory = new this.api.platformAccessory(device.label, device.oid);
+              newaccessory.context.device = device;
+              await this.configureAccessory(newaccessory);
+              const services = newaccessory.services.map((service) => service.UUID);
+              accessory.services
+                  .filter((service) => !services.includes(service.UUID))
+                  .forEach((services) => accessory?.removeService(services));
+              this.api.updatePlatformAccessories([accessory]);
+              */
           } else {
               // the accessory does not yet exist, so we need to create it
-              this.log.info('Adding new accessory:', device.name);
-
-              // create a new accessory
-              const accessory = new this.api.platformAccessory(device.name, uuid);
-
-              // store a copy of the device object in the `accessory.context`
-              // the `context` property can be used to store any data about the accessory you may need
+              this.log.info('Adding new accessory:', device.label);
+              accessory = new this.api.platformAccessory(device.label, device.oid);
               accessory.context.device = device;
-
-              // create the accessory handler for the newly create accessory
-              // this is imported from `platformAccessory.ts`
-              accessories.push(new classConstructor(this, device, accessory));
-
-              // link the accessory to your platform
+              await this.configureAccessory(accessory);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           }
+
+          this.log.info('Configuring accessory:', accessory.displayName);
+          this.log.debug('\t' + device.uiClass + ' > ' + device.widget);
       }
+      const uuids = devices.map((device) => device.oid);
       const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
   }

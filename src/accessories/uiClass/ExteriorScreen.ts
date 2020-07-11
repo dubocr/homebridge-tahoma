@@ -1,5 +1,5 @@
-import OverkizAccessory from '../OverkizAccessory';
+import RollerShutter from './RollerShutter';
 
-export default class ExteriorScreen extends OverkizAccessory {
+export default class ExteriorScreen extends RollerShutter {
 
 }

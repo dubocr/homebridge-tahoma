@@ -2,7 +2,7 @@ import axios from 'axios';
 import events from 'events';
 import pollingtoevent from 'polling-to-event';
 import { URLSearchParams } from 'url';
-import OverkizDevice from './api/OverkizDevice';
+import OverkizDevice from './models/OverkizDevice';
 
 let Log;
 
@@ -369,8 +369,24 @@ export default class OverkizClient {
     }
 
     async getDeviceModels() {
-        const devices = await this.get('/setup/devices');
-        return devices.map((device) => new OverkizDevice(device));
+        const devices: OverkizDevice[] = [];
+        const data = await this.get('/setup/devices');
+        for(const d of data) {
+            const device = await import('./models/widget/' + d.widget)
+                .then((c) => new c.default(this, d))
+                .catch(() => new OverkizDevice(this, d));
+            if(device.isMainDevice()) {
+                devices.push(device);
+            } else {
+                const main = devices.filter((d) => d.getBaseURL() === device.getBaseURL()).pop();
+                if(main) {
+                    main.addChild(device);
+                } else {
+                    Log.debug('No main device to attach ' + device.label);
+                }
+            }
+        }
+        return devices;
     }
 
 

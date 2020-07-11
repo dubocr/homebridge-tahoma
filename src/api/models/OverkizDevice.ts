@@ -1,31 +1,26 @@
+import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
+import OverkizClient from '../OverkizClient';
+
 export default class OverkizDevice {
-    uiClass;
-    services: OverkizDevice[] = [];
-    child: OverkizDevice[] = [];
-    parent: OverkizDevice|null = null;
-    name: string;
-    merged = false;
-    stateless = false;
-    states;
-    timeout: number|null = null;
+    
+    public oid;
+    public deviceURL;
+    public label;
+    public uiClass;
+    public widget;
+    public states;
+    public definition = { commands: [] };
 
-    deviceURL = '';
-    baseURL = '';
+    private child: OverkizDevice[] = [];
 
-    constructor(device) {
-        Object.assign(this, device);
-        this.services = [];
-        this.child = [];
-        this.parent = null;
-        this.merged = false;
-        this.timeout = null;
-
-        this.name = device.label;
-        this.baseURL = this.getBaseURL();
-
-        if(this.states === undefined) {
-            this.stateless = true;
-        }
+    constructor(protected readonly api: OverkizClient, json) {
+        this.oid = json.oid;
+        this.deviceURL = json.deviceURL;
+        this.label = json.label;
+        this.uiClass = json.uiClass;
+        this.widget = json.widget;
+        this.states = json.states;
+        this.definition.commands = json.definition.commands;
     }
 
     getSerialNumber() {
