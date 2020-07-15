@@ -12,6 +12,7 @@ export default class OverkizDevice {
     public definition = { commands: [] };
 
     private child: OverkizDevice[] = [];
+    private executionId = 0;
 
     constructor(protected readonly api: OverkizClient, json) {
         this.oid = json.oid;
@@ -72,5 +73,44 @@ export default class OverkizDevice {
             }
         }
         return null;
+    }
+
+    isCommandInProgress() {
+        return (this.executionId in this.api.executionCallback);
+    }
+
+    cancelCommand() {
+        this.api.cancelCommand(this.executionId);
+    }
+
+    executeCommand(label, commands) {
+        if (this.isCommandInProgress()) {
+            this.cancelCommand();
+        }
+
+        const command = {
+            label: this.label + ' - ' + label + ' - HomeKit',
+            deviceURL: this.deviceURL,
+            commands: commands,
+            highPriority: this.states['io:PriorityLockLevelState'] ? true : false,
+        };
+        return this.api.executeCommand(command);
+        /*.catch((error, data) => {
+                let deviceError = null;
+                if(error && data && data.failedCommands) {
+                    if(data && data.failedCommands) {
+                        for(const fail of data.failedCommands) {
+                            if(fail.deviceURL === this.deviceURL) {
+                                deviceError = fail.failureType;
+                            }
+                        }
+                    } else {
+                        deviceError = error;
+                    }
+                }
+                if(deviceError) {
+                    throw new Error(deviceError);
+                }
+            })*/
     }
 }

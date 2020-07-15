@@ -1,11 +1,12 @@
-import OverkizAccessory from '../OverkizAccessory';
+import Window from './Window';
 
-export default class RollerShutter extends OverkizAccessory {
+export default class RollerShutter extends Window {
     build() {
-        const service = this.accessory.getService(this.platform.Service.WindowCovering) || this.accessory.addService(this.platform.Service.WindowCovering);
-        service.getCharacteristic(this.platform.Characteristic.TargetPosition).on('set', (value, callabck) => {
-            this.platform.log.debug('Target: ' + value);
-            callabck('Unable to connect');
-        });
+        const service = this.registerService(this.platform.Service.WindowCovering);
+        this.currentPosition = service.getCharacteristic(this.platform.Characteristic.CurrentPosition);
+        this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
+        this.positionState = service.getCharacteristic(this.platform.Characteristic.PositionState);
+        this.obstructionDetected = service.getCharacteristic(this.platform.Characteristic.ObstructionDetected);
+        this.targetPosition.on('set', this.postpone(this.setTargetPosition));
     }
 }

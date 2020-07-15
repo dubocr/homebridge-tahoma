@@ -68,7 +68,7 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
           if (accessory) {
               // the accessory already exists
               //this.log.info('Updating accessory:', accessory.displayName);
-              /*
+              
               const newaccessory = new this.api.platformAccessory(device.label, device.oid);
               newaccessory.context.device = device;
               await this.configureAccessory(newaccessory);
@@ -77,7 +77,7 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
                   .filter((service) => !services.includes(service.UUID))
                   .forEach((services) => accessory?.removeService(services));
               this.api.updatePlatformAccessories([accessory]);
-              */
+              
           } else {
               // the accessory does not yet exist, so we need to create it
               this.log.info('Adding new accessory:', device.label);

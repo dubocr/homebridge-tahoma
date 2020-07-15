@@ -1,10 +1,18 @@
 import axios from 'axios';
-import events from 'events';
+import { default as events, EventEmitter } from 'events';
 import pollingtoevent from 'polling-to-event';
 import { URLSearchParams } from 'url';
 import OverkizDevice from './models/OverkizDevice';
 
 let Log;
+
+export class ExecutionError extends Error {
+    public readonly state;
+    constructor(state, error) {
+        super(error);
+        this.state = state;
+    }
+}
 
 export class Command {
     type = 1;
@@ -33,12 +41,13 @@ export class Action {
     }
 }
 
-export class Execution {
+export class Execution extends EventEmitter {
     label;
     metadata = null;
     actions: Action[] = [];
 
     constructor(name, deviceURL?: string, commands?: []) {
+        super();
         this.label = name;
         if(deviceURL && commands) {
             this.actions.push(new Action(deviceURL, commands));
@@ -48,9 +57,16 @@ export class Execution {
 
 class Queue {
     commands: any[] = [];
+    promise;
+    resolve;
+    reject;
 
     constructor(command: Command) {
         this.commands = [command];
+        this.promise = new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+        });
     }
 
     callback(status, error, data) {
@@ -120,7 +136,7 @@ export default class OverkizClient {
     isLoggedIn = false;
     listenerId: null|number = null;
     runningCommands = 0;
-    executionCallback: ((state, error, data) => void)[] = [];
+    executionCallback: Execution[] = [];
     platformAccessories = [];
     stateChangedEventListener = null;
     pendingQueue: null|Queue = null;
@@ -188,10 +204,11 @@ export default class OverkizClient {
                         }
                     }
                 } else if (event.name === 'ExecutionStateChangedEvent') {
-                    //Log(event.failedCommands);
-                    const cb = this.executionCallback[event.execId];
-                    if (cb !== null) {
-                        cb(event.newState, event.failureType === undefined ? null : event.failureType, event);
+                    //Log(event);
+                    const execution = this.executionCallback[event.execId];
+                    if (execution) {
+                        execution.emit('state', event.newState, event);
+                        //cb(event.newState, event.failureType === undefined ? null : event.failureType, event);
                         if (event.timeToNextState === -1) { // No more state expected for this execution
                             delete this.executionCallback[event.execId];
                             if(this.hasExecution()) {
@@ -442,7 +459,7 @@ export default class OverkizClient {
     */
     executeCommand(command) {
         if(command.highPriority) {
-            this.execute('apply/highPriority', new Execution(command.label, command.deviceURL, command.commands), command.callback);
+            return this.execute('apply/highPriority', new Execution(command.label, command.deviceURL, command.commands));
         } else {
             if(this.pendingQueue === null) {
                 this.pendingQueue = new Queue(command);
@@ -450,12 +467,13 @@ export default class OverkizClient {
                     if(this.pendingQueue !== null) {
                         const queue = this.pendingQueue;
                         this.pendingQueue = null;
-                        this.execute('apply', queue.getExecution(), queue.callback.bind(queue));
+                        this.execute('apply', queue.getExecution()).then(queue.resolve).catch(queue.reject);
                     }
                 }, 100);
             } else {
                 this.pendingQueue.push(command);
             }
+            return this.pendingQueue.promise;
         }
     }
 
@@ -464,25 +482,25 @@ export default class OverkizClient {
     	execution: Body parameters
     	callback: Callback function executed when command sended
     */
-    execute(oid, execution, callback) {
+    execute(oid, execution) {
         if(this.runningCommands >= 10) {
         // Avoid EXEC_QUEUE_FULL (max 10 commands simultaneous)
-            setTimeout(this.execute.bind(this), 10 * 1000, oid, execution, callback); // Postpone in 10 sec
+            setTimeout(this.execute.bind(this), 10 * 1000, oid, execution); // Postpone in 10 sec
             return;
         }
         //Log(command);
         this.runningCommands++;
         return this.post('/exec/'+oid, execution)
             .then((data) => {
-                callback(ExecutionState.INITIALIZED, null, data); // Init OK
-                this.executionCallback[data.execId] = callback;
+                this.executionCallback[data.execId] = execution;
                 if(this.pollingPeriod === 0) {
                     this.registerListener();
                 }
+                return execution;
             })
             .catch((error) => {
                 this.runningCommands--;
-                callback(ExecutionState.FAILED, error);
+                throw new ExecutionError(ExecutionState.FAILED, error);
             });
     }
 }
