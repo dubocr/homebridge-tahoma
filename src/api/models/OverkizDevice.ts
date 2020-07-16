@@ -1,7 +1,8 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
-import OverkizClient from '../OverkizClient';
+import { default as OverkizClient, Action } from '../OverkizClient';
+import { EventEmitter } from 'events';
 
-export default class OverkizDevice {
+export default class OverkizDevice extends EventEmitter {
     
     public oid;
     public deviceURL;
@@ -15,6 +16,7 @@ export default class OverkizDevice {
     private executionId = 0;
 
     constructor(protected readonly api: OverkizClient, json) {
+        super();
         this.oid = json.oid;
         this.deviceURL = json.deviceURL;
         this.label = json.label;
@@ -22,6 +24,12 @@ export default class OverkizDevice {
         this.widget = json.widget;
         this.states = json.states;
         this.definition.commands = json.definition.commands;
+
+        api.on('states', (deviceURL, states) => {
+            if(this.deviceURL === deviceURL) {
+                this.emit('states', states);
+            }
+        });
     }
 
     getSerialNumber() {
@@ -76,41 +84,24 @@ export default class OverkizDevice {
     }
 
     isCommandInProgress() {
-        return (this.executionId in this.api.executionCallback);
+        return (this.executionId in this.api.executionPool);
     }
 
     cancelCommand() {
         this.api.cancelCommand(this.executionId);
     }
 
-    executeCommand(label, commands) {
+    executeCommands(title, commands) {
         if (this.isCommandInProgress()) {
             this.cancelCommand();
         }
 
-        const command = {
-            label: this.label + ' - ' + label + ' - HomeKit',
-            deviceURL: this.deviceURL,
-            commands: commands,
-            highPriority: this.states['io:PriorityLockLevelState'] ? true : false,
-        };
-        return this.api.executeCommand(command);
-        /*.catch((error, data) => {
-                let deviceError = null;
-                if(error && data && data.failedCommands) {
-                    if(data && data.failedCommands) {
-                        for(const fail of data.failedCommands) {
-                            if(fail.deviceURL === this.deviceURL) {
-                                deviceError = fail.failureType;
-                            }
-                        }
-                    } else {
-                        deviceError = error;
-                    }
-                }
-                if(deviceError) {
-                    throw new Error(deviceError);
-                }
-            })*/
+        title = this.label + ' - ' + title;
+        const highPriority = this.states['io:PriorityLockLevelState'] ? true : false;
+        const action = new Action(title, highPriority);
+        action.deviceURL = this.deviceURL;
+        action.commands = commands;
+
+        return this.api.executeAction(action).then(() => action);
     }
 }

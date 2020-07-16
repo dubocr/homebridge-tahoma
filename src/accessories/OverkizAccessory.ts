@@ -2,7 +2,7 @@ import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallb
 
 import { OverkizPlatform } from '../platform';
 import OverkizDevice from '../api/models/OverkizDevice';
-import { ExecutionState } from '../api/OverkizClient';
+import { ExecutionState, DeviceState } from '../api/OverkizClient';
 
 /**
  * Platform Accessory
@@ -13,6 +13,7 @@ export default class OverkizAccessory {
     protected readonly services: Service[] = [];
     private postponeTimer;
     protected stateless = false;
+    protected config: Record<string, any> = {};
     
     constructor(
         protected readonly platform: OverkizPlatform,
@@ -27,7 +28,21 @@ export default class OverkizAccessory {
         }
         this.stateless = (device.states.length === 0);
         this.build();
+
+        if(!this.stateless) {
+            // Init states
+            this.device.states.forEach((state: DeviceState) => this.onStateChange(state.name, state.value));
+
+            // Register state changes
+            device.on('states', (states) => {
+                states.forEach((state: DeviceState) => this.onStateChange(state.name, state.value));
+            });
+        }
     }
+
+    /**
+     * Logging methods
+     */
 
     debug(message) {
         this.platform.log.debug('[' + this.device.label + '] ' + message);
@@ -37,9 +52,13 @@ export default class OverkizAccessory {
         this.platform.log.warn('[' + this.device.label + '] ' + message);
     }
 
-    build() {
-        this.warn('Unsuported device accessory ' + this.device.uiClass);
+    error(message) {
+        this.platform.log.error('[' + this.device.label + '] ' + message);
     }
+
+    /**
+     * Common  methods
+     */
 
     registerService(service) {
         const srv = this.accessory.getService(service) || this.accessory.addService(service);
@@ -58,37 +77,49 @@ export default class OverkizAccessory {
         };
     }
 
-    executeCommand(commands) {
-        let cmdName = '';
+    executeCommands(commands) {
+        let title = '';
         if(commands === null || commands.length === 0) {
             throw new Error('No target command for ' + this.device.label);
         } else if(Array.isArray(commands)) {
             if(commands.length === 0) {
                 throw new Error('No target command for ' + this.device.label);
             } else if(commands.length > 1) {
-                cmdName = commands[0].name + ' +' + (commands.length-1) + ' others';
+                title = commands[0].name + ' +' + (commands.length-1) + ' others';
             } else {
-                cmdName = commands[0].name;
+                title = commands[0].name;
             }
             for(const c of commands) {
                 this.debug(c.name + JSON.stringify(c.parameters));
             }
         } else {
             this.debug(commands.name +JSON.stringify(commands.parameters));
-            cmdName = commands.name;
+            title = commands.name;
             commands = [commands];
         }
         
-        const commandLabel = this.device.label + ' - ' + cmdName + ' - HomeKit';
-        return this.device.executeCommand(commandLabel, commands)
-            .then((execution) => {
-                execution.on('state', (state, event) => {
-                    this.debug(cmdName + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
+        return this.device.executeCommands(title + ' - HomeKit', commands)
+            .then((action) => {
+                action.on('state', (state, event) => {
+                    this.debug(title + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
                 });
+                return action;
             })
             .catch((error) => {
-                this.debug(cmdName + ' ' + error.message);
+                this.debug(title + ' ' + error.message);
                 throw error;
             });
+    }
+
+    /**
+     * Methods to be overriden
+     */
+
+    build() {
+        this.warn('Unsuported device accessory ' + this.device.uiClass);
+    }
+
+    onStateChange(name, value) {
+        //this.debug(name + ' -> ' + value);
     }
 }

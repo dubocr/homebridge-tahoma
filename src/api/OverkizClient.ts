@@ -14,6 +14,25 @@ export class ExecutionError extends Error {
     }
 }
 
+export interface DeviceState {
+    readonly name;
+    readonly type;
+    readonly value;
+}
+
+export interface ExecutionStateEvent {
+    readonly timestamp: number;
+    readonly setupOID;
+    readonly execId;
+    readonly newState: ExecutionState;
+    readonly ownerKey;
+    readonly type: number;
+    readonly subType: number;
+    readonly oldState: ExecutionState;
+    readonly timeToNextState: number;
+    readonly name;
+}
+
 export class Command {
     type = 1;
     name = '';
@@ -31,77 +50,51 @@ export class Command {
     }
 }
 
-export class Action {
-    deviceURL;
-    commands: Command[] = [];
+export class Action extends EventEmitter {
+    public deviceURL;
+    public commands: Command[] = [];
 
-    constructor(deviceURL: string, commands: []) {
-        this.deviceURL = deviceURL;
-        this.commands = commands;
-    }
-}
-
-export class Execution extends EventEmitter {
-    label;
-    metadata = null;
-    actions: Action[] = [];
-
-    constructor(name, deviceURL?: string, commands?: []) {
+    constructor(public readonly label: string, public highPriority: boolean) {
         super();
-        this.label = name;
-        if(deviceURL && commands) {
-            this.actions.push(new Action(deviceURL, commands));
-        }
+    }
+
+    toJSON() {
+        return {
+            deviceURL: this.deviceURL,
+            commands: this.commands,
+        };
     }
 }
 
-class Queue {
-    commands: any[] = [];
-    promise;
-    resolve;
-    reject;
+export class Execution {
+    private timeout;
 
-    constructor(command: Command) {
-        this.commands = [command];
-        this.promise = new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-        });
+    public label = '';
+    public actions: Action[] = [];
+    public metadata = null;
+
+    addAction(action: Action) {
+        this.label = this.actions.length === 0 ? action.label : 'Execute scene (' + this.actions.length + ' devices) - HomeKit';
+        this.actions.push(action);
     }
 
-    callback(status, error, data) {
-        if(error && data && data.failedCommands) {
-            for(const command of this.commands) {
-                let failed = false;
-                for(const fail of data.failedCommands) {
-                    if(fail.deviceURL === command.deviceURL) {
-                        command.callback(status, fail.failureType, data);
-                        failed = true;
-                        break;
-                    }
+    onStateUpdate(state, event) {
+        if(event.failureType && event.failedCommands) {
+            this.actions.forEach((action) => {
+                const failure = event.failedCommands.find((c) => c.deviceURL === action.deviceURL);
+                if(failure) {
+                    action.emit('state', ExecutionState.FAILED, failure);
+                } else {
+                    action.emit('state', ExecutionState.COMPLETED);
                 }
-                if(!failed) {
-                    command.callback(ExecutionState.COMPLETED, null, data);
-                }
-            }
+            });
         } else {
-            for(const command of this.commands) {
-                command.callback(status, error, data);
-            }
+            this.actions.forEach((action) => action.emit('state', state, event));
         }
     }
 
-    getExecution() {
-        const label = this.commands.length > 1 ? 'Execute scene (' + this.commands.length + ' devices) - HomeKit' : this.commands[0].label;
-        const execution = new Execution(label);
-        for(const command of this.commands) {
-            execution.actions.push(new Action(command.deviceURL, command.commands));
-        }
-        return execution;
-    }
-
-    push(command) {
-        this.commands.push(command);
+    hasPriority() {
+        return this.actions.find((action) => action.highPriority) ? true : false;
     }
 }
 
@@ -120,10 +113,7 @@ enum Server {
 	'Rexel' = 'ha112-1.overkiz.com'
 }
 
-export default class OverkizClient {
-
-    events;
-
+export default class OverkizClient extends events.EventEmitter {
     debug: boolean;
     debugUrl: string;
     execPollingPeriod;
@@ -135,17 +125,17 @@ export default class OverkizClient {
     server;
     isLoggedIn = false;
     listenerId: null|number = null;
-    runningCommands = 0;
-    executionCallback: Execution[] = [];
+    executionPool: Execution[] = [];
     platformAccessories = [];
     stateChangedEventListener = null;
-    pendingQueue: null|Queue = null;
+    execution: Execution = new Execution();
     cookies = '';
 
-    constructor(log, config) {
-        Log = log;
+    executionTimeout;
 
-        this.events = new events.EventEmitter();
+    constructor(log, config) {
+        super();
+        Log = log;
 
         // Default values
         this.debug = config['debug'] || false;
@@ -168,7 +158,6 @@ export default class OverkizClient {
 
         this.isLoggedIn = false;
         this.listenerId = null;
-        this.runningCommands = 0;
         this.platformAccessories = [];
 
         axios.defaults.baseURL = this.debugUrl ? this.debugUrl : 'https://' + this.server + '/enduser-mobile-web/enduserAPI';
@@ -197,7 +186,7 @@ export default class OverkizClient {
             for (const event of data) {
                 //Log(event);
                 if (event.name === 'DeviceStateChangedEvent') {
-                    this.events.emit('states', event.deviceURL, event.deviceStates);
+                    this.emit('states', event.deviceURL, event.deviceStates);
                     if(this.debug) {
                         for(const state of event.deviceStates) {
                             Log(state.name + ' -> ' + state.value);
@@ -205,17 +194,12 @@ export default class OverkizClient {
                     }
                 } else if (event.name === 'ExecutionStateChangedEvent') {
                     //Log(event);
-                    const execution = this.executionCallback[event.execId];
+                    const execution = this.executionPool[event.execId];
                     if (execution) {
-                        execution.emit('state', event.newState, event);
+                        execution.onStateUpdate(event.newState, event);
                         //cb(event.newState, event.failureType === undefined ? null : event.failureType, event);
                         if (event.timeToNextState === -1) { // No more state expected for this execution
-                            delete this.executionCallback[event.execId];
-                            if(this.hasExecution()) {
-                                this.runningCommands--;
-                            } else {
-                                this.runningCommands = 0;
-                            }
+                            delete this.executionPool[event.execId];
                             if(this.pollingPeriod === 0 && !this.hasExecution()) { // Unregister listener when no more execution running
                                 this.unregisterListener();
                             }
@@ -269,7 +253,7 @@ export default class OverkizClient {
                         this.getDevices()
                             .then((data) => {
                                 for (const device of data) {
-                                    this.events.emit('states', device.deviceURL, device.deviceStates);
+                                    this.emit('states', device.deviceURL, device.deviceStates);
                                 }
                             });
                     }, 10 * 1000); // Read devices states after 10s
@@ -291,7 +275,7 @@ export default class OverkizClient {
     }
 
     hasExecution() {
-        return Object.keys(this.executionCallback).length > 0;
+        return Object.keys(this.executionPool).length > 0;
     }
 
     makeRequest(options) {
@@ -455,26 +439,17 @@ export default class OverkizClient {
     }
 
     /*
-    	command: The command to execute
+    	action: The action to execute
     */
-    executeCommand(command) {
-        if(command.highPriority) {
-            return this.execute('apply/highPriority', new Execution(command.label, command.deviceURL, command.commands));
-        } else {
-            if(this.pendingQueue === null) {
-                this.pendingQueue = new Queue(command);
-                setTimeout(() => {
-                    if(this.pendingQueue !== null) {
-                        const queue = this.pendingQueue;
-                        this.pendingQueue = null;
-                        this.execute('apply', queue.getExecution()).then(queue.resolve).catch(queue.reject);
-                    }
-                }, 100);
-            } else {
-                this.pendingQueue.push(command);
-            }
-            return this.pendingQueue.promise;
-        }
+    public executeAction(action) {
+        this.execution.addAction(action);
+        clearTimeout(this.executionTimeout);
+        return new Promise((resolve, reject) => {
+            this.executionTimeout = setTimeout(() => {
+                this.execute(this.execution.hasPriority() ? 'apply/highPriority' : 'apply', this.execution).then(resolve).catch(reject);
+                this.execution = new Execution();
+            }, 100);
+        });
     }
 
     /*
@@ -483,23 +458,21 @@ export default class OverkizClient {
     	callback: Callback function executed when command sended
     */
     execute(oid, execution) {
-        if(this.runningCommands >= 10) {
-        // Avoid EXEC_QUEUE_FULL (max 10 commands simultaneous)
+        if(this.executionPool.length >= 10) {
+            // Avoid EXEC_QUEUE_FULL (max 10 commands simultaneous)
             setTimeout(this.execute.bind(this), 10 * 1000, oid, execution); // Postpone in 10 sec
             return;
         }
-        //Log(command);
-        this.runningCommands++;
+        //Log(JSON.stringify(execution));
         return this.post('/exec/'+oid, execution)
             .then((data) => {
-                this.executionCallback[data.execId] = execution;
+                this.executionPool[data.execId] = execution;
                 if(this.pollingPeriod === 0) {
                     this.registerListener();
                 }
                 return execution;
             })
             .catch((error) => {
-                this.runningCommands--;
                 throw new ExecutionError(ExecutionState.FAILED, error);
             });
     }
