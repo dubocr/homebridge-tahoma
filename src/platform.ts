@@ -34,11 +34,17 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
       });
   }
 
+  async configureAccessory(accessory: PlatformAccessory) {
+      if(!this.accessories.map((a) => a.UUID).includes(accessory.UUID)) {
+          this.accessories.push(accessory);
+      }
+  }
+
   /**
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  async configureAccessory(accessory: PlatformAccessory) {
+  async configureAccessory2(accessory: PlatformAccessory) {
       const device = new OverkizDevice(this.client, accessory.context.device);
       const classConstructor = await import('./accessories/widget/' + device.widget)
           .catch(() => import('./accessories/uiClass/' + device.uiClass))
@@ -66,9 +72,11 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
           let accessory = this.accessories.find(accessory => accessory.UUID === device.oid);
 
           if (accessory) {
+              accessory.context.device = device;
+              await this.configureAccessory2(accessory);
               // the accessory already exists
               //this.log.info('Updating accessory:', accessory.displayName);
-              
+              /*
               const newaccessory = new this.api.platformAccessory(device.label, device.oid);
               newaccessory.context.device = device;
               await this.configureAccessory(newaccessory);
@@ -77,13 +85,13 @@ export class OverkizPlatform implements DynamicPlatformPlugin {
                   .filter((service) => !services.includes(service.UUID))
                   .forEach((services) => accessory?.removeService(services));
               this.api.updatePlatformAccessories([accessory]);
-              
+              */
           } else {
               // the accessory does not yet exist, so we need to create it
               this.log.info('Adding new accessory:', device.label);
               accessory = new this.api.platformAccessory(device.label, device.oid);
               accessory.context.device = device;
-              await this.configureAccessory(accessory);
+              await this.configureAccessory2(accessory);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           }
 

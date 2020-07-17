@@ -470,7 +470,7 @@ export default class OverkizClient extends events.EventEmitter {
                 if(this.pollingPeriod === 0) {
                     this.registerListener();
                 }
-                return execution;
+                return data.execId;
             })
             .catch((error) => {
                 throw new ExecutionError(ExecutionState.FAILED, error);

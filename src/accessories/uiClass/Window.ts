@@ -3,10 +3,10 @@ import { Characteristic, CharacteristicValue, CharacteristicSetCallback} from 'h
 import { ExecutionState, Command, Action } from '../../api/OverkizClient';
 
 export default class Window extends OverkizAccessory {
-    protected currentPosition: Characteristic | null = null;
-    protected targetPosition: Characteristic | null = null;
-    protected positionState: Characteristic | null = null;
-    protected obstructionDetected: Characteristic | null = null;
+    protected currentPosition;
+    protected targetPosition;
+    protected positionState;
+    protected obstructionDetected;
 
     protected reverse = false;
     protected defaultPosition = 0;
@@ -22,6 +22,10 @@ export default class Window extends OverkizAccessory {
     }
 
     setTargetPosition(value, callback: CharacteristicSetCallback) {
+
+        this.debug('current ' + this.currentPosition.value);
+        this.debug('target ' + this.targetPosition.value);
+
         const commands: Command[] = [];
         const target = this.reverse ? (100 - value) : value;
         commands.push(new Command('setClosure', (100-target)));
@@ -123,13 +127,11 @@ export default class Window extends OverkizAccessory {
             targetPosition = currentPosition;
         }
 
-        if(this.currentPosition && currentPosition !== undefined) {
+        if(currentPosition !== undefined) {
             this.currentPosition.updateValue(currentPosition);
-            this.debug(currentPosition);
-            this.debug(this.currentPosition.value);
         }
         if(!this.device.isCommandInProgress() && targetPosition !== undefined) {
-            this.targetPosition?.updateValue(targetPosition);
+            this.targetPosition.updateValue(targetPosition);
         }
         /*if(currentAngle !== undefined) {
             this.currentAngle?.updateValue(currentAngle);

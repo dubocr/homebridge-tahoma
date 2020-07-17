@@ -13,7 +13,7 @@ export default class OverkizDevice extends EventEmitter {
     public definition = { commands: [] };
 
     private child: OverkizDevice[] = [];
-    private executionId = 0;
+    private executionId;
 
     constructor(protected readonly api: OverkizClient, json) {
         super();
@@ -102,6 +102,9 @@ export default class OverkizDevice extends EventEmitter {
         action.deviceURL = this.deviceURL;
         action.commands = commands;
 
-        return this.api.executeAction(action).then(() => action);
+        return this.api.executeAction(action).then((executionId) => {
+            this.executionId = executionId;
+            return action;
+        });
     }
 }
