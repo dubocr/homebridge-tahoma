@@ -70,9 +70,8 @@ class Thermostat extends AbstractService {
 
             case 'SomfyHeatingTemperatureInterface':
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-                // 3 modes only (comfort, eco, off)
-                this.targetState.setProps({ validValues: [0,1,2] });
-            break;
+                this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
+                break;
 
             case 'AtlanticPassAPCHeatingZone':
                 // 3 modes only (comfort, eco, off)
@@ -503,9 +502,8 @@ class Thermostat extends AbstractService {
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
 				if(this.device.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
-					commands.push(new Command('setDerogatedTargetTemperature', value));
-					commands.push(new Command('setDerogationOnOffState', 'on'));
-					commands.push(new Command('setDerogationTime', this.derogationDuration));
+					commands.push(new Command('setHeatingTargetTemperature', value));
+                    commands.push(new Command('setCoolingTargetTemperature', value));
 				} else if(this.device.states['core:ThermalConfigurationState'] == 'heating') {
 					if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.device.states['io:PassAPCHeatingModeState'])) {
 						commands.push(new Command('setDerogatedTargetTemperature', value));
