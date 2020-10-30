@@ -3,7 +3,7 @@ var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
 class Thermostat extends AbstractService {
-    constructor (homebridge, log, device, config) {
+    constructor (homebridge, log, device, config, platform) {
         super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
@@ -26,6 +26,7 @@ class Thermostat extends AbstractService {
 
         this.targetState.on('set', this.setTargetState.bind(this))
         this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
+        this.platform = platform;
 
         switch(this.device.widget) {
             // EvoHome
@@ -100,6 +101,18 @@ class Thermostat extends AbstractService {
                 this.targetState.setProps({ validValues: [0,1,2,3] });
                 this.targetTemperature.setProps({ minValue: 0, maxValue: 30, minStep: 0.5 });
             break;
+        }
+    }
+
+    getHeatingOrCoolingState() {
+        for (let device of this.platform.platformDevices) {
+            if (device.widget === 'AtlanticPassAPCZoneControl' && device.deviceURL.split('#')[0] === this.device.deviceURL.split("#")[0]) {
+                for (let state of device.states) {
+                    if (state.name == 'io:PassAPCOperatingModeState') {
+                        return state.value;
+                    }
+                }
+            }
         }
     }
 
@@ -336,10 +349,19 @@ class Thermostat extends AbstractService {
             case 'AtlanticPassAPCHeatingAndCoolingZone':
         		switch(value) {
 					case Characteristic.TargetHeatingCoolingState.AUTO:
-						commands.push(new Command('setHeatingOnOffState', 'on'));
-						commands.push(new Command('setCoolingOnOffState', 'on'));
-						commands.push(new Command('setPassAPCCoolingMode', 'manu'));
-                        commands.push(new Command('setPassAPCHeatingMode', 'manu'));
+					    let heatingOrCooling = this.getHeatingOrCoolingState();
+					    if (heatingOrCooling === 'cooling') {
+					        commands.push(new Command('setCoolingOnOffState', 'on'));
+					        commands.push(new Command('setPassAPCCoolingMode', 'manu'));
+                        } else if (heatingOrCooling === 'heating') {
+					        commands.push(new Command('setHeatingOnOffState', 'on'));
+					        commands.push(new Command('setPassAPCHeatingMode', 'manu'));
+                        } else {
+					        commands.push(new Command('setHeatingOnOffState', 'on'));
+						    commands.push(new Command('setCoolingOnOffState', 'on'));
+						    commands.push(new Command('setPassAPCCoolingMode', 'manu'));
+                            commands.push(new Command('setPassAPCHeatingMode', 'manu'));
+                        }
 						break;
 
 					case Characteristic.TargetHeatingCoolingState.HEAT:
@@ -506,8 +528,15 @@ class Thermostat extends AbstractService {
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
 				if(this.device.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
+				    let heatingOrCooling = this.getHeatingOrCoolingState();
+					if (heatingOrCooling === 'heating') {
                         commands.push(new Command('setHeatingTargetTemperature', value));
+					} else if (heatingOrCooling === 'cooling') {
 				        commands.push(new Command('setCoolingTargetTemperature', value));
+                    } else {
+					    commands.push(new Command('setHeatingTargetTemperature', value));
+					    commands.push(new Command('setCoolingTargetTemperature', value));
+                    }
 				}
 			break;
 
@@ -912,7 +941,7 @@ class Thermostat extends AbstractService {
 			case 'core:ThermalConfigurationState':
             case 'core:PassAPCHeatingModeState':
                 if(this.device.states['core:HeatingOnOffState'] == 'on' || this.device.states['core:CoolingOnOffState'] == 'on') {
-                    currentState = Characteristic.TargetHeatingCoolingState.AUTO;
+                    currentState = this.getHeatingOrCoolingState() ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
                     targetState = Characteristic.TargetHeatingCoolingState.AUTO;
                 } else {
                     currentState = Characteristic.TargetHeatingCoolingState.OFF;
