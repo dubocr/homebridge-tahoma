@@ -338,6 +338,8 @@ class Thermostat extends AbstractService {
 					case Characteristic.TargetHeatingCoolingState.AUTO:
 						commands.push(new Command('setHeatingOnOffState', 'on'));
 						commands.push(new Command('setCoolingOnOffState', 'on'));
+						commands.push(new Command('setPassAPCCoolingMode', 'manu'));
+                        commands.push(new Command('setPassAPCHeatingMode', 'manu'));
 						break;
 
 					case Characteristic.TargetHeatingCoolingState.HEAT:
@@ -353,6 +355,8 @@ class Thermostat extends AbstractService {
 					case Characteristic.TargetHeatingCoolingState.OFF:
 						commands.push(new Command('setHeatingOnOffState', 'off'));
 						commands.push(new Command('setCoolingOnOffState', 'off'));
+						commands.push(new Command('setPassAPCCoolingMode', 'stop'));
+                        commands.push(new Command('setPassAPCHeatingMode', 'stop'));
 						break;
 				}
         	break;
@@ -502,11 +506,8 @@ class Thermostat extends AbstractService {
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
 				if(this.device.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
-					if (this.device.states['core:HeatingOnOffState'] === 'on') {
                         commands.push(new Command('setHeatingTargetTemperature', value));
-                    } else if (this.device.states['core:CoolingOnOffState'] === 'on') {
 				        commands.push(new Command('setCoolingTargetTemperature', value));
-                    }
 				}
 			break;
 
@@ -885,7 +886,6 @@ class Thermostat extends AbstractService {
             case 'core:WaterTargetTemperatureState':
             case 'core:TargetDHWTemperatureState':
             case 'core:TargetRoomTemperatureState':
-                targetTemperature = value;
             break;
 
             // AtlanticPassAPCDHW
@@ -918,6 +918,7 @@ class Thermostat extends AbstractService {
                     currentState = Characteristic.TargetHeatingCoolingState.OFF;
                     targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 }
+                targetTemperature = this.device.states['core:HeatingTargetTemperatureState'];
             break;
         }
 
