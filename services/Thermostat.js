@@ -912,6 +912,7 @@ class Thermostat extends AbstractService {
         var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null, currentHumidity = null;
 		switch(name) {
             case 'core:TargetTemperatureState':
+                targetTemperature = value;
             case 'core:WaterTargetTemperatureState':
             case 'core:TargetDHWTemperatureState':
             case 'core:TargetRoomTemperatureState':
@@ -940,7 +941,11 @@ class Thermostat extends AbstractService {
 			case 'core:CoolingOnOffState':
 			case 'core:ThermalConfigurationState':
             case 'core:PassAPCHeatingModeState':
-                if(this.device.states['core:HeatingOnOffState'] == 'on' || this.device.states['core:CoolingOnOffState'] == 'on') {
+            case 'core:StatusState':
+                if (this.device.states['core:HeatingOnOffState'] == 'on'
+                    || this.device.states['core:CoolingOnOffState'] == 'on'
+                    || this.device.states['io:PassAPCHeatingProfileState'] === 'manu'
+                    || this.device.states['io:PassAPCCoolingProfileState'] === 'manu') {
                     currentState = this.getHeatingOrCoolingState() ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
                     targetState = Characteristic.TargetHeatingCoolingState.AUTO;
                 } else {
