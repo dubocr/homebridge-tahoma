@@ -946,7 +946,7 @@ class Thermostat extends AbstractService {
                     || this.device.states['core:CoolingOnOffState'] == 'on'
                     || this.device.states['io:PassAPCHeatingProfileState'] === 'manu'
                     || this.device.states['io:PassAPCCoolingProfileState'] === 'manu') {
-                    currentState = this.getHeatingOrCoolingState() ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
+                    currentState = this.getHeatingOrCoolingState() === 'heating' ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.COOL;
                     targetState = Characteristic.TargetHeatingCoolingState.AUTO;
                 } else {
                     currentState = Characteristic.TargetHeatingCoolingState.OFF;
