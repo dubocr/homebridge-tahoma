@@ -18,37 +18,6 @@ class HeaterCooler extends AbstractService {
         this.targetState.on('set', this.setStatus.bind(this));
         this.activeState.on('set', this.setActive.bind(this)).on('get', this.getActive.bind(this));
 
-        this.service.getCharacteristic(Characteristic.TemperatureDisplayUnits)
-            .on('get', function (callback) {
-                callback(null, Characteristic.TemperatureDisplayUnits.CELSIUS);
-            });
-
-        this.service.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-            .on('get', function (callback) {
-                callback(null, 50);
-            })
-
-
-        this.heatingThresholdTemperature = this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature)
-            .setProps({
-                minValue: 16,
-                maxValue: 30,
-                minStep: 0.5,
-                //perms: [Characteristic.Perms.READ]
-            })
-            .on('get', this.getHeatingTemperature.bind(this))
-            .on('set', this.setHeatingTemperature.bind(this));
-
-        this.coolingThresholdTemperature = this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature)
-            .setProps({
-                minValue: 8,
-                maxValue: 30,
-                minStep: 1,
-                //perms: [Characteristic.Perms.READ]
-            })
-            .on('get', this.getCoolingTemperature.bind(this))
-            .on('set', this.setCoolingTemperature.bind(this));
-
 
         switch (device.widget) {
             case 'DimplexVentilationInletOutlet'://COULD BE REMOVED
@@ -56,6 +25,25 @@ class HeaterCooler extends AbstractService {
                 break;
             case 'AtlanticPassAPCZoneControl':
                 this.targetState.setProps({validValues: [Characteristic.TargetHeaterCoolerState.HEAT, Characteristic.TargetHeaterCoolerState.COOL]});
+                this.heatingThresholdTemperature = this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature)
+                    .setProps({
+                        minValue: 16,
+                        maxValue: 30,
+                        minStep: 0.5,
+                        //perms: [Characteristic.Perms.READ]
+                    })
+                    .on('get', this.getHeatingTemperature.bind(this))
+                    .on('set', this.setHeatingTemperature.bind(this));
+
+                this.coolingThresholdTemperature = this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature)
+                    .setProps({
+                        minValue: 8,
+                        maxValue: 30,
+                        minStep: 1,
+                        //perms: [Characteristic.Perms.READ]
+                    })
+                    .on('get', this.getCoolingTemperature.bind(this))
+                    .on('set', this.setCoolingTemperature.bind(this));
                 break;
         }
     }
