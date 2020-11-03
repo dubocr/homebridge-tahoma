@@ -3,13 +3,12 @@ var AbstractService = require('./AbstractService');
 var {Command, ExecutionState} = require('../overkiz-api');
 
 class HeaterCooler extends AbstractService {
-    constructor(homebridge, log, device, config, platform) {
+    constructor(homebridge, log, device, config) {
         super(homebridge, log, device);
         Log = log;
         Service = homebridge.hap.Service;
         Characteristic = homebridge.hap.Characteristic;
 
-        this.platform = platform;
         this.service = new Service.HeaterCooler(device.getName());
         this.currentState = this.service.getCharacteristic(Characteristic.CurrentHeaterCoolerState);
         this.activeState = this.service.getCharacteristic(Characteristic.Active);
@@ -86,19 +85,9 @@ class HeaterCooler extends AbstractService {
         }
     }
 
-    _getAllChildZones() {
-        let devices = [];
-        for (let device of this.platform.platformDevices) {
-            if (device.widget === 'AtlanticPassAPCHeatingAndCoolingZone' && device.deviceURL.split('#')[0] === this.device.deviceURL.split("#")[0]) {
-                devices.push(device);
-            }
-        }
-        return devices;
-    }
-
     _executeOnAllZone(command, value, callback) {
         var commandCount = 0;
-        for (let device of this._getAllChildZones()) {
+        for (let device of this.device.child) {
             device.executeCommand([new Command(command, value)], function (status, error, data) {
                 switch (status) {
                     case ExecutionState.INITIALIZED:
@@ -124,12 +113,19 @@ class HeaterCooler extends AbstractService {
 
     getDisplayTemperature() {
         let compareFunc = this.device.states['io:PassAPCOperatingModeState'] === 'heating' ? Math.max : Math.min;
+        let compareValue = this.device.states['io:PassAPCOperatingModeState'] === 'heating' ? 'io:PassAPCHeatingProfileState' : 'io:PassAPCCoolingProfileState';
         var displayTemp;
-        for (let device of this.platform.platformDevices) {
-            if (device.widget === 'TemperatureSensor' && device.deviceURL.split('#')[0] === this.device.deviceURL.split("#")[0]) {
-                for (let state of device.states) {
-                    if (state.name == 'core:TemperatureState') {
-                        displayTemp = displayTemp ? compareFunc(displayTemp, state.value) : state.value;
+        for (let device of this.device.child) {
+            for (let deviceState of device.states) {
+                if (deviceState.name === compareValue && deviceState.value === 'manu') {
+                    for (let child of device.child) {
+                        if (child.widget === 'TemperatureSensor') {
+                            for (let state of child.states) {
+                                if (state.name == 'core:TemperatureState') {
+                                    displayTemp = displayTemp ? compareFunc(displayTemp, state.value) : state.value;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -138,27 +134,41 @@ class HeaterCooler extends AbstractService {
     }
 
     getHeatingThreasholdTemperature() {
-        var displayTemp;
-        for (let device of this._getAllChildZones()) {
+        var displayTemp, newTemp, isOn;
+
+        for (let device of this.device.child) {
             for (let state of device.states) {
-                if (state.name == 'core:HeatingTargetTemperatureState') {
-                    displayTemp = displayTemp ? Math.max(displayTemp, state.value) : state.value;
+                if (state.name === 'core:HeatingTargetTemperatureState') {
+                    newTemp = displayTemp ? Math.max(displayTemp, state.value) : state.value;
                 }
+                if (state.name === 'io:PassAPCCoolingProfileState') {
+                    isOn = state.value === 'manu' ? true : false;
+                }
+            }
+            if (isOn) {
+                displayTemp = newTemp;
             }
         }
         return displayTemp;
     }
 
     getCoolingThreasholdTemperature() {
-        var displayTemp;
+        var displayTemp, newTemp, isOn;
 
-        for (let device of this._getAllChildZones()) {
+        for (let device of this.device.child) {
             for (let state of device.states) {
-                if (state.name == 'core:CoolingTargetTemperatureState') {
-                    displayTemp = displayTemp ? Math.min(displayTemp, state.value) : state.value;
+                if (state.name === 'core:CoolingTargetTemperatureState') {
+                    newTemp = displayTemp ? Math.min(displayTemp, state.value) : state.value;
+                }
+                if (state.name === 'io:PassAPCHeatingProfileState') {
+                    isOn = state.value === 'manu' ? true : false;
                 }
             }
+            if (isOn) {
+                displayTemp = newTemp;
+            }
         }
+
         return displayTemp;
     }
 
@@ -185,7 +195,7 @@ class HeaterCooler extends AbstractService {
                     case Characteristic.TargetHeaterCoolerState.HEAT:
                         if (this.device.states['io:PassAPCOperatingModeState'] !== 'heating') {
                             commands.push(new Command('setPassAPCOperatingMode', 'heating'));
-                            for (let device of this._getAllChildZones()) {
+                            for (let device of this.device.child) {
                                 device.services[0].markZoneOn('heating');
                             }
                         }
@@ -193,7 +203,7 @@ class HeaterCooler extends AbstractService {
                     case Characteristic.TargetHeaterCoolerState.COOL:
                         if (this.device.states['io:PassAPCOperatingModeState'] !== 'cooling') {
                             commands.push(new Command('setPassAPCOperatingMode', 'cooling'));
-                            for (let device of this._getAllChildZones()) {
+                            for (let device of this.device.child) {
                                 device.services[0].markZoneOn("cooling");
                             }
                         }
@@ -243,14 +253,14 @@ class HeaterCooler extends AbstractService {
                         value = this.device.states['io:LastPassAPCOperatingModeState'];
                         if (value !== this.device.states['io:PassAPCOperatingModeState'] && value !== 'stop') {
                             commands.push(new Command('setPassAPCOperatingMode', value));
-                            for (let device of this._getAllChildZones()) {
+                            for (let device of this.device.child) {
                                 device.services[0].markZoneOn(value);
                             }
                         }
                         break;
                     case Characteristic.Active.INACTIVE:
                         commands.push(new Command('setPassAPCOperatingMode', 'stop'));
-                        for (let device of this._getAllChildZones()) {
+                        for (let device of this.device.child) {
                             device.services[0].markZoneOff();
                         }
                         break;
@@ -313,7 +323,7 @@ class HeaterCooler extends AbstractService {
                     this.currentState.updateValue(Characteristic.CurrentHeaterCoolerState.INACTIVE);
                     this.activeState.updateValue(Characteristic.Active.INACTIVE);
 
-                    for (let device of this._getAllChildZones()) {
+                    for (let device of this.device.child) {
                         device.services[0].markZoneOff();
                     }
 

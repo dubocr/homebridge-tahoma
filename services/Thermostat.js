@@ -3,7 +3,7 @@ var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
 class Thermostat extends AbstractService {
-    constructor(homebridge, log, device, config, platform) {
+    constructor(homebridge, log, device, config) {
         super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
@@ -26,7 +26,6 @@ class Thermostat extends AbstractService {
 
         this.targetState.on('set', this.setTargetState.bind(this))
         this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
-        this.platform = platform;
 
         switch(this.device.widget) {
             // EvoHome
@@ -105,13 +104,9 @@ class Thermostat extends AbstractService {
     }
 
     getHeatingOrCoolingState() {
-        for (let device of this.platform.platformDevices) {
-            if (device.widget === 'AtlanticPassAPCZoneControl' && device.deviceURL.split('#')[0] === this.device.deviceURL.split("#")[0]) {
-                for (let state of device.states) {
-                    if (state.name == 'io:PassAPCOperatingModeState') {
-                        return state.value;
-                    }
-                }
+        for (let state of this.device.parent.states) {
+            if (state.name == 'io:PassAPCOperatingModeState') {
+                return state.value;
             }
         }
     }
@@ -915,6 +910,7 @@ class Thermostat extends AbstractService {
 
     /* Atlantic Heater */
     AtlanticPassAPCHeatingZoneStateUpdate(name, value) {
+        //Log("THERMO PARENT", this.device.parent.name);
         var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null, currentHumidity = null;
 		switch(name) {
             case 'core:TargetTemperatureState':
@@ -952,7 +948,6 @@ class Thermostat extends AbstractService {
                 let zoneMode = this.getHeatingOrCoolingState();
                 if (zoneMode === 'stop') {
                     currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                    targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 } else if (this.device.states['core:HeatingOnOffState'] == 'on'
                     || this.device.states['core:CoolingOnOffState'] == 'on'
                     || this.device.states['io:PassAPCHeatingProfileState'] === 'manu'
