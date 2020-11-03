@@ -29,7 +29,6 @@ class Switch extends AbstractService {
         var commands = [];
         switch(this.device.widget) {
             case 'AtlanticPassAPCHeatPump':
-            case 'AtlanticPassAPCZoneControl':
             case 'AtlanticPassAPCBoiler':
                 commands = new Command('setPassAPCOperatingMode', value ? 'heating' : 'stop');
             break;
