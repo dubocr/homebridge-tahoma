@@ -25,7 +25,7 @@ class Thermostat extends AbstractService {
         this.targetTemperature = this.service.getCharacteristic(Characteristic.TargetTemperature);
 
         this.targetState.on('set', this.setTargetState.bind(this))
-        this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
+        this.targetTemperature.on('set', this.device.postpone.bind(this,this.setTargetTemperature.bind(this)));
 
         switch(this.device.widget) {
             // EvoHome
@@ -910,7 +910,6 @@ class Thermostat extends AbstractService {
 
     /* Atlantic Heater */
     AtlanticPassAPCHeatingZoneStateUpdate(name, value) {
-        //Log("THERMO PARENT", this.device.parent.name);
         var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null, currentHumidity = null;
 		switch(name) {
             case 'core:TargetTemperatureState':
