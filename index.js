@@ -52,23 +52,23 @@ function TahomaPlatform(log, config, api) {
 
 TahomaPlatform.prototype = {
     getDevice: function(deviceURL) {
-        for (device of this.platformDevices) {
+        for (let device of this.platformDevices) {
         	if (device.deviceURL == deviceURL)
 				return device;
         }
-        
+
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
         	baseURL = deviceURL.substring(0, i1);
 			//Log.info('Search extended : ' + baseURL);
-        	for (device of this.platformDevices) {
+        	for (let device of this.platformDevices) {
 				if (device.deviceURL != null && device.deviceURL == baseURL+'#1') // accessory.deviceURL.startsWith(baseURL)
 				return device;
 			}
         }
         return null;
     },
-	
+
 	getMainDevice: function(deviceURL) {
         var i1 = deviceURL.indexOf("#");
         if(i1 != -1) {
@@ -109,13 +109,13 @@ TahomaPlatform.prototype = {
             callback(this.platformAccessories);
         }
     },
- 
+
  /*
 	configureAccessory: function(accessory) {
 	  Log(accessory.displayName, "Configure Accessory");
 	},
 */
-	
+
     loadDevices: function(callback) {
     	var that = this;
     	this.platformAccessories = [];
@@ -137,7 +137,7 @@ TahomaPlatform.prototype = {
 								var forced = this.forceType[device.name] || this.forceType[device.widget];
 								var widgetConfig = this.config[device.widget] || {};
 								var services = [];
-								if(forced != undefined) { 
+								if(forced != undefined) {
 									var config = that.config[forced] || {};
 									Object.assign(config, widgetConfig);
 									services[forced] = config;
@@ -159,7 +159,7 @@ TahomaPlatform.prototype = {
 									Object.assign(config, widgetConfig);
 									services[deviceDefinition] = config;
 								}
-								
+
 								var keys = Object.keys(services);
 								Log.info('Instanciate ' + device.name + ' as ' + (keys.length == 1 ? keys[0] : JSON.stringify(keys)));
 								for(var service in services) {
@@ -179,7 +179,7 @@ TahomaPlatform.prototype = {
 							Log.info('Device ' + device.label + ' ignored');
 						}
 					}
-					
+
 					this.platformDevices.sort(function(a, b) {
 						if(a.deviceURL == b.deviceURL) return 0;
 						if(a.getComponentID() > b.getComponentID()) return 1; else return -1;
@@ -201,7 +201,7 @@ TahomaPlatform.prototype = {
 				callback(error);
 			}.bind(this));
     },
-    
+
     loadScenarios: function(callback) {
     	var that = this;
     	this.api.getActionGroups(function(error, data) {
@@ -217,10 +217,10 @@ TahomaPlatform.prototype = {
 				callback(error);
 			});
     },
-    
+
     onStatesChange: function(deviceURL, states) {
 		if(states != null) {
-			device = this.getDevice(deviceURL);
+			let device = this.getDevice(deviceURL);
 			if (device != null) {
 				device.onStatesUpdate(states, deviceURL);
 			}

@@ -937,25 +937,20 @@ class Thermostat extends AbstractService {
                     targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 }
             break;
-
-            // PASS APC
-            case 'core:HeatingOnOffState':
-			case 'core:CoolingOnOffState':
-			case 'core:ThermalConfigurationState':
-            case 'core:PassAPCHeatingModeState':
-            case 'core:StatusState':
-                let zoneMode = this.getHeatingOrCoolingState();
-                if (zoneMode === 'stop') {
-                    currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                } else if (this.device.states['core:HeatingOnOffState'] == 'on'
-                    || this.device.states['core:CoolingOnOffState'] == 'on'
-                    || this.device.states['io:PassAPCHeatingProfileState'] === 'manu'
-                    || this.device.states['io:PassAPCCoolingProfileState'] === 'manu') {
-                    currentState = this.getHeatingOrCoolingState() === 'heating' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
-                    targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                }
-                targetTemperature = this.device.states['core:HeatingTargetTemperatureState'];
-                break;
+        }
+        if (["core:StatusState", "io:PassAPCHeatingProfileState", "core:HeatingOnOffState", "io:PassAPCCoolingProfileState", "core:CoolingOnOffState"].indexOf(name) !== -1) {
+            let zoneMode = this.getHeatingOrCoolingState();
+            if (zoneMode === 'stop') {
+                currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+            } else if ((this.device.states['core:HeatingOnOffState'] == 'on' &&  this.device.states['io:PassAPCHeatingProfileState'] === 'manu'  && zoneMode === "heating") ||
+                (this.device.states['core:CoolingOnOffState'] == 'on' && this.device.states['io:PassAPCCoolingProfileState'] === 'manu' && zoneMode === "cooling")) {
+                currentState = this.getHeatingOrCoolingState() === 'heating' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+                targetState = Characteristic.TargetHeatingCoolingState.AUTO;
+            } else {
+                currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                targetState = Characteristic.TargetHeatingCoolingState.OFF;
+            }
+            targetTemperature = this.device.states['core:HeatingTargetTemperatureState'];
         }
 
         return [currentState, targetState, currentTemperature, targetTemperature, currentHumidity];
