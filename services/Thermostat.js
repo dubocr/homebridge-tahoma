@@ -319,9 +319,9 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
+                let heatingOrCooling = this.getHeatingOrCoolingState();
                 switch (value) {
                     case Characteristic.TargetHeatingCoolingState.AUTO:
-                        let heatingOrCooling = this.getHeatingOrCoolingState();
                         if (heatingOrCooling === 'cooling') {
                             commands.push(new Command('setCoolingOnOffState', 'on'));
                             commands.push(new Command('setPassAPCCoolingMode', 'manu'));
@@ -347,10 +347,13 @@ class Thermostat extends AbstractService {
                         break;
 
                     case Characteristic.TargetHeatingCoolingState.OFF:
-                        commands.push(new Command('setHeatingOnOffState', 'off'));
-                        commands.push(new Command('setCoolingOnOffState', 'off'));
-                        commands.push(new Command('setPassAPCCoolingMode', 'stop'));
-                        commands.push(new Command('setPassAPCHeatingMode', 'stop'));
+                        if (heatingOrCooling === 'cooling') {
+                            commands.push(new Command('setCoolingOnOffState', 'off'));
+                            commands.push(new Command('setPassAPCHeatingMode', 'stop'));
+                        } else {
+                            commands.push(new Command('setHeatingOnOffState', 'off'));
+                            commands.push(new Command('setPassAPCCoolingMode', 'stop'));
+                        }
                         break;
                 }
                 break;
@@ -432,6 +435,8 @@ class Thermostat extends AbstractService {
         this.device.executeCommand(commands, function (status, error, data) {
             switch (status) {
                 case ExecutionState.INITIALIZED:
+                    break;
+                case ExecutionState.IN_PROGRESS:
                     if (this.device.widget === 'AtlanticPassAPCHeatingAndCoolingZone') {
                         let newCurrentState;
                         switch (value) {
@@ -458,10 +463,7 @@ class Thermostat extends AbstractService {
                         }
                         this.currentState.updateValue(newCurrentState);
                     }
-
                     callback(error);
-                    break;
-                case ExecutionState.IN_PROGRESS:
                     break;
                 case ExecutionState.COMPLETED:
                     if (this.device.stateless) {
@@ -942,8 +944,8 @@ class Thermostat extends AbstractService {
             let zoneMode = this.getHeatingOrCoolingState();
             if (zoneMode === 'stop') {
                 currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-            } else if ((this.device.states['core:HeatingOnOffState'] == 'on' &&  this.device.states['io:PassAPCHeatingProfileState'] === 'manu'  && zoneMode === "heating") ||
-                (this.device.states['core:CoolingOnOffState'] == 'on' && this.device.states['io:PassAPCCoolingProfileState'] === 'manu' && zoneMode === "cooling")) {
+            } else if ((this.device.states['core:HeatingOnOffState'] == 'on' && ['manu', 'externalSetpoint'].indexOf(this.device.states['io:PassAPCHeatingProfileState']) !== -1 && zoneMode === "heating") ||
+                (this.device.states['core:CoolingOnOffState'] == 'on' && ['manu', 'externalSetpoint'].indexOf(this.device.states['io:PassAPCCoolingProfileState']) !== -1 && zoneMode === "cooling")) {
                 currentState = this.getHeatingOrCoolingState() === 'heating' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
                 targetState = Characteristic.TargetHeatingCoolingState.AUTO;
             } else {
