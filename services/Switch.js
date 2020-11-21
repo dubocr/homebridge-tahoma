@@ -64,6 +64,9 @@ class Switch extends AbstractService {
         }
         this.device.executeCommand(commands, function(status, error, data) {
             switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                break;
                 case ExecutionState.FAILED:
                     this.onState.updateValue(!value);
                 break;
