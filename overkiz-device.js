@@ -221,16 +221,18 @@ class OverkizDevice {
 					target = child;
 			}
 		}
-		
+
 		if(target) {
 			Log.info('#' + device.getComponentID() + ' ' + device.name + ' (' + device.widget + ') merged into #' + target.getComponentID() + ' ' + target.name + ' (' + target.widget + ')');
 		} else {
 			Log.info('#' + device.getComponentID() + ' ' + device.name + ' ('+device.widget+') attached to #' + this.getComponentID() + ' ' + this.name + ' ('+this.widget+')');
 		}
 	}
-    
+
     merge(device) {
-		device.parent = this;
+		if (!device.parent) {
+			device.parent = this;
+		}
 		this.child.push(device);
 		switch(device.widget + ' > ' + this.widget) {
 			//case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':

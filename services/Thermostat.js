@@ -3,7 +3,7 @@ var AbstractService = require('./AbstractService');
 var { Command, ExecutionState } = require('../overkiz-api');
 
 class Thermostat extends AbstractService {
-    constructor (homebridge, log, device, config) {
+    constructor(homebridge, log, device, config) {
         super(homebridge, log, device);
 		Log = log;
 		Service = homebridge.hap.Service;
@@ -25,7 +25,7 @@ class Thermostat extends AbstractService {
         this.targetTemperature = this.service.getCharacteristic(Characteristic.TargetTemperature);
 
         this.targetState.on('set', this.setTargetState.bind(this))
-        this.targetTemperature.on('set', this.setTargetTemperature.bind(this));
+        this.targetTemperature.on('set', this.device.postpone.bind(this,this.setTargetTemperature.bind(this)));
 
         switch(this.device.widget) {
             // EvoHome
@@ -70,9 +70,8 @@ class Thermostat extends AbstractService {
 
             case 'SomfyHeatingTemperatureInterface':
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-                // 3 modes only (comfort, eco, off)
-                this.targetState.setProps({ validValues: [0,1,2] });
-            break;
+                this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
+                break;
 
             case 'AtlanticPassAPCHeatingZone':
                 // 3 modes only (comfort, eco, off)
@@ -101,6 +100,14 @@ class Thermostat extends AbstractService {
                 this.targetState.setProps({ validValues: [0,1,2,3] });
                 this.targetTemperature.setProps({ minValue: 0, maxValue: 30, minStep: 0.5 });
             break;
+        }
+    }
+
+    getHeatingOrCoolingState() {
+        for (let state of this.device.parent.states) {
+            if (state.name == 'io:PassAPCOperatingModeState') {
+                return state.value;
+            }
         }
     }
 
@@ -287,29 +294,6 @@ class Thermostat extends AbstractService {
 
             case 'AtlanticPassAPCBoiler':
             case 'AtlanticPassAPCHeatPump':
-            case 'AtlanticPassAPCZoneControl':
-                switch(value) {
-                    case Characteristic.TargetHeatingCoolingState.AUTO:
-                        commands.push(new Command('setPassAPCOperatingMode', 'heating'));
-                        break;
-
-                    case Characteristic.TargetHeatingCoolingState.HEAT:
-                        commands.push(new Command('setPassAPCOperatingMode', 'heating'));
-                        break;
-
-                    case Characteristic.TargetHeatingCoolingState.COOL:
-                        commands.push(new Command('setPassAPCOperatingMode', 'cooling'));
-                        break;
-
-                    case Characteristic.TargetHeatingCoolingState.OFF:
-                        commands.push(new Command('setPassAPCOperatingMode', 'stop'));
-                        break;
-
-                    default:
-                        callback("Bad command");
-                        break;
-                }
-            break;
 
             case 'AtlanticPassAPCHeatingZone':
         		switch(value) {
@@ -335,28 +319,44 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-        		switch(value) {
-					case Characteristic.TargetHeatingCoolingState.AUTO:
-						commands.push(new Command('setHeatingOnOffState', 'on'));
-						commands.push(new Command('setCoolingOnOffState', 'on'));
-						break;
+                let heatingOrCooling = this.getHeatingOrCoolingState();
+                switch (value) {
+                    case Characteristic.TargetHeatingCoolingState.AUTO:
+                        if (heatingOrCooling === 'cooling') {
+                            commands.push(new Command('setCoolingOnOffState', 'on'));
+                            commands.push(new Command('setPassAPCCoolingMode', 'manu'));
+                        } else if (heatingOrCooling === 'heating') {
+                            commands.push(new Command('setHeatingOnOffState', 'on'));
+                            commands.push(new Command('setPassAPCHeatingMode', 'manu'));
+                        } else {
+                            commands.push(new Command('setHeatingOnOffState', 'on'));
+                            commands.push(new Command('setCoolingOnOffState', 'on'));
+                            commands.push(new Command('setPassAPCCoolingMode', 'manu'));
+                            commands.push(new Command('setPassAPCHeatingMode', 'manu'));
+                        }
+                        break;
 
-					case Characteristic.TargetHeatingCoolingState.HEAT:
-						commands.push(new Command('setHeatingOnOffState', 'on'));
-						commands.push(new Command('setCoolingOnOffState', 'off'));
-						break;
+                    case Characteristic.TargetHeatingCoolingState.HEAT:
+                        commands.push(new Command('setHeatingOnOffState', 'on'));
+                        commands.push(new Command('setCoolingOnOffState', 'off'));
+                        break;
 
-					case Characteristic.TargetHeatingCoolingState.COOL:
-						commands.push(new Command('setHeatingOnOffState', 'off'));
-						commands.push(new Command('setCoolingOnOffState', 'on'));
-						break;
+                    case Characteristic.TargetHeatingCoolingState.COOL:
+                        commands.push(new Command('setHeatingOnOffState', 'off'));
+                        commands.push(new Command('setCoolingOnOffState', 'on'));
+                        break;
 
-					case Characteristic.TargetHeatingCoolingState.OFF:
-						commands.push(new Command('setHeatingOnOffState', 'off'));
-						commands.push(new Command('setCoolingOnOffState', 'off'));
-						break;
-				}
-        	break;
+                    case Characteristic.TargetHeatingCoolingState.OFF:
+                        if (heatingOrCooling === 'cooling') {
+                            commands.push(new Command('setCoolingOnOffState', 'off'));
+                            commands.push(new Command('setPassAPCHeatingMode', 'stop'));
+                        } else {
+                            commands.push(new Command('setHeatingOnOffState', 'off'));
+                            commands.push(new Command('setPassAPCCoolingMode', 'stop'));
+                        }
+                        break;
+                }
+                break;
 
             case 'HitachiAirToAirHeatPump':
                 commands = this.getHitachiCommands(value, this.targetTemperature.value);
@@ -432,24 +432,52 @@ class Thermostat extends AbstractService {
         	break;
         }
 
-		this.device.executeCommand(commands, function(status, error, data) {
-			switch (status) {
-				case ExecutionState.INITIALIZED:
-					callback(error);
-				break;
-				case ExecutionState.IN_PROGRESS: break;
-				case ExecutionState.COMPLETED:
-					if(this.device.stateless) {
-						this.currentState.updateValue(value);
-					}
-				break;
-				case ExecutionState.FAILED:
-					this.targetState.updateValue(this.currentState.value);
-					//this.targetState.updateValue(new Error(HAPServer.Status.SERVICE_COMMUNICATION_FAILURE));
-				break;
-				default: break;
-			}
-		}.bind(this), callback);
+        this.device.executeCommand(commands, function (status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    break;
+                case ExecutionState.IN_PROGRESS:
+                    if (this.device.widget === 'AtlanticPassAPCHeatingAndCoolingZone') {
+                        let newCurrentState;
+                        switch (value) {
+                            case Characteristic.TargetHeatingCoolingState.AUTO:
+                                let heatingOrCooling = this.getHeatingOrCoolingState();
+                                if (heatingOrCooling === 'cooling') {
+                                    newCurrentState = Characteristic.CurrentHeatingCoolingState.COOLING;
+                                } else if (heatingOrCooling === 'heating') {
+                                    newCurrentState = Characteristic.CurrentHeatingCoolingState.HEATING;
+                                }
+                                break;
+
+                            case Characteristic.TargetHeatingCoolingState.HEAT:
+                                newCurrentState = Characteristic.CurrentHeatingCoolingState.HEATING;
+                                break;
+
+                            case Characteristic.TargetHeatingCoolingState.COOL:
+                                newCurrentState = Characteristic.CurrentHeatingCoolingState.COOLING;
+                                break;
+
+                            case Characteristic.TargetHeatingCoolingState.OFF:
+                                newCurrentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                                break;
+                        }
+                        this.currentState.updateValue(newCurrentState);
+                    }
+                    callback(error);
+                    break;
+                case ExecutionState.COMPLETED:
+                    if (this.device.stateless) {
+                        this.currentState.updateValue(value);
+                    }
+                    break;
+                case ExecutionState.FAILED:
+                    this.targetState.updateValue(this.currentState.value);
+                    //this.targetState.updateValue(new Error(HAPServer.Status.SERVICE_COMMUNICATION_FAILURE));
+                    break;
+                default:
+                    break;
+            }
+        }.bind(this), callback);
     }
 
     setTargetTemperature(value, callback) {
@@ -502,42 +530,18 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-				if(this.device.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
-					commands.push(new Command('setDerogatedTargetTemperature', value));
-					commands.push(new Command('setDerogationOnOffState', 'on'));
-					commands.push(new Command('setDerogationTime', this.derogationDuration));
-				} else if(this.device.states['core:ThermalConfigurationState'] == 'heating') {
-					if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.device.states['io:PassAPCHeatingModeState'])) {
-						commands.push(new Command('setDerogatedTargetTemperature', value));
-						commands.push(new Command('setDerogationOnOffState', 'on'));
-						commands.push(new Command('setDerogationTime', this.derogationDuration));
-					} else {
-						if(this.device.states['io:PassAPCHeatingProfileState'] == 'comfort') {
-							commands.push(new Command('setComfortHeatingTargetTemperature', value));
-						} else if(this.device.states['io:PassAPCHeatingProfileState'] == 'eco') {
-							commands.push(new Command('setEcoHeatingTargetTemperature', value));
-						} else {
-							Log("Invalid state " + this.device.states['io:PassAPCHeatingProfileState']);
-							callback("Invalid state");
-						}
-					}
-				} else if(this.device.states['core:ThermalConfigurationState'] == 'cooling') {
-					if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.device.states['io:PassAPCCoolingModeState'])) {
-						commands.push(new Command('setDerogatedTargetTemperature', value));
-						commands.push(new Command('setDerogationOnOffState', 'on'));
-						commands.push(new Command('setDerogationTime', [this.derogationDuration]));
-					} else {
-						if(this.device.states['io:PassAPCCoolingProfileState'] == 'comfort') {
-							commands.push(new Command('setComfortCoolingTargetTemperature', value));
-						} else if(this.device.states['io:PassAPCCoolingProfileState'] == 'eco') {
-							commands.push(new Command('setEcoCoolingTargetTemperature', value));
-						} else {
-							Log("Invalid state " + this.device.states['io:PassAPCCoolingProfileState']);
-							callback("Invalid state");
-						}
-					}
-				}
-			break;
+                if (this.device.states['core:ThermalConfigurationState'] == 'heatingAndCooling') {
+                    let heatingOrCooling = this.getHeatingOrCoolingState();
+                    if (heatingOrCooling === 'heating') {
+                        commands.push(new Command('setHeatingTargetTemperature', value));
+                    } else if (heatingOrCooling === 'cooling') {
+                        commands.push(new Command('setCoolingTargetTemperature', value));
+                    } else {
+                        commands.push(new Command('setHeatingTargetTemperature', value));
+                        commands.push(new Command('setCoolingTargetTemperature', value));
+                    }
+                }
+                break;
 
             case 'HitachiAirToAirHeatPump':
                 commands = this.getHitachiCommands(this.targetState.value, value);
@@ -556,21 +560,21 @@ class Thermostat extends AbstractService {
         	break;
         }
 
-		this.device.executeCommand(commands, function(status, error, data) {
-			switch (status) {
-				case ExecutionState.INITIALIZED:
-					callback(error);
-				break;
-				case ExecutionState.COMPLETED:
-					if(this.device.stateless) {
-						this.currentTemperature.updateValue(value);
-					}
-				break;
-				case ExecutionState.FAILED:
+        this.device.executeCommand(commands, function (status, error, data) {
+            switch (status) {
+                case ExecutionState.INITIALIZED:
+                    callback(error);
+                    break;
+                case ExecutionState.COMPLETED:
+                    if (this.device.stateless) {
+                        this.currentTemperature.updateValue(value);
+                    }
+                    break;
+                case ExecutionState.FAILED:
                     this.targetTemperature.updateValue(this.currentTemperature.value);
-				break;
-			}
-		}.bind(this), callback);
+                    break;
+            }
+        }.bind(this), callback);
     }
 
     onStateUpdate(name, value) {
@@ -659,44 +663,9 @@ class Thermostat extends AbstractService {
 
             // PASS APC
             //case 'core:HeatingOnOffState':
-			case 'core:CoolingOnOffState':
-			case 'core:ThermalConfigurationState':
-            case 'core:PassAPCHeatingModeState':
-                if(this.device.states['core:HeatingOnOffState'] == 'on') {
-                    currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                    if(this.device.states['core:PassAPCHeatingProfileState'] == 'comfort') {
-                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                    } else if(this.device.states['core:PassAPCHeatingProfileState'] == 'eco') {
-                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                    } else {
-                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                    }
-                } else if(this.device.states['core:CoolingOnOffState'] == 'on') {
-                    currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                } else {
-                    currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                }
-
-                switch(this.device.states['core:ThermalConfigurationState']) {
-                    case 'heating':
-                        if(['auto', 'internalScheduling', 'externalScheduling'].includes(this.device.states['core:PassAPCHeatingModeState'])) {
-                            targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                        } else if(this.device.states['core:PassAPCHeatingModeState'] == 'comfort') {
-                            targetState = Characteristic.TargetHeatingCoolingState.HEAT;
-                        } else if(this.device.states['core:PassAPCHeatingModeState'] == 'eco') {
-                            targetState = Characteristic.TargetHeatingCoolingState.COOL;
-                        } else {
-                            targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                        }
-                    break;
-                    case 'cooling':
-                        targetState = Characteristic.TargetHeatingCoolingState.COOL;
-                    break;
-                    case 'heatingAndCooling':
-                        targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                    break;
-                }
-            break;
+            case 'core:CoolingOnOffState':
+            case 'core:ThermalConfigurationState':
+                break;
 
             case 'core:OnOffState':
             case 'core:HeatingOnOffState':
@@ -946,6 +915,7 @@ class Thermostat extends AbstractService {
         var currentState = null, targetState = null, currentTemperature = null, targetTemperature = null, currentHumidity = null;
 		switch(name) {
             case 'core:TargetTemperatureState':
+                targetTemperature = value;
             case 'core:WaterTargetTemperatureState':
             case 'core:TargetDHWTemperatureState':
             case 'core:TargetRoomTemperatureState':
@@ -969,50 +939,33 @@ class Thermostat extends AbstractService {
                     targetState = Characteristic.TargetHeatingCoolingState.OFF;
                 }
             break;
-
-            // PASS APC
-            case 'core:HeatingOnOffState':
-			case 'core:CoolingOnOffState':
-			case 'core:ThermalConfigurationState':
-            case 'core:PassAPCHeatingModeState':
-                if(this.device.states['core:HeatingOnOffState'] == 'on') {
-                    currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                    if(this.device.states['core:PassAPCHeatingProfileState'] == 'comfort') {
-                        currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-                    } else if(this.device.states['core:PassAPCHeatingProfileState'] == 'eco') {
-                        currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                    } else {
-                        targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                    }
-                } else if(this.device.states['core:CoolingOnOffState'] == 'on') {
-                    currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-                } else {
-                    currentState = Characteristic.CurrentHeatingCoolingState.OFF;
-                }
-
-                switch(this.device.states['core:ThermalConfigurationState']) {
-                    case 'heating':
-                        if(['auto', 'internalScheduling', 'externalScheduling'].includes(this.device.states['core:PassAPCHeatingModeState'])) {
-                            targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                        } else if(this.device.states['core:PassAPCHeatingModeState'] == 'comfort') {
-                            targetState = Characteristic.TargetHeatingCoolingState.HEAT;
-                        } else if(this.device.states['core:PassAPCHeatingModeState'] == 'eco') {
-                            targetState = Characteristic.TargetHeatingCoolingState.COOL;
-                        } else {
-                            targetState = Characteristic.TargetHeatingCoolingState.OFF;
-                        }
-                    break;
-                    case 'cooling':
-                        targetState = Characteristic.TargetHeatingCoolingState.COOL;
-                    break;
-                    case 'heatingAndCooling':
-                        targetState = Characteristic.TargetHeatingCoolingState.AUTO;
-                    break;
-                }
-            break;
+        }
+        if (["core:StatusState", "io:PassAPCHeatingProfileState", "core:HeatingOnOffState", "io:PassAPCCoolingProfileState", "core:CoolingOnOffState"].indexOf(name) !== -1) {
+            let zoneMode = this.getHeatingOrCoolingState();
+            if (zoneMode === 'stop') {
+                currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+            } else if ((this.device.states['core:HeatingOnOffState'] == 'on' && ['manu', 'externalSetpoint'].indexOf(this.device.states['io:PassAPCHeatingProfileState']) !== -1 && zoneMode === "heating") ||
+                (this.device.states['core:CoolingOnOffState'] == 'on' && ['manu', 'externalSetpoint'].indexOf(this.device.states['io:PassAPCCoolingProfileState']) !== -1 && zoneMode === "cooling")) {
+                currentState = this.getHeatingOrCoolingState() === 'heating' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL;
+                targetState = Characteristic.TargetHeatingCoolingState.AUTO;
+            } else {
+                currentState = Characteristic.CurrentHeatingCoolingState.OFF;
+                targetState = Characteristic.TargetHeatingCoolingState.OFF;
+            }
+            targetTemperature = this.device.states['core:HeatingTargetTemperatureState'];
         }
 
         return [currentState, targetState, currentTemperature, targetTemperature, currentHumidity];
+    }
+
+    markZoneOff() {
+        this.currentState.updateValue(Characteristic.CurrentHeatingCoolingState.OFF);
+        this.targetState.updateValue(Characteristic.TargetHeatingCoolingState.OFF);
+    }
+
+    markZoneOn(mode) {
+        this.currentState.updateValue(mode === 'heating' ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.COOL);
+        this.targetState.updateValue(Characteristic.TargetHeatingCoolingState.AUTO);
     }
 }
 
