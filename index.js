@@ -125,7 +125,7 @@ TahomaPlatform.prototype = {
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
 						Log.info('[' + device.label + ']' + ' type: ' + device.uiClass + ' > ' + device.widget + ', protocol: ' + protocol);
-						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
+						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.uiClass) == -1 && that.exclusions.indexOf(device.label) == -1) {
 							device = new OverkizDevice(Homebridge, Log, this.api, device);
 							var deviceDefinition = mapping[device.widget];
 							if(deviceDefinition == undefined) {
