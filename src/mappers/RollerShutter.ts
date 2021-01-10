@@ -7,6 +7,6 @@ export default class RollerShutter extends Window {
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
         this.positionState = service.getCharacteristic(this.platform.Characteristic.PositionState);
         this.obstructionDetected = service.getCharacteristic(this.platform.Characteristic.ObstructionDetected);
-        this.targetPosition.on('set', this.postpone(this.setTargetPosition));
+        this.targetPosition.on('set', this.debounce(this.setTargetPosition));
     }
 }

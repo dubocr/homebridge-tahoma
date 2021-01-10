@@ -1,4 +1,4 @@
-import HeatingSystem from '../uiClass/HeatingSystem';
+import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCBoiler extends HeatingSystem {    
     build() {

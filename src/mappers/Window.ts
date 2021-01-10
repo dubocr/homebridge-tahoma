@@ -1,8 +1,8 @@
-import OverkizAccessory from '../OverkizAccessory';
+import Mapper from '../Mapper';
 import { Characteristic, CharacteristicValue, CharacteristicSetCallback} from 'homebridge';
-import { ExecutionState, Command, Action } from '../../api/OverkizClient';
+import { ExecutionState, Command, Action } from 'overkiz-client';
 
-export default class Window extends OverkizAccessory {
+export default class Window extends Mapper {
     protected currentPosition;
     protected targetPosition;
     protected positionState;
@@ -18,7 +18,7 @@ export default class Window extends OverkizAccessory {
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
         this.positionState = service.getCharacteristic(this.platform.Characteristic.PositionState);
         this.obstructionDetected = service.getCharacteristic(this.platform.Characteristic.ObstructionDetected);
-        this.targetPosition.on('set', this.postpone(this.setTargetPosition));
+        this.targetPosition.on('set', this.debounce(this.setTargetPosition));
     }
 
     setTargetPosition(value, callback: CharacteristicSetCallback) {
