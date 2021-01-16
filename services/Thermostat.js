@@ -515,8 +515,8 @@ class Thermostat extends AbstractService {
             case 'AtlanticPassAPCHeatingZone':
                 if(['auto', 'externalScheduling', 'internalScheduling'].includes(this.device.states['io:PassAPCHeatingModeState'])) {
                     commands.push(new Command('setDerogatedTargetTemperature', value));
-                    commands.push(new Command('setDerogationOnOffState', 'on'));
                     commands.push(new Command('setDerogationTime', this.derogationDuration));
+                    commands.push(new Command('setDerogationOnOffState', 'on'));
                 } else {
                     // PassAPCHeatingProfileState or PassAPCHeatingModeState ?
                     if(this.device.states['io:PassAPCHeatingModeState'] == 'comfort') {

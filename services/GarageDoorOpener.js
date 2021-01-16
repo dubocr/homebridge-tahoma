@@ -60,6 +60,7 @@ class GarageDoorOpener extends AbstractService {
             case 'PositionableGarageDoor':
             case 'SlidingDiscreteGateWithPedestrianPosition':
             case 'PositionableGarageDoorWithPartialPosition':
+            default:
                 commands.push(new Command(value == Characteristic.TargetDoorState.OPEN ? 'open' : 'close'));
             break;
         }
