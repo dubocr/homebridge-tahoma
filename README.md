@@ -64,7 +64,7 @@ Configuration parameters:
 
 | GarageDoorOpener parameters| Type			| Default		| Note                                                                                                                                                                  |
 |----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `cyclic`	         		| Boolean	| false			| optional, activate restoring initial state for cyclic device without							|
+| `cycle`	         		| Boolean	| false			| optional, activate restoring initial state for cyclic device without							|
 | `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
 | `stateless`	       		 | Boolean	| false			| optional, force stateless device detection (if your device hasn't state reports but don't react as it in HomeKit) |
 

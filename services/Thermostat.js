@@ -132,8 +132,36 @@ class Thermostat extends AbstractService {
             break;
 
             case 'ProgrammableAndProtectableThermostatSetPoint':
+                // Nothing to do
+                switch(value) {
+                    case Characteristic.TargetHeatingCoolingState.AUTO:
+                    case Characteristic.TargetHeatingCoolingState.HEAT:
+                        commands = new Command('setTargetModeAlias', 'comfort');
+                        break;
+                    case Characteristic.TargetHeatingCoolingState.COOL:
+                        commands = new Command('setTargetModeAlias', 'eco');
+                        break;
+                    case Characteristic.TargetHeatingCoolingState.OFF:
+                        commands = new Command('setTargetModeAlias', 'holidays');
+                        break;
+                }
+            break;
             case 'ThermostatSetPoint':
                 // Nothing to do
+                switch(value) {
+                    case Characteristic.TargetHeatingCoolingState.AUTO:
+                        commands = new Command('setThermostatMode', 'auto');
+                        break;
+                    case Characteristic.TargetHeatingCoolingState.HEAT:
+                        commands = new Command('setThermostatMode', 'heat');
+                        break;
+                    case Characteristic.TargetHeatingCoolingState.COOL:
+                        commands = new Command('setThermostatMode', 'cool');
+                        break;
+                    case Characteristic.TargetHeatingCoolingState.OFF:
+                        commands = new Command('setThermostatMode', 'off');
+                        break;
+                }
             break;
 
             case 'SomfyThermostat':
@@ -500,7 +528,8 @@ class Thermostat extends AbstractService {
             break;
 
             case 'ThermostatSetPoint':
-                commands = new Command('setThermostatSetpoint', [value,value,value,value]);
+                //commands = new Command('setThermostatSetpoint', [value,value,value,value]);
+                commands = new Command('setHeatingTargetTemperature', value);
             break;
 
             case 'SomfyThermostat':
@@ -588,6 +617,7 @@ class Thermostat extends AbstractService {
         }
 		switch(name) {
             case 'core:TemperatureState':
+            case 'core:RoomTemperatureState':
             case 'core:WaterTemperatureState':
 			case 'zwave:SetPointHeatingValueState':
                 currentTemperature = value > 273.15 ? (value - 273.15) : value;
