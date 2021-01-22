@@ -43,7 +43,9 @@ class Thermostat extends AbstractService {
             case 'ProgrammableAndProtectableThermostatSetPoint':
             case 'ThermostatSetPoint':
                 // Nothing to do with Target
-                this.targetState.setProps({ validValues: [] });
+                this.targetState.setProps({ validValues: [3] });
+				this.targetState.value = Characteristic.TargetHeatingCoolingState.AUTO;
+				this.currentState.value = Characteristic.CurrentHeatingCoolingState.HEAT;
             break;
 
             case 'AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint':
@@ -133,7 +135,9 @@ class Thermostat extends AbstractService {
 
             case 'ProgrammableAndProtectableThermostatSetPoint':
                 // Nothing to do
-                switch(value) {
+                callback();
+                return;
+                /*switch(value) {
                     case Characteristic.TargetHeatingCoolingState.AUTO:
                     case Characteristic.TargetHeatingCoolingState.HEAT:
                         commands = new Command('setTargetModeAlias', 'comfort');
@@ -145,10 +149,12 @@ class Thermostat extends AbstractService {
                         commands = new Command('setTargetModeAlias', 'holidays');
                         break;
                 }
-            break;
+            break;*/
             case 'ThermostatSetPoint':
                 // Nothing to do
-                switch(value) {
+                callback();
+                return;
+                /*switch(value) {
                     case Characteristic.TargetHeatingCoolingState.AUTO:
                         commands = new Command('setThermostatMode', 'auto');
                         break;
@@ -162,7 +168,7 @@ class Thermostat extends AbstractService {
                         commands = new Command('setThermostatMode', 'off');
                         break;
                 }
-            break;
+            break;*/
 
             case 'SomfyThermostat':
                 switch(value) {
