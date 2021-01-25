@@ -1,7 +1,7 @@
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCBoiler extends HeatingSystem {    
-    build() {
+    buildServices() {
         this.registerService(this.platform.Service.Thermostat);
     }
 }

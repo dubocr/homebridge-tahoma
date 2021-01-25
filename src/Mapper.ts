@@ -18,15 +18,22 @@ export default class Mapper {
         protected readonly device: Device,
     ) {
         this.log = platform.log;
+        this.config = platform.config[device.oid] ||
+            platform.config[device.label] ||
+            platform.config[device.widget] ||
+            platform.config[device.uiClass] ||
+            {};
 
         const info = this.accessory.getService(this.platform.Service.AccessoryInformation);
         if(info) {
-            info.setCharacteristic(this.platform.Characteristic.Manufacturer, device.getManufacturer());
-            info.setCharacteristic(this.platform.Characteristic.Model, device.getModel());
+            info.setCharacteristic(this.platform.Characteristic.Manufacturer, device.manufacturer);
+            info.setCharacteristic(this.platform.Characteristic.Model, device.model);
             info.setCharacteristic(this.platform.Characteristic.SerialNumber, device.serialNumber);
         }
         this.stateless = (device.states.length === 0);
-        this.build();
+
+        //this.buildService
+        this.buildServices();
 
         if(!this.stateless) {
             // Init states
@@ -90,7 +97,7 @@ export default class Mapper {
             });
     }
 
-    protected build() {
+    protected buildServices() {
         // 
     }
 
@@ -99,13 +106,12 @@ export default class Mapper {
     }
 
     protected onStateChange(name: string, value: unknown) {
-        // 
+        this.debug(name + ' => ' + value);
     }
     
     /**
      * Logging methods
      */
-
     protected debug(message) {
         this.platform.log.debug('[' + this.device.label + '] ' + message);
     }

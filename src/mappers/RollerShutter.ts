@@ -1,7 +1,11 @@
 import Window from './Window';
 
 export default class RollerShutter extends Window {
-    build() {
+    registerServices() {
+        return [ this.platform.Service.WindowCovering ];
+    }
+
+    registerCharacteristics() {
         const service = this.registerService(this.platform.Service.WindowCovering);
         this.currentPosition = service.getCharacteristic(this.platform.Characteristic.CurrentPosition);
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);

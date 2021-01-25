@@ -12,7 +12,7 @@ export default class Window extends Mapper {
     protected defaultPosition = 0;
     protected cycle = false;
 
-    build() {
+    buildServices() {
         const service = this.registerService(this.platform.Service.Window);
         this.currentPosition = service.getCharacteristic(this.platform.Characteristic.CurrentPosition);
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);

@@ -80,14 +80,14 @@ export class Platform implements DynamicPlatformPlugin {
           }
 
 
+          this.log.info('Configuring accessory:', accessory.displayName);
+          this.log.debug('\t' + device.uiClass + ' > ' + device.widget);
+
           const mapper = await import('./mappers/' + device.uiClass + '/' + device.widget)
               .catch(() => import('./mappers/' + device.uiClass))
               .then((c) => c.default)
               .catch(() => Mapper);
-          (new mapper(this, accessory, device));
-
-          this.log.info('Configuring accessory:', accessory.displayName);
-          this.log.debug('\t' + device.uiClass + ' > ' + device.widget);
+          new mapper(this, accessory, device);
       }
       const uuids = devices.map((device) => device.oid);
       const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
