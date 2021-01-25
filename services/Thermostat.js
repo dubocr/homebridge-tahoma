@@ -976,7 +976,7 @@ class Thermostat extends AbstractService {
                 }
             break;
         }
-        if (["core:StatusState", "io:PassAPCHeatingModeState", "core:HeatingOnOffState", "io:PassAPCCoolingModeState", "core:CoolingOnOffState"].includes(name)) {
+        if (["core:StatusState", "io:PassAPCHeatingModeState", "core:HeatingOnOffState", "core:HeatingTargetTemperatureState", "io:PassAPCCoolingModeState", "core:CoolingOnOffState"].includes(name)) {
             let zoneMode = this.getHeatingOrCoolingState();
             if (zoneMode === 'stop') {
                 currentState = Characteristic.CurrentHeatingCoolingState.OFF;
