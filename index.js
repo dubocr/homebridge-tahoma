@@ -7,7 +7,7 @@ var DEFAULT_RETRY_DELAY = 30;
 
 module.exports = function(homebridge) {
 	console.log("homebridge-tahoma API version: " + homebridge.version);
-	
+
 	Homebridge = homebridge;
 	Service = homebridge.hap.Service;
 	Characteristic = homebridge.hap.Characteristic;
@@ -31,7 +31,7 @@ function TahomaPlatform(log, config, api) {
 	}*/
 	this.forceType = config.forceType || {};
 	this.api = new Api(log, config);
-	
+
 	Services = [];
 	// load up all services
 	var servicesDir = __dirname + '/services/';
@@ -43,7 +43,7 @@ function TahomaPlatform(log, config, api) {
 			Services[name] = require(path.join(servicesDir, file));
 		}
 	});
-	
+
     this.platformAccessories = [];
     this.platformDevices = [];
 
@@ -135,7 +135,7 @@ TahomaPlatform.prototype = {
 								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
 							} else {
 								var forced = this.forceType[device.name] || this.forceType[device.widget];
-								var widgetConfig = this.config[device.widget] || {};
+								var widgetConfig = this.config[device.widget] || this.config[device.uiClass] || {};
 								var services = [];
 								if(forced != undefined) {
 									var config = that.config[forced] || {};
@@ -161,7 +161,7 @@ TahomaPlatform.prototype = {
 								}
 
 								var keys = Object.keys(services);
-								Log.info('Instanciate ' + device.name + ' as ' + (keys.length == 1 ? keys[0] : JSON.stringify(keys)));
+								Log.info('Instanciate ' + device.name + ' as ' + (keys.length == 1 ? keys[0] : JSON.stringify(keys)) + ' with config ' + JSON.stringify(config));
 								for(var service in services) {
 									if(Services[service] == undefined) {
 										Log.info('Service ' + service + ' not implemented');
@@ -237,21 +237,21 @@ function ScenarioAccessory(name, oid, api) {
 		var service = new Service.Switch(name);
 		this.state = service.getCharacteristic(Characteristic.On);
     this.state.on('set', this.executeScenario.bind(this));
-    
-    this.services.push(service); 
+
+    this.services.push(service);
 }
 
 ScenarioAccessory.prototype = {
     getServices: function() {
 			return this.services;
     },
-    
+
     executeScenario: function(value, callback) {
     	var that = this;
 			if (this.isCommandInProgress()) {
 					this.api.cancelCommand(this.lastExecId, function() {});
 			}
-			
+
 			if(value) {
 				this.api.execute(this.oid, null, function(status, error, data) {
 					if(!error) {
@@ -266,7 +266,7 @@ ScenarioAccessory.prototype = {
 			}
 			callback();
     },
-    
+
     isCommandInProgress: function() {
         return (this.lastExecId in this.api.executionCallback);
     }

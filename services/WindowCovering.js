@@ -283,10 +283,16 @@ class WindowCovering extends AbstractService {
         switch(name) {
             case 'core:DeploymentState':
                 currentPosition = this.reverse ? (100 - value) : value;
-                targetPosition = currentPosition;
             break;
 
             case 'core:TargetClosureState':
+                if(this.device.uiClass == "Awning") {
+                    targetPosition = this.reverse ? (100 - value) : value;
+                } else {
+                    targetPosition = this.reverse ? value : (100 - value);
+                }
+            break;
+
             case 'core:ClosureState':
                 if(value == 99) value = 100; // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
                 currentPosition = this.reverse ? value : (100 - value);
