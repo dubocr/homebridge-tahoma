@@ -124,16 +124,17 @@ TahomaPlatform.prototype = {
 					Log.debug(data.length + ' device(s) found');
 					for (device of data) {
 						var protocol = device.controllableName.split(':').shift(); // Get device protocol name
-						Log.info('[' + device.label + ']' + ' type: ' + device.uiClass + ' > ' + device.widget + ', protocol: ' + protocol);
-						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.label) == -1) {
-							device = new OverkizDevice(Homebridge, Log, this.api, device);
-							var deviceDefinition = mapping[device.widget];
-							if(deviceDefinition == undefined) {
-								deviceDefinition = mapping[device.uiClass];
-							}
-							if(deviceDefinition == undefined) {
-								Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
-							} else {
+            Log.info('[' + device.label + ']' + ' type: ' + device.uiClass + ' > ' + device.widget + ', protocol: ' + protocol);
+            var deviceDefinition = mapping[device.widget];
+						if(deviceDefinition == undefined) {
+							deviceDefinition = mapping[device.uiClass];
+						}
+						if(deviceDefinition == undefined) {
+							Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
+						} else {
+  						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.uiClass) == -1 && that.exclusions.indexOf(deviceDefinition) == -1 && that.exclusions.indexOf(device.label) == -1) {
+  							device = new OverkizDevice(Homebridge, Log, this.api, device);
+							
 								var forced = this.forceType[device.name] || this.forceType[device.widget];
 								var widgetConfig = this.config[device.widget] || this.config[device.uiClass] || {};
 								var services = [];
@@ -174,10 +175,10 @@ TahomaPlatform.prototype = {
 									}
 								}
 								this.platformDevices.push(device);
-							}
-						} else {
-							Log.info('Device ' + device.label + ' ignored');
-						}
+							} else {
+							  Log.info('Device ' + device.label + ' ignored');
+              }
+            }
 					}
 
 					this.platformDevices.sort(function(a, b) {
