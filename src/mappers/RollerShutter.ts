@@ -8,26 +8,20 @@ export default class RollerShutter extends Window {
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
         this.positionState = service.getCharacteristic(this.platform.Characteristic.PositionState);
         this.obstructionDetected = service.getCharacteristic(this.platform.Characteristic.ObstructionDetected);
+
         this.targetPosition.on('set', this.debounce(this.setTargetPosition));
 
-        /*this.on(
+        this.device.on(
             'core:ClosureState',
-            (value) => this.currentPosition?.updateValue(this.reverse ? value : (100-value)),
+            (value) => this.currentPosition?.updateValue(this.reversedValue(value)),
         );
-        this.on(
+        this.device.on(
             'core:TargetClosureState', 
-            (value) => this.targetPosition?.updateValue(this.reverse ? value : (100-value)),
-        );*/
+            (value) => this.targetPosition?.updateValue(this.reversedValue(value)),
+        );
     }
 
-    protected onStateChange(name: string, value) {
-        switch(name) {
-            case 'core:ClosureState':
-                this.currentPosition?.updateValue(this.reverse ? value : (100-value));
-                break;
-            case 'core:TargetClosureState':
-                this.targetPosition?.updateValue(this.reverse ? value : (100-value));
-                break;
-        }
+    private reversedValue(value) {
+        return this.reverse ? value : (100-value);
     }
 }

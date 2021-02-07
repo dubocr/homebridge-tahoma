@@ -10,15 +10,11 @@ export default class AirSensor extends Mapper {
         const service = this.registerService(this.platform.Service.AirQualitySensor);
         this.quality = service.getCharacteristic(this.platform.Characteristic.AirQuality);
         this.co2 = service.addCharacteristic(this.platform.Characteristic.CarbonDioxideLevel);
-    }
 
-    protected onStateChange(name, value) {
-        switch(name) {
-            case 'core:CO2ConcentrationState':
-                this.co2?.updateValue(value);
-                this.quality?.updateValue(this.co2ToQuality(value));
-                break;
-        }
+        this.device.on('core:CO2ConcentrationState', (value) => {
+            this.co2?.updateValue(value);
+            this.quality?.updateValue(this.co2ToQuality(value));
+        });
     }
 
     private co2ToQuality(value) {
