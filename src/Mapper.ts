@@ -29,11 +29,16 @@ export default class Mapper {
             info.setCharacteristic(this.platform.Characteristic.Manufacturer, device.manufacturer);
             info.setCharacteristic(this.platform.Characteristic.Model, device.model);
             info.setCharacteristic(this.platform.Characteristic.SerialNumber, device.serialNumber);
+            this.services.push(info);
         }
         this.stateless = (device.states.length === 0);
 
-        //this.buildService
-        this.buildServices();
+        this.registerServices();
+        this.accessory.services.forEach((service) => {
+            if(!this.services.find((s) => s.UUID === service.UUID)) {
+                this.accessory.removeService(service);
+            }
+        });
 
         if(!this.stateless) {
             // Init states
@@ -44,6 +49,10 @@ export default class Mapper {
                 this.onStatesChange(states);
             });
         }
+    }
+
+    protected registerServices() {
+        // 
     }
 
     protected registerService(serviceName) {
@@ -95,10 +104,6 @@ export default class Mapper {
                 this.debug(title + ' ' + error.message);
                 throw error;
             });
-    }
-
-    protected buildServices() {
-        // 
     }
 
     protected onStatesChange(states: Array<State>) {

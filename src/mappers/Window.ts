@@ -1,18 +1,18 @@
 import Mapper from '../Mapper';
-import { Characteristic, CharacteristicValue, CharacteristicSetCallback} from 'homebridge';
+import { Characteristic, CharacteristicSetCallback} from 'homebridge';
 import { ExecutionState, Command, Action } from 'overkiz-client';
 
 export default class Window extends Mapper {
-    protected currentPosition;
-    protected targetPosition;
-    protected positionState;
-    protected obstructionDetected;
+    protected currentPosition: Characteristic | undefined;
+    protected targetPosition: Characteristic | undefined;
+    protected positionState: Characteristic | undefined;
+    protected obstructionDetected: Characteristic | undefined;
 
     protected reverse = false;
     protected defaultPosition = 0;
     protected cycle = false;
 
-    buildServices() {
+    protected registerServices() {
         const service = this.registerService(this.platform.Service.Window);
         this.currentPosition = service.getCharacteristic(this.platform.Characteristic.CurrentPosition);
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
@@ -23,8 +23,8 @@ export default class Window extends Mapper {
 
     setTargetPosition(value, callback: CharacteristicSetCallback) {
 
-        this.debug('current ' + this.currentPosition.value);
-        this.debug('target ' + this.targetPosition.value);
+        this.debug('current ' + this.currentPosition?.value);
+        this.debug('target ' + this.targetPosition?.value);
 
         const commands: Command[] = [];
         const target = this.reverse ? (100 - value) : value;
@@ -67,7 +67,7 @@ export default class Window extends Mapper {
             .catch(callback);
     }
 
-    onStateChange(name, value) {
+    protected onStateChange(name, value) {
         let currentPosition;
         let targetPosition;
         let currentAngle;
@@ -128,10 +128,10 @@ export default class Window extends Mapper {
         }
 
         if(currentPosition !== undefined) {
-            this.currentPosition.updateValue(currentPosition);
+            this.currentPosition?.updateValue(currentPosition);
         }
         if(!this.device.isCommandInProgress() && targetPosition !== undefined) {
-            this.targetPosition.updateValue(targetPosition);
+            this.targetPosition?.updateValue(targetPosition);
         }
         /*if(currentAngle !== undefined) {
             this.currentAngle?.updateValue(currentAngle);

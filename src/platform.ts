@@ -1,4 +1,4 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { Client } from 'overkiz-client';
@@ -74,7 +74,7 @@ export class Platform implements DynamicPlatformPlugin {
               // the accessory does not yet exist, so we need to create it
               this.log.info('Adding new accessory:', device.label);
               accessory = new this.api.platformAccessory(device.label, device.oid);
-              accessory.context.device = device;
+              //accessory.context.device = device;
               await this.configureAccessory(accessory);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           }

@@ -1,24 +1,34 @@
-import { CharacteristicValue } from 'homebridge';
+import { Characteristic, CharacteristicSetCallback } from 'homebridge';
+import { Command } from 'overkiz-client';
 import Mapper from '../Mapper';
 
 export default class GarageDoor extends Mapper {
-    protected currentState;
-    protected targetState;
+    protected currentState: Characteristic | undefined;
+    protected targetState: Characteristic | undefined;
 
-    buildServices() {
+    protected reverse = false;
+
+    protected registerServices() {
         const service = this.registerService(this.platform.Service.GarageDoorOpener);
         this.currentState = service.getCharacteristic(this.platform.Characteristic.CurrentDoorState);
         this.targetState = service.getCharacteristic(this.platform.Characteristic.TargetDoorState);
-        service.getCharacteristic(this.platform.Characteristic.TargetPosition).on('set', (value, callabck) => {
-            this.platform.log.debug('Target: ' + value);
-            callabck('Unable to connect');
-        });
+        this.targetState.on('set', this.setTargetState);
     }
 
-    onStateUpdate(name: string, value) {
-        let currentState: CharacteristicValue|null = null;
-        let targetState: CharacteristicValue|null = null;
+    protected setTargetState(value, callback: CharacteristicSetCallback) {
+        value = this.reverse ? 
+            (
+                value === this.platform.Characteristic.TargetDoorState.OPEN ? 
+                    this.platform.Characteristic.TargetDoorState.CLOSED : this.platform.Characteristic.TargetDoorState.OPEN
+            ) : value;
+        this.getTargetCommands(value);
+    }
 
+    protected getTargetCommands(value) {
+        return new Command(value === this.platform.Characteristic.TargetDoorState.OPEN ? 'open' : 'close');
+    }
+
+    onStateChange(name: string, value) {
         switch(name) {
             case 'core:OpenClosedPedestrianState':
             case 'core:OpenClosedUnknownState':
@@ -27,27 +37,26 @@ export default class GarageDoor extends Mapper {
                 switch(value) {
                     case 'unknown':
                     case 'open' :
-                        currentState = this.platform.Characteristic.CurrentDoorState.OPEN;
-                        targetState = this.platform.Characteristic.TargetDoorState.OPEN;
+                        this.currentState?.updateValue(this.platform.Characteristic.CurrentDoorState.OPEN);
+                        if(this.device.isIdle) {
+                            this.targetState?.updateValue(this.platform.Characteristic.TargetDoorState.OPEN);
+                        }
                         break;
                     case 'pedestrian' :
                     case 'partial' :
-                        currentState = this.platform.Characteristic.CurrentDoorState.STOPPED;
-                        targetState = this.platform.Characteristic.TargetDoorState.OPEN;
+                        this.currentState?.updateValue(this.platform.Characteristic.CurrentDoorState.STOPPED);
+                        if(this.device.isIdle) {
+                            this.targetState?.updateValue(this.platform.Characteristic.TargetDoorState.OPEN);
+                        }
                         break;
                     case 'closed' :
-                        currentState = this.platform.Characteristic.CurrentDoorState.CLOSED;
-                        targetState = this.platform.Characteristic.TargetDoorState.CLOSED;
+                        this.currentState?.updateValue(this.platform.Characteristic.CurrentDoorState.CLOSED);
+                        if(this.device.isIdle) {
+                            this.targetState?.updateValue(this.platform.Characteristic.TargetDoorState.CLOSED);
+                        }
                         break;
                 }
                 break;
-        }
-
-        if(this.currentState !== null && currentState !== null) {
-            this.currentState.updateValue(currentState);
-        }
-        if(!this.device.isCommandInProgress() && this.targetState !== null && targetState !== null) {
-            this.targetState.updateValue(targetState);
         }
     }
 }
