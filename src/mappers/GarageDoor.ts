@@ -1,34 +1,47 @@
 import { Characteristic, CharacteristicSetCallback } from 'homebridge';
-import { Command } from 'overkiz-client';
+import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 
 export default class GarageDoor extends Mapper {
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
 
+    protected cycle = false;
     protected reverse = false;
 
     protected registerServices() {
         const service = this.registerService(this.platform.Service.GarageDoorOpener);
         this.currentState = service.getCharacteristic(this.platform.Characteristic.CurrentDoorState);
         this.targetState = service.getCharacteristic(this.platform.Characteristic.TargetDoorState);
-        this.targetState.on('set', this.setTargetState);
-    }
-
-    protected setTargetState(value, callback: CharacteristicSetCallback) {
-        value = this.reverse ? 
-            (
-                value === this.platform.Characteristic.TargetDoorState.OPEN ? 
-                    this.platform.Characteristic.TargetDoorState.CLOSED : this.platform.Characteristic.TargetDoorState.OPEN
-            ) : value;
-        this.getTargetCommands(value);
+        this.targetState.on('set', this.setTargetState.bind(this));
     }
 
     protected getTargetCommands(value) {
-        return new Command(value === this.platform.Characteristic.TargetDoorState.OPEN ? 'open' : 'close');
+        value = this.reverse ? !value : value;
+        return new Command(value ? 'open' : 'close');
     }
 
-    onStateChange(name: string, value) {
+    protected async setTargetState(value, callback: CharacteristicSetCallback) {
+        const action = await this.executeCommands(this.getTargetCommands(value), callback);
+        action.on('update', (state) => {
+            switch (state) {
+                case ExecutionState.COMPLETED:
+                    this.currentState?.updateValue(value);
+                    if(this.cycle) {
+                        setTimeout(() => {
+                            this.currentState?.updateValue(!value);
+                            this.targetState?.updateValue(!value);
+                        }, 5000);
+                    }
+                    break;
+                case ExecutionState.FAILED:
+                    this.targetState?.updateValue(!value);
+                    break;
+            }
+        });
+    }
+
+    protected onStateChange(name: string, value) {
         switch(name) {
             case 'core:OpenClosedPedestrianState':
             case 'core:OpenClosedUnknownState':

@@ -7,8 +7,13 @@ export default class LightSensor extends Mapper {
     protected registerServices() {
         const service = this.registerService(this.platform.Service.LightSensor);
         this.lightLevel = service.getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel);
-
-        this.device.on('core:LuminanceState', this.lightLevel.updateValue);
     }
 
+    protected onStateChange(name: string, value) {
+        switch(name) {
+            case 'core:LuminanceState':
+                this.lightLevel?.updateValue(value);
+                break;
+        }
+    }
 }

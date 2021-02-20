@@ -15,23 +15,80 @@ export default class Light extends Mapper {
         this.brightness = service.getCharacteristic(this.platform.Characteristic.Brightness);
         this.saturation = service.getCharacteristic(this.platform.Characteristic.Saturation);
 
-        this.on.on('set', this.setOn);
-        this.brightness.on('set', this.setBrightness);
-        this.saturation.on('set', this.setSaturation);
+        this.on.on('set', this.setOn.bind(this));
+        this.brightness.on('set', this.setBrightness.bind(this));
+        this.saturation.on('set', this.setSaturation.bind(this));
+    }
+
+    protected getOnOffCommands(value): Command | Array<Command> {
+        return new Command(value ? 'on' : 'off');
     }
 
     protected async setOn(value, callback: CharacteristicSetCallback) {
-        const command = new Command(value ? 'on' : 'off');
-        this.executeCommands(command, callback);
+        const action = await this.executeCommands(this.getOnOffCommands(value));
+        action.on('update', (state, data) => {
+            switch (state) {
+                case ExecutionState.COMPLETED:
+                    callback();
+                    break;
+                case ExecutionState.FAILED:
+                    callback(data);
+                    break;
+            }
+        });
+    }
+
+    protected getBrightnessCommands(value): Command | Array<Command> {
+        return new Command('setIntensity', value);
     }
 
     protected async setBrightness(value, callback: CharacteristicSetCallback) {
-        const command = new Command('setIntensity', value);
-        this.executeCommands(command, callback);
+        const action = await this.executeCommands(this.getBrightnessCommands(value));
+        action.on('update', (state, data) => {
+            switch (state) {
+                case ExecutionState.COMPLETED:
+                    callback();
+                    break;
+                case ExecutionState.FAILED:
+                    callback(data);
+                    break;
+            }
+        });
+    }
+
+    protected getSaturationCommands(value): Command | Array<Command> {
+        return new Command('setHueAndSaturation', [ this.hue?.value, value]);
     }
 
     protected async setSaturation(value, callback: CharacteristicSetCallback) {
-        const command = new Command('setHueAndSaturation', [ this.hue?.value, value]);
-        this.executeCommands(command, callback);
+        const action = await this.executeCommands(this.getSaturationCommands(value));
+        action.on('update', (state, data) => {
+            switch (state) {
+                case ExecutionState.COMPLETED:
+                    callback();
+                    break;
+                case ExecutionState.FAILED:
+                    callback(data);
+                    break;
+            }
+        });
+    }
+
+    protected onStateChange(name: string, value) {
+        switch(name) {
+            case 'core:OnOffState':
+                this.on?.updateValue(value === 'on');
+                break;
+            case 'core:IntensityState':
+            case 'core:LightIntensityState':
+                this.brightness?.updateValue(value);
+                break;
+            case 'core:ColorHueState':
+                this.hue?.updateValue(value);
+                break;
+            case 'core:ColorSaturationState':
+                this.saturation?.updateValue(value);
+                break;
+        }
     }
 }

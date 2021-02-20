@@ -17,10 +17,15 @@ export class Platform implements DynamicPlatformPlugin {
   public readonly accessories: PlatformAccessory[] = [];
   private readonly client: Client;
 
+  private readonly exclude: Array<string>;
+
   constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
       this.log.debug('Finished initializing platform:', this.config.name);
 
       this.client = new Client(log, config);
+
+      this.exclude = config.exclude || [];
+      this.exclude.push('Box', 'IOStack');
 
       // When this event is fired it means Homebridge has restored all cached accessories from disk.
       // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -53,6 +58,14 @@ export class Platform implements DynamicPlatformPlugin {
 
       // loop over the discovered devices and register each one if it has not already been registered
       for (const device of devices) {
+          if(
+              this.exclude.includes(device.uiClass) ||
+                this.exclude.includes(device.widget) ||
+                this.exclude.includes(device.label)
+          ) {
+              continue;
+          }
+
           // see if an accessory with the same uuid has already been registered and restored from
           // the cached devices we stored in the `configureAccessory` method above
           let accessory = this.accessories.find(accessory => accessory.UUID === device.oid);

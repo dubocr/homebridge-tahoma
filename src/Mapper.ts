@@ -1,5 +1,5 @@
 import { CharacteristicSetCallback, CharacteristicValue, Logger, PlatformAccessory, Service } from 'homebridge';
-import { ExecutionState } from 'overkiz-client';
+import { Action, ExecutionState } from 'overkiz-client';
 import { State } from 'overkiz-client';
 import { Command } from 'overkiz-client';
 import { Device } from 'overkiz-client';
@@ -41,14 +41,21 @@ export default class Mapper {
         });
 
         if(!this.stateless) {
-            // Init states
-            this.onStatesChange(this.device.states);
+            // Init and register states changes
+            this.propagateStates(this.device.states);
+            device.on('states', this.propagateStates.bind(this));
 
-            // Register state changes
-            device.on('states', (states) => {
-                this.onStatesChange(states);
+            // Init and register sensors states changes
+            this.device.sensors.forEach((sensor) => {
+                this.propagateStates(sensor.states);
+                sensor.on('states', this.propagateStates.bind(this));
             });
         }
+    }
+
+    private propagateStates(states) {
+        this.onStatesUpdate();
+        states.forEach((state: State) => this.onStateChange(state.name, state.value));
     }
 
     protected registerServices() {
@@ -72,7 +79,10 @@ export default class Mapper {
         };
     }
 
-    protected executeCommands(commands: Command|Array<Command>) {
+    protected executeCommands(
+        commands: Command|Array<Command>,
+        callback: CharacteristicSetCallback | undefined = undefined,
+    ): Promise<Action> {
         let title = '';
         if(commands === null || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
@@ -95,22 +105,28 @@ export default class Mapper {
         
         return this.device.executeCommands(title + ' - HomeKit', commands)
             .then((action) => {
-                action.on('state', (state, event) => {
+                action.on('update', (state, event) => {
                     this.debug(title + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
                 });
+                if(callback) {
+                    callback();
+                }
                 return action;
             })
             .catch((error) => {
                 this.debug(title + ' ' + error.message);
+                if(callback) {
+                    callback(error);
+                }
                 throw error;
             });
     }
 
-    protected onStatesChange(states: Array<State>) {
-        states.forEach((state: State) => this.onStateChange(state.name, state.value));
+    protected onStatesUpdate() {
+        //
     }
 
-    protected onStateChange(name: string, value: unknown) {
+    protected onStateChange(name: string, value) {
         this.debug(name + ' => ' + value);
     }
     
