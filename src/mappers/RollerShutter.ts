@@ -63,7 +63,7 @@ export default class RollerShutter extends Mapper {
         return this.reverse ? value : (100-value);
     }
 
-    protected onStateChange(name: string, value) {
+    protected onStateChanged(name: string, value) {
         switch(name) {
             case 'core:ClosureState':
                 this.currentPosition?.updateValue(this.reversedValue(value));

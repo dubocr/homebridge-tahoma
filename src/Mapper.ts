@@ -1,4 +1,4 @@
-import { CharacteristicSetCallback, CharacteristicValue, Logger, PlatformAccessory, Service } from 'homebridge';
+import { CharacteristicSetCallback, CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Action, ExecutionState } from 'overkiz-client';
 import { State } from 'overkiz-client';
 import { Command } from 'overkiz-client';
@@ -8,9 +8,10 @@ import { Platform } from './Platform';
 export default class Mapper {
     protected log: Logger;
     protected services: Array<Service> = [];
+    private postponeTimer;
     private debounceTimer;
     protected stateless = false;
-    protected config: Record<string, unknown> = {};
+    protected config: Record<string, string | boolean | number> = {};
 
     constructor(
         protected readonly platform: Platform,
@@ -35,38 +36,47 @@ export default class Mapper {
 
         this.registerServices();
         this.accessory.services.forEach((service) => {
-            if(!this.services.find((s) => s.UUID === service.UUID)) {
+            if(!this.services.find((s) => s.UUID === service.UUID && s.subtype === service.subtype)) {
                 this.accessory.removeService(service);
             }
         });
 
         if(!this.stateless) {
             // Init and register states changes
-            this.propagateStates(this.device.states);
-            device.on('states', this.propagateStates.bind(this));
+            this.onStatesChanged(this.device.states);
+            device.on('states', states => this.onStatesChanged(states));
 
             // Init and register sensors states changes
             this.device.sensors.forEach((sensor) => {
-                this.propagateStates(sensor.states);
-                sensor.on('states', this.propagateStates.bind(this));
+                this.onStatesChanged(sensor.states);
+                sensor.on('states', states => this.onStatesChanged(states));
             });
         }
     }
 
-    private propagateStates(states) {
-        this.onStatesUpdate();
-        states.forEach((state: State) => this.onStateChange(state.name, state.value));
-    }
+    /**
+     * Helper methods
+     */
 
-    protected registerServices() {
-        // 
-    }
-
-    protected registerService(serviceName) {
-        const service: Service = this.accessory.getService(serviceName) || this.accessory.addService(serviceName);
-        service.setCharacteristic(this.platform.Characteristic.Name, this.device.label);
+    protected registerService(type: WithUUID<typeof Service>, subtype?: string) {
+        let service: Service;
+        const name = subtype ? this.translate(subtype) : this.device.label;
+        if(subtype) {
+            service = this.accessory.getServiceById(type, subtype) || this.accessory.addService(type, name, subtype);
+        } else {
+            service = this.accessory.getService(type) || this.accessory.addService(type);
+        }
+        service.setCharacteristic(this.platform.Characteristic.Name, name);
         this.services.push(service);
         return service;
+    }
+
+    private translate(value: string) {
+        switch(value) {
+            case 'boost': return 'Boost';
+            case 'drying': return 'Séchage';
+            default: return value.charAt(0).toUpperCase() + value.slice(1);
+        }
     }
 
     protected debounce(task) {
@@ -77,6 +87,13 @@ export default class Mapper {
             this.debounceTimer = setTimeout(task.bind(this), 2000, value, (err) => err);
             callback();
         };
+    }
+
+    protected postpone(task, ...args) {
+        if(this.postponeTimer !== null) {
+            clearTimeout(this.postponeTimer);
+        }
+        this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
     protected executeCommands(
@@ -121,18 +138,11 @@ export default class Mapper {
                 throw error;
             });
     }
-
-    protected onStatesUpdate() {
-        //
-    }
-
-    protected onStateChange(name: string, value) {
-        this.debug(name + ' => ' + value);
-    }
     
     /**
      * Logging methods
      */
+
     protected debug(message) {
         this.platform.log.debug('[' + this.device.label + '] ' + message);
     }
@@ -143,5 +153,30 @@ export default class Mapper {
 
     protected error(message) {
         this.platform.log.error('[' + this.device.label + '] ' + message);
+    }
+
+    /**
+     * Children methods
+     */
+
+    protected registerServices() {
+        // 
+    }
+
+    protected onStatesChanged(states: Array<State>) {
+        states.forEach((state: State) => {
+            this.debug(state.name + ' => ' + state.value);
+            this.onStateChanged(state.name, state.value);
+        });
+    }
+
+    /**
+     * Triggered when device state change
+     * @param name State name
+     * @param value State value
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected onStateChanged(name: string, value) {
+        //
     }
 }

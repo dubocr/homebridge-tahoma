@@ -41,7 +41,7 @@ export default class GarageDoor extends Mapper {
         });
     }
 
-    protected onStateChange(name: string, value) {
+    protected onStateChanged(name: string, value) {
         switch(name) {
             case 'core:OpenClosedPedestrianState':
             case 'core:OpenClosedUnknownState':

@@ -10,8 +10,8 @@ export default class HeatingSystem extends Mapper {
 
     protected on: Characteristic | undefined;
 
-    protected registerThermostatService(): Service {
-        const service = this.registerService(this.platform.Service.Thermostat);
+    protected registerThermostatService(subtype?: string): Service {
+        const service = this.registerService(this.platform.Service.Thermostat, subtype);
         this.currentTemperature = service.getCharacteristic(this.platform.Characteristic.CurrentTemperature);
         this.targetTemperature = service.getCharacteristic(this.platform.Characteristic.TargetTemperature);
         this.currentState = service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState);
@@ -22,11 +22,11 @@ export default class HeatingSystem extends Mapper {
         return service;
     }
 
-    protected registerSwitchService(): Service {
-        const service = this.registerService(this.platform.Service.Switch);
+    protected registerSwitchService(subtype?: string): Service {
+        const service = this.registerService(this.platform.Service.Switch, subtype);
         this.on = service.getCharacteristic(this.platform.Characteristic.On);
         
-        this.on?.on('set', this.setOn);
+        this.on?.on('set', this.setOn.bind(this));
         return service;
     }
 
@@ -96,7 +96,7 @@ export default class HeatingSystem extends Mapper {
         this.currentTemperature?.updateValue(value > 273.15 ? (value - 273.15) : value);
     }
 
-    protected onStateChange(name: string, value) {
+    protected onStateChanged(name: string, value) {
         this.debug(name + ' => ' + value);
         switch(name) {
             case 'core:TemperatureState': this.onTemperatureUpdate(value); break;

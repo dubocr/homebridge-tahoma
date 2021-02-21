@@ -32,7 +32,7 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
         return new Command('setHeatingLevel', [mode]);
     }
 
-    protected onStateChange(name, value) {
+    protected onStateChanged(name, value) {
         switch(name) {
             case 'io:TargetHeatingLevelState':
                 switch(value) {

@@ -86,7 +86,7 @@ export class Platform implements DynamicPlatformPlugin {
           } else {
               // the accessory does not yet exist, so we need to create it
               this.log.info('Adding new accessory:', device.label);
-              accessory = new this.api.platformAccessory(device.label, device.oid);
+              accessory = new this.api.platformAccessory(device.label, device.uuid);
               //accessory.context.device = device;
               await this.configureAccessory(accessory);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
@@ -102,7 +102,7 @@ export class Platform implements DynamicPlatformPlugin {
               .catch(() => Mapper);
           new mapper(this, accessory, device);
       }
-      const uuids = devices.map((device) => device.oid);
+      const uuids = devices.map((device) => device.uuid);
       const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
   }

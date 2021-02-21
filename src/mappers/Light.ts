@@ -74,7 +74,7 @@ export default class Light extends Mapper {
         });
     }
 
-    protected onStateChange(name: string, value) {
+    protected onStateChanged(name: string, value): boolean {
         switch(name) {
             case 'core:OnOffState':
                 this.on?.updateValue(value === 'on');
@@ -90,5 +90,6 @@ export default class Light extends Mapper {
                 this.saturation?.updateValue(value);
                 break;
         }
+        return false;
     }
 }

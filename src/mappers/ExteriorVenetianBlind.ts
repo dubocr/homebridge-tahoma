@@ -2,7 +2,7 @@ import RollerShutter from './RollerShutter';
 
 export default class ExteriorVenetianBlind extends RollerShutter {
 
-    protected onStateChange(name, value) {
+    protected onStateChanged(name, value) {
         let currentPosition;
         let targetPosition;
         let currentAngle;

@@ -12,7 +12,7 @@ export default class AirSensor extends Mapper {
         this.co2 = service.addCharacteristic(this.platform.Characteristic.CarbonDioxideLevel);
     }
 
-    protected onStateChange(name: string, value) {
+    protected onStateChanged(name: string, value) {
         switch(name) {
             case 'core:CO2ConcentrationState':
                 this.co2?.updateValue(value);

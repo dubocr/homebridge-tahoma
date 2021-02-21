@@ -52,16 +52,21 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
         return commands;
     }
 
-    protected onStateChange(name, value) {
-        this.debug(name + ' => ' + value);
+    protected onStateChanged(name, value) {
         switch(name) {
             case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
+            case 'core:TargetTemperatureState':
+            case 'core:HeatingOnOffState':
+            case 'io:PassAPCHeatingModeState':
+            case 'io:PassAPCHeatingProfileState':
+            case 'core:ComfortHeatingTargetTemperatureState':
+            case 'core:EcoHeatingTargetTemperatureState':
+                this.postpone(this.computeStates);
         }
     }
 
-    protected onStatesUpdate() {
+    protected computeStates() {
         let targetState;
-        this.debug('States updated => ' + this.device.get('io:PassAPCHeatingModeState'));
         if(this.device.get('core:HeatingOnOffState') === 'on') {
             switch(this.device.get('io:PassAPCHeatingModeState')) {
                 case 'off':
@@ -97,7 +102,7 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
             this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.OFF);
             this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
         }
-        if(this.targetState && targetState && !this.device.isCommandInProgress()) {
+        if(this.targetState !== undefined && targetState !== undefined && !this.device.isCommandInProgress()) {
             this.targetState.value = targetState;
         }
     }

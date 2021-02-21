@@ -26,7 +26,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
         return new Command('setOperatingMode', [mode]);
     }
 
-    protected onStateChange(name: string, value) {
+    protected onStateChanged(name: string, value) {
         this.debug(name + ' => ' + value);
         switch(name) {
             case 'core:ComfortRoomTemperatureState': this.onTemperatureUpdate(value); break;

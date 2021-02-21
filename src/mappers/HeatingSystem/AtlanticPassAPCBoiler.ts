@@ -10,7 +10,7 @@ export default class AtlanticPassAPCBoiler extends HeatingSystem {
         return new Command('setPassAPCOperatingMode', value ? 'heating' : 'stop');
     }
 
-    protected onStateChange(name, value) {
+    protected onStateChanged(name, value) {
         switch(name) {
             case 'io:PassAPCOperatingModeState':
                 switch(value) {

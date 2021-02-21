@@ -21,7 +21,7 @@ export default class ThermostatSetPoint extends HeatingSystem {
         return new Command('setHeatingTargetTemperature', value);
     }
 
-    protected onStateChange(name, value) {
+    protected onStateChanged(name, value) {
         switch(name) {
             case 'zwave:SetPointHeatingValueState': this.onTemperatureUpdate(value); break;
         }
