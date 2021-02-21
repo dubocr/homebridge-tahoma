@@ -68,13 +68,13 @@ export class Platform implements DynamicPlatformPlugin {
 
           // see if an accessory with the same uuid has already been registered and restored from
           // the cached devices we stored in the `configureAccessory` method above
-          let accessory = this.accessories.find(accessory => accessory.UUID === device.oid);
+          let accessory = this.accessories.find(accessory => accessory.UUID === device.uuid);
 
           if (accessory) {
               // the accessory already exists
               //this.log.info('Updating accessory:', accessory.displayName);
               /*
-              const newaccessory = new this.api.platformAccessory(device.label, device.oid);
+              const newaccessory = new this.api.platformAccessory(device.label, device.uuid);
               newaccessory.context.device = device;
               await this.configureAccessory(newaccessory);
               const services = newaccessory.services.map((service) => service.UUID);

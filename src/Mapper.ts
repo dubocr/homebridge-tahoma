@@ -96,10 +96,7 @@ export default class Mapper {
         this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
-    protected executeCommands(
-        commands: Command|Array<Command>,
-        callback: CharacteristicSetCallback | undefined = undefined,
-    ): Promise<Action> {
+    protected executeCommands(commands: Command|Array<Command>, callback?: CharacteristicSetCallback): Promise<Action> {
         let title = '';
         if(commands === null || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
