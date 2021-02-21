@@ -65,10 +65,9 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     }
 
     protected onStateChanged(name: string, value) {
-        this.debug(name + ' => ' + value);
         switch(name) {
-            case 'core:ComfortRoomTemperatureState': this.onTemperatureUpdate(value); break;
-            case 'io:EffectiveTemperatureSetpointState': this.targetTemperature?.updateValue(value); break;
+            case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
+            case 'core:TargetTemperatureState': this.targetTemperature?.updateValue(value); break;
             case 'io:TowelDryerTemporaryStateState':
                 this.on?.updateValue(value === 'boost');
                 this.drying?.updateValue(value === 'drying');

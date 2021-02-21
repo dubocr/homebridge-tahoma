@@ -27,8 +27,6 @@ export default class RollerShutter extends Mapper {
     }
 
     async setTargetPosition(value, callback: CharacteristicSetCallback) {
-        this.debug('current ' + this.currentPosition?.value);
-        this.debug('target ' + this.targetPosition?.value);
         const action = await this.executeCommands(this.getTargetCommands(value), callback);
         action.on('update', (state, data) => {
             const positionState = (value === 100 || value > (this.currentPosition?.value || 0)) ? 
@@ -67,6 +65,9 @@ export default class RollerShutter extends Mapper {
         switch(name) {
             case 'core:ClosureState':
                 this.currentPosition?.updateValue(this.reversedValue(value));
+                if(this.targetPosition && !this.device.hasState('core:TargetClosureState')) {
+                    this.targetPosition.value = this.reversedValue(value);
+                }
                 break;
             case 'core:TargetClosureState':
                 this.targetPosition?.updateValue(this.reversedValue(value));
