@@ -42,7 +42,7 @@ Configuration parameters:
 | `service`              	 | String		| 'TaHoma'			| optional, service name ('TaHoma', 'Connexoon', 'Connexoon RTS', 'Cozytouch' or 'Rexel')																																																											|
 | `refreshPeriod`            | Integer	| 1800					| optional, device states refresh period in seconds							 																										 																										|
 | `pollingPeriod`            | Integer	| 0						| optional, bridge polling period in seconds for sensors events (0: no polling)							 																										 																										|
-| `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts), device types (eg. RollerShutter), device definitions (eg. WindowCovering) or device (name) to exclude																																										|
+| `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts), device types (eg. RollerShutter), device definitions (eg. WindowCovering), widget types (e.g. PositionableExteriorVenetianBlind) or devices (names) to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false					| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
 | `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)										|
