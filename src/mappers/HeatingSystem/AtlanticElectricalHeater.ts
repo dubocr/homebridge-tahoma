@@ -12,7 +12,7 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
             this.platform.Characteristic.TargetHeatingCoolingState.COOL,
             this.platform.Characteristic.TargetHeatingCoolingState.OFF,
         ] });
-        this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] }); 
+        this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] });
         this.targetTemperature?.off('set', this.setTargetTemperature);
     }
 

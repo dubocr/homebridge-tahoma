@@ -4,8 +4,8 @@ Supports TaHoma (Somfy), Connexoon (Somfy), Cozytouch (Atlantic,Thermor,Sauter) 
 
 # Installation
 
-1. Install homebridge using: npm install -g homebridge
-2. Install this plugin using: npm install -g homebridge-tahoma
+1. Install homebridge using: `npm install -g homebridge`
+2. Install this plugin using: `npm install -g homebridge-tahoma`
 3. Update your configuration file. See bellow for a sample.
 
 # Configuration
@@ -42,7 +42,7 @@ Configuration parameters:
 | `service`              	 | String		| 'TaHoma'			| optional, service name ('TaHoma', 'Connexoon', 'Connexoon RTS', 'Cozytouch' or 'Rexel')																																																											|
 | `refreshPeriod`            | Integer	| 1800					| optional, device states refresh period in seconds							 																										 																										|
 | `pollingPeriod`            | Integer	| 0						| optional, bridge polling period in seconds for sensors events (0: no polling)							 																										 																										|
-| `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts) or device (name) to exclude																																										|
+| `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude																																										|
 | `exposeScenarios`	         | Boolean	| false					| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
 | `forceType`		         | Object		| {}				| optional, list of device (name) to force with another type (see below). Ex. Fan recognised as Light can be force to Fan type											|
 | `Alarm`		             | Object		| {}				| optional, Alarm configuration object (see below)										|
@@ -112,3 +112,13 @@ These documentations could help you developing plugin :
 [HomeKit services and characteristics](https://github.com/KhaosT/HAP-NodeJS/blob/master/src/lib/gen/HomeKit.ts)
 
 I do not expect any reward concerning this plugin, however, some users ask me for a [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L4X489MG7FUCN) button as sign of contribution. Feel free to use it.
+
+# New version
+
+To contribute to the new major release currently in beta, please follow steps below :
+1. Update plugin to beta channel `npm install -g homebridge-tahoma@beta`
+2. Report your config to [https://dev.duboc.pro/tahoma](https://dev.duboc.pro/tahoma)
+3. Browse or open issue with title corresponding to your device widget name (see picture below)
+![Widget](https://dev.duboc.pro/img/widgets.png)
+
+This new release will break homekit identifiers. Your devices will be removed from Homekit automation.
