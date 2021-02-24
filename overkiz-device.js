@@ -238,7 +238,7 @@ class OverkizDevice {
 			//case 'AtlanticPassAPCHeatingAndCoolingZone > AtlanticPassAPCZoneControl':
 			case 'TemperatureSensor > AtlanticPassAPCHeatingAndCoolingZone':
 			case 'TemperatureSensor > AtlanticPassAPCHeatingZone':
-			case 'TemperatureSensor > AtlanticPassAPCDHW':
+			//case 'TemperatureSensor > AtlanticPassAPCDHW':
 			case 'TemperatureSensor > SomfyThermostat':
 			case 'RelativeHumiditySensor > SomfyThermostat':
 			case 'TemperatureSensor > ValveHeatingTemperatureInterface':

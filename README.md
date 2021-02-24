@@ -2,6 +2,15 @@
 
 Supports TaHoma (Somfy), Connexoon (Somfy), Cozytouch (Atlantic,Thermor,Sauter) and E.Connect 2 (Rexel) platforms on HomeBridge
 
+# Support
+
+Any support request must follow this process :
+1. Execute failling operations from official app then from Homekit
+2. Report your config to [https://dev.duboc.pro/tahoma](https://dev.duboc.pro/tahoma)
+3. Browse or open issue with title corresponding to your device widget name (see picture below)
+4. Provide your bridge last 4 digits (number visible as SETUP-XXXX-XXXX-XXXX at step 2.)
+![Widget](https://dev.duboc.pro/img/widgets.png)
+
 # Installation
 
 1. Install homebridge using: npm install -g homebridge
@@ -108,7 +117,7 @@ Before opening issue, please submit your config with [this form](http://dev.dubo
 
 You are welcome to contribute to this plugin development by adding new kind of devices by adding implementation `.js` file in `accessories` folder or improving existing 'js' file.
 These documentations could help you developing plugin :
-[Obtaining my config](https://dev.duboc.pro/tools/setup),
+[Obtaining my config](https://dev.duboc.pro/tahoma),
 [HomeKit services and characteristics](https://github.com/KhaosT/HAP-NodeJS/blob/master/src/lib/gen/HomeKit.ts)
 
 I do not expect any reward concerning this plugin, however, some users ask me for a [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L4X489MG7FUCN) button as sign of contribution. Feel free to use it.
