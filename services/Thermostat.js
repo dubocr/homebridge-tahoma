@@ -74,7 +74,7 @@ class Thermostat extends AbstractService {
                 this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
                 break;
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-                if(this.device.states['core:ProductModelNameState'] != 'R002414300') {
+                if(this.device.parent.states['core:ProductModelNameState'] != 'R002414300') {
                     this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
                 }
                 break;
@@ -361,7 +361,7 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-                if(this.device.states['core:ProductModelNameState'] == 'R002414300') {
+                if(this.device.parent.states['core:ProductModelNameState'] == 'R002414300') {
                     switch(value) {
                         case Characteristic.TargetHeatingCoolingState.AUTO:
                             commands.push(new Command('setHeatingOnOffState', 'on'));
@@ -597,7 +597,7 @@ class Thermostat extends AbstractService {
             break;
 
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-                if(this.device.states['core:ProductModelNameState'] == 'R002414300') {
+                if(this.device.parent.states['core:ProductModelNameState'] == 'R002414300') {
                     if(
                         this.device.states['io:PassAPCHeatingModeState'] == 'internalScheduling' ||
                         this.device.states['io:PassAPCCoolingModeState'] == 'internalScheduling'
@@ -1032,7 +1032,7 @@ class Thermostat extends AbstractService {
             break;
         }
         if(this.device.widget === 'AtlanticPassAPCHeatingAndCoolingZone') {
-            if(this.device.states['core:ProductModelNameState'] == 'R002414300') {
+            if(this.device.parent.states['core:ProductModelNameState'] == 'R002414300') {
                 this.computeStates();
             } else if (["core:StatusState", "io:PassAPCHeatingModeState", "core:HeatingOnOffState", "core:HeatingTargetTemperatureState", "io:PassAPCCoolingModeState", "core:CoolingOnOffState"].includes(name)) {
                 let zoneMode = this.getHeatingOrCoolingState();
