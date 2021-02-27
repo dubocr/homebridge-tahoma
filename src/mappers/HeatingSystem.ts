@@ -10,6 +10,16 @@ export default class HeatingSystem extends Mapper {
 
     protected on: Characteristic | undefined;
 
+    protected derogationDuration;
+    protected comfortTemperature;
+    protected ecoTemperature;
+    
+    protected applyConfig(config) {
+        this.derogationDuration = config['derogationDuration'] || 1;
+        this.comfortTemperature = config['comfort'] || 19;
+        this.ecoTemperature = config['eco'] || 17;
+    }
+
     protected registerThermostatService(subtype?: string): Service {
         const service = this.registerService(this.platform.Service.Thermostat, subtype);
         this.currentTemperature = service.getCharacteristic(this.platform.Characteristic.CurrentTemperature);

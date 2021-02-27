@@ -10,11 +10,14 @@ export default class Alarm extends Mapper {
     protected nightZones: unknown | undefined;
     protected occupancySensor: unknown | undefined;
 
-    protected registerServices() {
-        this.stayZones = this.config.STAY_ARM || 'A';
-        this.nightZones = this.config.NIGHT_ARM || 'B';
-        this.occupancySensor = this.config.occupancySensor || false;
+    protected applyConfig(config) {
+        this.stayZones = config.STAY_ARM || 'A';
+        this.nightZones = config.NIGHT_ARM || 'B';
+        this.occupancySensor = config.occupancySensor || false;
+    }
 
+
+    protected registerServices() {
         const service = this.registerService(this.platform.Service.SecuritySystem);
         this.currentState = service.getCharacteristic(this.platform.Characteristic.SecuritySystemCurrentState);
         this.targetState = service.getCharacteristic(this.platform.Characteristic.SecuritySystemTargetState);

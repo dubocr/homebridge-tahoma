@@ -26,7 +26,7 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
                 mode = 'eco';
                 break;
             case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
-                mode = 'standby';
+                mode = 'frostprotection';
                 break;
         }
         return new Command('setHeatingLevel', [mode]);
@@ -46,10 +46,14 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
                     case 'comfort-2':
                         this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.HEAT);
                         this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+                        this.currentTemperature?.updateValue(this.comfortTemperature);
+                        this.targetTemperature?.updateValue(this.comfortTemperature);
                         break;
                     case 'eco':
                         this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.COOL);
                         this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.COOL);
+                        this.currentTemperature?.updateValue(this.ecoTemperature);
+                        this.targetTemperature?.updateValue(this.ecoTemperature);
                         break; 
                 }
         }

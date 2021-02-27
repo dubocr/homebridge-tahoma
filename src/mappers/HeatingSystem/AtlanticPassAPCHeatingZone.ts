@@ -36,7 +36,7 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
-        const duration = this.config['derogationDuration'];
+        const duration = this.derogationDuration;
         const commands: Array<Command> = [];
         if(this.targetState?.value === this.platform.Characteristic.TargetHeatingCoolingState.AUTO) {
             commands.push(new Command('setDerogatedTargetTemperature', value));

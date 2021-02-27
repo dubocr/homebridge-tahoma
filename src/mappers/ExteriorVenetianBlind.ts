@@ -1,6 +1,65 @@
+import { Characteristic, CharacteristicSetCallback } from 'homebridge';
+import { Command, ExecutionState } from 'overkiz-client';
 import RollerShutter from './RollerShutter';
 
 export default class ExteriorVenetianBlind extends RollerShutter {
+    
+    protected currentAngle: Characteristic | undefined;
+    protected targetAngle: Characteristic | undefined;
+    
+    protected blindMode;
+    
+    protected applyConfig(config) {
+        this.blindMode = config['blindMode'] || false;
+    }
+
+    protected registerServices() {
+        super.registerServices();
+
+        if(!this.blindMode) {
+            const service = this.accessory.getService(this.platform.Service.WindowCovering);
+            if(service) {
+                this.currentAngle = this.registerCharacteristic(service, this.platform.Characteristic.CurrentHorizontalTiltAngle);
+                this.targetAngle = this.registerCharacteristic(service, this.platform.Characteristic.TargetHorizontalTiltAngle);
+                this.targetAngle?.setProps({ minStep: 10 });
+                this.targetAngle?.on('set', this.debounce(this.setTargetAnglePosition));
+            }
+        }
+    }
+
+    protected getTargetCommands(value) {
+        if(!this.blindMode) {
+            return super.getTargetCommands(value);
+        } else {
+            if(value < 100) {
+                return new Command('setClosureAndOrientation', [100, this.reversedValue(value)]);
+            } else {
+                return new Command('setClosure', this.reversedValue(value));
+            }
+        }
+    }
+
+    protected getTargetAngleCommands(value) {
+        if(this.targetPosition?.getValue() === this.currentPosition?.getValue()) {
+            const orientation = Math.round((value + 90)/1.8);
+            return new Command('setOrientation', orientation);
+        } else {
+            const orientation = Math.round((value + 90)/1.8);
+            const closure = this.reversedValue((this.targetPosition?.getValue() || 0));
+            return new Command('setClosureAndOrientation', [closure, orientation]);
+        }
+    }
+
+    async setTargetAnglePosition(value, callback: CharacteristicSetCallback) {
+        const action = await this.executeCommands(this.getTargetAngleCommands(value), callback);
+        action.on('update', (state, data) => {
+            switch (state) {
+                case ExecutionState.FAILED:
+                    this.targetAngle?.updateValue(this.currentAngle?.value || 0); 
+                    break;
+            }
+        });
+    }
 
     protected onStateChanged(name, value) {
         let currentPosition;
@@ -46,7 +105,7 @@ export default class ExteriorVenetianBlind extends RollerShutter {
             default: break;
         }
 
-        if(this.config.blindMode === 'orientation' && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
+        if(this.blindMode === 'orientation' && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
             if(this.device.get('core:OpenClosedState') === 'closed') {
                 const orientation = this.reversedValue(this.device.get('core:SlateOrientationState'));
                 if(Number.isInteger(orientation)) {

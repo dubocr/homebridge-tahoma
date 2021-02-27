@@ -11,7 +11,7 @@ export default class Mapper {
     private postponeTimer;
     private debounceTimer;
     protected stateless = false;
-    protected config: Record<string, string | boolean | number> = {};
+    //protected config: Record<string, string | boolean | number> = {};
 
     constructor(
         protected readonly platform: Platform,
@@ -19,11 +19,12 @@ export default class Mapper {
         protected readonly device: Device,
     ) {
         this.log = platform.log;
-        this.config = platform.config[device.oid] ||
+        const config = platform.config[device.oid] ||
             platform.config[device.label] ||
             platform.config[device.widget] ||
             platform.config[device.uiClass] ||
             {};
+        this.applyConfig(config);
 
         const info = this.accessory.getService(this.platform.Service.AccessoryInformation);
         if(info) {
@@ -57,6 +58,9 @@ export default class Mapper {
     /**
      * Helper methods
      */
+    protected applyConfig(config) {
+        //
+    }
 
     protected registerService(type: WithUUID<typeof Service>, subtype?: string) {
         let service: Service;
@@ -69,6 +73,10 @@ export default class Mapper {
         service.setCharacteristic(this.platform.Characteristic.Name, name);
         this.services.push(service);
         return service;
+    }
+
+    protected registerCharacteristic(service: Service, characteristic) {
+        return service.getCharacteristic(characteristic) || service.addCharacteristic(characteristic);
     }
 
     private translate(value: string) {

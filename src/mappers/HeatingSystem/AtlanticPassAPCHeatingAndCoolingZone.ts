@@ -2,10 +2,7 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem { 
-    derogationDuration; 
-    
     protected registerServices() {
-        this.derogationDuration = this.config['derogationDuration'] || 1;
         this.registerThermostatService();
     }
 
