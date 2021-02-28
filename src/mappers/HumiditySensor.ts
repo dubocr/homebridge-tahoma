@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import Mapper from '../Mapper';
 
@@ -5,8 +6,8 @@ export default class HumiditySensor extends Mapper {
     protected humidity: Characteristic | undefined;
     
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.HumiditySensor);
-        this.humidity = service.getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity);
+        const service = this.registerService(Services.HumiditySensor);
+        this.humidity = service.getCharacteristic(Characteristics.CurrentRelativeHumidity);
     }
 
     protected onStateChanged(name: string, value) {

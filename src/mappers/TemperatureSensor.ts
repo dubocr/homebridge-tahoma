@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import Mapper from '../Mapper';
 
@@ -5,8 +6,8 @@ export default class TemperatureSensor extends Mapper {
     protected temperature: Characteristic | undefined;
     
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.TemperatureSensor);
-        this.temperature = service.getCharacteristic(this.platform.Characteristic.CurrentTemperature);
+        const service = this.registerService(Services.TemperatureSensor);
+        this.temperature = service.getCharacteristic(Characteristics.CurrentTemperature);
     }
 
     protected onStateChanged(name: string, value) {

@@ -1,3 +1,4 @@
+import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
@@ -21,13 +22,13 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
         const autoTemp = Math.trunc(Math.max(Math.min(temperature - currentTemperature, 5), -5));
 
         switch(state) {
-            case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
+            case Characteristics.TargetHeatingCoolingState.OFF:
                 onOff = 'off';
                 switch(currentState) {
-                    case this.platform.Characteristic.CurrentHeatingCoolingState.HEAT:
+                    case Characteristics.CurrentHeatingCoolingState.HEAT:
                         heatMode = 'heating';
                         break;
-                    case this.platform.Characteristic.CurrentHeatingCoolingState.COOL:
+                    case Characteristics.CurrentHeatingCoolingState.COOL:
                         heatMode = 'cooling';
                         break;
                     default:
@@ -36,15 +37,15 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
                 }
                 break;
 
-            case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+            case Characteristics.TargetHeatingCoolingState.HEAT:
                 heatMode = 'heating';
                 break;
 
-            case this.platform.Characteristic.TargetHeatingCoolingState.COOL:
+            case Characteristics.TargetHeatingCoolingState.COOL:
                 heatMode = 'cooling';
                 break;
 
-            case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+            case Characteristics.TargetHeatingCoolingState.AUTO:
                 heatMode = 'auto';
                 temperature = autoTemp;
                 break;

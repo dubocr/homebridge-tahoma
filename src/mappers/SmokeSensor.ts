@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import Mapper from '../Mapper';
 
@@ -7,11 +8,11 @@ export default class SmokeSensor extends Mapper {
     protected battery: Characteristic | undefined;
     
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.SmokeSensor);
-        this.smoke = service.getCharacteristic(this.platform.Characteristic.SmokeDetected);
+        const service = this.registerService(Services.SmokeSensor);
+        this.smoke = service.getCharacteristic(Characteristics.SmokeDetected);
         if(this.device.hasState('core:SensorDefectState')) {
-            this.fault = service.addCharacteristic(this.platform.Characteristic.StatusFault);
-            this.battery = service.addCharacteristic(this.platform.Characteristic.StatusLowBattery);
+            this.fault = service.addCharacteristic(Characteristics.StatusFault);
+            this.battery = service.addCharacteristic(Characteristics.StatusLowBattery);
         }
     }
 
@@ -23,15 +24,15 @@ export default class SmokeSensor extends Mapper {
             case 'core:SensorDefectState':
                 switch(value) {
                     case 'lowBattery':
-                        this.battery?.updateValue(this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW);
+                        this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_LOW);
                         break;
                     case 'maintenanceRequired':
                     case 'dead':
-                        this.fault?.updateValue(this.platform.Characteristic.StatusFault.GENERAL_FAULT);
+                        this.fault?.updateValue(Characteristics.StatusFault.GENERAL_FAULT);
                         break;
                     case 'noDefect':
-                        this.fault?.updateValue(this.platform.Characteristic.StatusFault.NO_FAULT);
-                        this.battery?.updateValue(this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+                        this.fault?.updateValue(Characteristics.StatusFault.NO_FAULT);
+                        this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_NORMAL);
                         break;
                 }
                 break;

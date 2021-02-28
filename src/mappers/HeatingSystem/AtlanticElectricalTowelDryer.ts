@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../../Platform';
 import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
@@ -8,16 +9,16 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected registerServices() {
         this.registerThermostatService();
         this.targetState?.setProps({ validValues: [
-            this.platform.Characteristic.TargetHeatingCoolingState.AUTO,
-            this.platform.Characteristic.TargetHeatingCoolingState.HEAT,
-            this.platform.Characteristic.TargetHeatingCoolingState.OFF,
+            Characteristics.TargetHeatingCoolingState.AUTO,
+            Characteristics.TargetHeatingCoolingState.HEAT,
+            Characteristics.TargetHeatingCoolingState.OFF,
         ] });
         if(this.device.hasCommand('setTowelDryerBoostModeDuration')) {
             this.registerSwitchService('boost');
         }
         if(this.device.hasCommand('setDryingDuration')) {
-            const service = this.registerService(this.platform.Service.Switch, 'drying');
-            this.drying = service.getCharacteristic(this.platform.Characteristic.On);
+            const service = this.registerService(Services.Switch, 'drying');
+            this.drying = service.getCharacteristic(Characteristics.On);
             
             this.drying?.on('set', this.setDrying.bind(this));
         }
@@ -26,13 +27,13 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected getTargetStateCommands(value): Command | Array<Command> {
         const commands = new Array<Command>();
         switch(value) {
-            case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+            case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('setTowelDryerOperatingMode', 'internal'));
                 break;
-            case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+            case Characteristics.TargetHeatingCoolingState.HEAT:
                 commands.push(new Command('setTowelDryerOperatingMode', 'external'));
                 break;
-            case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
+            case Characteristics.TargetHeatingCoolingState.OFF:
                 commands.push(new Command('setTowelDryerOperatingMode', 'standby'));
                 break;
         }
@@ -82,16 +83,16 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected computeStates() {
         switch(this.device.get('core:OperatingModeState')) {
             case 'standby':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.OFF);
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.OFF);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.OFF);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                 break;
             case 'internal':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.AUTO);
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 break;
             case 'external':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.HEAT);
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 break;
         }
     }

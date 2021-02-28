@@ -1,3 +1,4 @@
+import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
@@ -9,22 +10,22 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
     protected getTargetStateCommands(value): Command | Array<Command> {
         const commands: Array<Command> = [];
         switch(value) {
-            case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+            case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('setHeatingOnOffState', 'on'));
                 commands.push(new Command('setCoolingOnOffState', 'on'));
                 break;
 
-            case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+            case Characteristics.TargetHeatingCoolingState.HEAT:
                 commands.push(new Command('setHeatingOnOffState', 'on'));
                 commands.push(new Command('setCoolingOnOffState', 'off'));
                 break;
 
-            case this.platform.Characteristic.TargetHeatingCoolingState.COOL:
+            case Characteristics.TargetHeatingCoolingState.COOL:
                 commands.push(new Command('setHeatingOnOffState', 'off'));
                 commands.push(new Command('setCoolingOnOffState', 'on'));
                 break;
 
-            case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
+            case Characteristics.TargetHeatingCoolingState.OFF:
                 commands.push(new Command('setHeatingOnOffState', 'off'));
                 commands.push(new Command('setCoolingOnOffState', 'off'));
                 break;
@@ -79,35 +80,35 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             this.device.get('core:HeatingOnOffState') === 'on' &&
             this.device.get('core:CoolingOnOffState') === 'on'
         ) {
-            targetState = this.platform.Characteristic.TargetHeatingCoolingState.AUTO;
+            targetState = Characteristics.TargetHeatingCoolingState.AUTO;
             this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
             if(this.device.get('io:PassAPCCoolingModeState') === 'stop') {
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
             } else {
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.COOL);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
             }
         } else if(this.device.get('core:HeatingOnOffState') === 'on') {
-            targetState = this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
-            this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+            targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
             if(this.device.get('io:PassAPCHeatingProfileState') === 'comfort') {
                 this.targetTemperature?.updateValue(this.device.get('core:ComfortHeatingTargetTemperatureState'));
             } else {
                 this.targetTemperature?.updateValue(this.device.get('core:EcoHeatingTargetTemperatureState'));
             }
         } else if(this.device.get('core:CoolingOnOffState') === 'on') {
-            targetState = this.platform.Characteristic.TargetHeatingCoolingState.COOL;
-            this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.COOL);
+            targetState = Characteristics.TargetHeatingCoolingState.COOL;
+            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
             if(this.device.get('io:PassAPCHeatingProfileState') === 'comfort') {
                 this.targetTemperature?.updateValue(this.device.get('core:ComfortCoolingTargetTemperatureState'));
             } else {
                 this.targetTemperature?.updateValue(this.device.get('core:EcoCoolingTargetTemperatureState'));
             }
         } else {
-            targetState = this.platform.Characteristic.TargetHeatingCoolingState.OFF;
-            this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.OFF);
+            targetState = Characteristics.TargetHeatingCoolingState.OFF;
+            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
             this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
         }
-        if(this.targetState !== undefined && targetState !== undefined && !this.device.isCommandInProgress()) {
+        if(this.targetState !== undefined && targetState !== undefined && this.device.isIdle) {
             this.targetState.value = targetState;
         }
     }

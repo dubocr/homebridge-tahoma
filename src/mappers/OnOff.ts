@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic, CharacteristicSetCallback } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
@@ -6,8 +7,8 @@ export default class OnOff extends Mapper {
     protected on: Characteristic | undefined;
 
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.Switch);
-        this.on = service.getCharacteristic(this.platform.Characteristic.On);
+        const service = this.registerService(Services.Switch);
+        this.on = service.getCharacteristic(Characteristics.On);
 
         this.on.on('set', this.setOn.bind(this));
     }

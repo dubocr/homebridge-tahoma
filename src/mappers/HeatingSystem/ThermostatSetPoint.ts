@@ -1,3 +1,4 @@
+import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
@@ -8,12 +9,12 @@ export default class ThermostatSetPoint extends HeatingSystem {
         
         if(this.targetState) {
             this.targetState.setProps({ validValues: [
-                this.platform.Characteristic.TargetHeatingCoolingState.HEAT,
+                Characteristics.TargetHeatingCoolingState.HEAT,
             ] });
-            this.targetState.value = this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
+            this.targetState.value = Characteristics.TargetHeatingCoolingState.HEAT;
         }
         if(this.currentState) {
-            this.currentState.value = this.platform.Characteristic.CurrentHeatingCoolingState.HEAT;
+            this.currentState.value = Characteristics.CurrentHeatingCoolingState.HEAT;
         }
     }
     

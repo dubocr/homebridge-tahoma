@@ -1,4 +1,5 @@
 
+import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
@@ -8,18 +9,18 @@ export default class VentilationSystem extends Mapper {
     protected targetState: Characteristic | undefined;
 
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.LockMechanism);
-        this.currentState = service.getCharacteristic(this.platform.Characteristic.LockCurrentState);
-        this.targetState = service.getCharacteristic(this.platform.Characteristic.LockTargetState);
+        const service = this.registerService(Services.LockMechanism);
+        this.currentState = service.getCharacteristic(Characteristics.LockCurrentState);
+        this.targetState = service.getCharacteristic(Characteristics.LockTargetState);
 
         this.targetState?.on('set', this.setTargetState.bind(this));
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
         switch(value) {
-            case this.platform.Characteristic.LockTargetState.SECURED:
+            case Characteristics.LockTargetState.SECURED:
                 return new Command('setLockedUnlocked', 'locked');
-            case this.platform.Characteristic.LockTargetState.UNSECURED:
+            case Characteristics.LockTargetState.UNSECURED:
             default:
                 return new Command('setLockedUnlocked', 'unlocked');
         }
@@ -48,11 +49,14 @@ export default class VentilationSystem extends Mapper {
             case 'core:LockedUnlockedState':
                 switch(value) {
                     case 'locked':
-                        this.currentState?.updateValue(this.platform.Characteristic.LockCurrentState.SECURED);
+                        this.currentState?.updateValue(Characteristics.LockCurrentState.SECURED);
                         break;
                     default:
-                        this.currentState?.updateValue(this.platform.Characteristic.LockCurrentState.UNSECURED);
+                        this.currentState?.updateValue(Characteristics.LockCurrentState.UNSECURED);
                         break;
+                }
+                if(this.device.isIdle && this.currentState) {
+                    this.targetState?.updateValue(this.currentState.value);
                 }
                 break;
         }

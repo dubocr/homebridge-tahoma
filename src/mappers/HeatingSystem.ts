@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
@@ -21,11 +22,11 @@ export default class HeatingSystem extends Mapper {
     }
 
     protected registerThermostatService(subtype?: string): Service {
-        const service = this.registerService(this.platform.Service.Thermostat, subtype);
-        this.currentTemperature = service.getCharacteristic(this.platform.Characteristic.CurrentTemperature);
-        this.targetTemperature = service.getCharacteristic(this.platform.Characteristic.TargetTemperature);
-        this.currentState = service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState);
-        this.targetState = service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState);
+        const service = this.registerService(Services.Thermostat, subtype);
+        this.currentTemperature = service.getCharacteristic(Characteristics.CurrentTemperature);
+        this.targetTemperature = service.getCharacteristic(Characteristics.TargetTemperature);
+        this.currentState = service.getCharacteristic(Characteristics.CurrentHeatingCoolingState);
+        this.targetState = service.getCharacteristic(Characteristics.TargetHeatingCoolingState);
         
         this.targetState?.on('set', this.setTargetState.bind(this));
         this.targetTemperature?.on('set', this.debounce(this.setTargetTemperature));
@@ -33,8 +34,8 @@ export default class HeatingSystem extends Mapper {
     }
 
     protected registerSwitchService(subtype?: string): Service {
-        const service = this.registerService(this.platform.Service.Switch, subtype);
-        this.on = service.getCharacteristic(this.platform.Characteristic.On);
+        const service = this.registerService(Services.Switch, subtype);
+        this.on = service.getCharacteristic(Characteristics.On);
         
         this.on?.on('set', this.setOn.bind(this));
         return service;
@@ -42,13 +43,13 @@ export default class HeatingSystem extends Mapper {
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         switch(value) {
-            case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+            case Characteristics.TargetHeatingCoolingState.AUTO:
                 return new Command('auto');
-            case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+            case Characteristics.TargetHeatingCoolingState.HEAT:
                 return new Command('heat');
-            case this.platform.Characteristic.TargetHeatingCoolingState.COOL:
+            case Characteristics.TargetHeatingCoolingState.COOL:
                 return new Command('cool');
-            case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
+            case Characteristics.TargetHeatingCoolingState.OFF:
                 return new Command('off');
             default:
                 return new Command('auto');
@@ -73,7 +74,7 @@ export default class HeatingSystem extends Mapper {
         });
     }
 
-    protected getTargetTemperatureCommands(value): Command | Array<Command> {
+    protected getTargetTemperatureCommands(value): Command | Array<Command> | undefined {
         return new Command('setTargetTemperature', value);
     }
 

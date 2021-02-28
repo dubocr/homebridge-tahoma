@@ -1,25 +1,27 @@
-
+import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 
 export default class VentilationSystem extends Mapper {
+    protected active: Characteristic | undefined;
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
 
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.AirPurifier);
-        this.currentState = service.getCharacteristic(this.platform.Characteristic.CurrentAirPurifierState);
-        this.targetState = service.getCharacteristic(this.platform.Characteristic.TargetAirPurifierState);
+        const service = this.registerService(Services.AirPurifier);
+        this.active = service.getCharacteristic(Characteristics.Active);
+        this.currentState = service.getCharacteristic(Characteristics.CurrentAirPurifierState);
+        this.targetState = service.getCharacteristic(Characteristics.TargetAirPurifierState);
 
         this.targetState?.on('set', this.setTargetState.bind(this));
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
         switch(value) {
-            case this.platform.Characteristic.TargetAirPurifierState.AUTO:
+            case Characteristics.TargetAirPurifierState.AUTO:
                 return new Command('setAirDemandMode', 'auto');
-            case this.platform.Characteristic.TargetAirPurifierState.MANUAL:
+            case Characteristics.TargetAirPurifierState.MANUAL:
             default:
                 return new Command('setAirDemandMode', 'boost');
         }
@@ -48,10 +50,10 @@ export default class VentilationSystem extends Mapper {
             case 'io:AirDemandModeState':
                 switch(value) {
                     case 'auto':
-                        this.currentState?.updateValue(this.platform.Characteristic.TargetAirPurifierState.AUTO);
+                        this.currentState?.updateValue(Characteristics.TargetAirPurifierState.AUTO);
                         break;
                     default:
-                        this.currentState?.updateValue(this.platform.Characteristic.TargetAirPurifierState.MANUAL);
+                        this.currentState?.updateValue(Characteristics.TargetAirPurifierState.MANUAL);
                         break;
                 }
                 break;

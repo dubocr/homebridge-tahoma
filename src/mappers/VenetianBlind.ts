@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic, CharacteristicSetCallback } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import RollerShutter from './RollerShutter';
@@ -17,10 +18,10 @@ export default class VenetianBlind extends RollerShutter {
         super.registerServices();
 
         if(!this.blindMode) {
-            const service = this.accessory.getService(this.platform.Service.WindowCovering);
+            const service = this.accessory.getService(Services.WindowCovering);
             if(service) {
-                this.currentAngle = this.registerCharacteristic(service, this.platform.Characteristic.CurrentHorizontalTiltAngle);
-                this.targetAngle = this.registerCharacteristic(service, this.platform.Characteristic.TargetHorizontalTiltAngle);
+                this.currentAngle = this.registerCharacteristic(service, Characteristics.CurrentHorizontalTiltAngle);
+                this.targetAngle = this.registerCharacteristic(service, Characteristics.TargetHorizontalTiltAngle);
                 this.targetAngle?.setProps({ minStep: 10 });
                 this.targetAngle?.on('set', this.debounce(this.setTargetAnglePosition));
             }
@@ -126,7 +127,7 @@ export default class VenetianBlind extends RollerShutter {
         if(currentPosition !== undefined) {
             this.currentPosition?.updateValue(currentPosition);
         }
-        if(!this.device.isCommandInProgress() && targetPosition !== undefined) {
+        if(this.device.isIdle && targetPosition !== undefined) {
             this.targetPosition?.updateValue(targetPosition);
         }
     }

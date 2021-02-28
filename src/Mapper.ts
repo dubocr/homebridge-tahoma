@@ -1,3 +1,4 @@
+import { Characteristics, Services } from './Platform';
 import { CharacteristicSetCallback, CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Action, ExecutionState } from 'overkiz-client';
 import { State } from 'overkiz-client';
@@ -26,11 +27,11 @@ export default class Mapper {
             {};
         this.applyConfig(config);
 
-        const info = this.accessory.getService(this.platform.Service.AccessoryInformation);
+        const info = this.accessory.getService(Services.AccessoryInformation);
         if(info) {
-            info.setCharacteristic(this.platform.Characteristic.Manufacturer, device.manufacturer);
-            info.setCharacteristic(this.platform.Characteristic.Model, device.model);
-            info.setCharacteristic(this.platform.Characteristic.SerialNumber, device.serialNumber);
+            info.setCharacteristic(Characteristics.Manufacturer, device.manufacturer);
+            info.setCharacteristic(Characteristics.Model, device.model);
+            info.setCharacteristic(Characteristics.SerialNumber, device.serialNumber);
             this.services.push(info);
         }
         this.stateless = (device.states.length === 0);
@@ -70,7 +71,7 @@ export default class Mapper {
         } else {
             service = this.accessory.getService(type) || this.accessory.addService(type);
         }
-        service.setCharacteristic(this.platform.Characteristic.Name, name);
+        service.setCharacteristic(Characteristics.Name, name);
         this.services.push(service);
         return service;
     }
@@ -104,9 +105,9 @@ export default class Mapper {
         this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
-    protected executeCommands(commands: Command|Array<Command>, callback?: CharacteristicSetCallback): Promise<Action> {
+    protected executeCommands(commands: Command|Array<Command>|undefined, callback?: CharacteristicSetCallback): Promise<Action> {
         let title = '';
-        if(commands === null || (Array.isArray(commands) && commands.length === 0)) {
+        if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
         } else if(Array.isArray(commands)) {
             if(commands.length === 0) {

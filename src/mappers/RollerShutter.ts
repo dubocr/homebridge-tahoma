@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic, CharacteristicSetCallback, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
@@ -21,17 +22,17 @@ export default class RollerShutter extends Mapper {
     }
 
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.WindowCovering);
-        this.currentPosition = service.getCharacteristic(this.platform.Characteristic.CurrentPosition);
-        this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
-        this.positionState = service.getCharacteristic(this.platform.Characteristic.PositionState);
+        const service = this.registerService(Services.WindowCovering);
+        this.currentPosition = service.getCharacteristic(Characteristics.CurrentPosition);
+        this.targetPosition = service.getCharacteristic(Characteristics.TargetPosition);
+        this.positionState = service.getCharacteristic(Characteristics.PositionState);
         if(this.stateless) {
             this.currentPosition.updateValue(this.initPosition);
             this.targetPosition.updateValue(this.initPosition);
         } else {
-            this.obstructionDetected = service.getCharacteristic(this.platform.Characteristic.ObstructionDetected);
+            this.obstructionDetected = service.getCharacteristic(Characteristics.ObstructionDetected);
         }
-        this.positionState.updateValue(this.platform.Characteristic.PositionState.STOPPED);
+        this.positionState.updateValue(Characteristics.PositionState.STOPPED);
         this.targetPosition.on('set', this.debounce(this.setTargetPosition));
     }
 
@@ -55,21 +56,21 @@ export default class RollerShutter extends Mapper {
 	* HomeKit '100' (Open) => 0% Closure
 	**/
     async setTargetPosition(value, callback: CharacteristicSetCallback) {
-        if(this.device.isCommandInProgress() && (value === 100 || value === 0)) {
+        if(!this.device.isIdle && (value === 100 || value === 0)) {
             callback();
             return this.device.cancelCommand();//.then(callback).catch(callback);
         }
         const action = await this.executeCommands(this.getTargetCommands(value), callback);
         action.on('update', (state, data) => {
             const positionState = (value === 100 || value > (this.currentPosition?.value || 0)) ? 
-                this.platform.Characteristic.PositionState.INCREASING : 
-                this.platform.Characteristic.PositionState.DECREASING;
+                Characteristics.PositionState.INCREASING : 
+                Characteristics.PositionState.DECREASING;
             switch (state) {
                 case ExecutionState.IN_PROGRESS:
                     this.positionState?.updateValue(positionState);
                     break;
                 case ExecutionState.COMPLETED:
-                    this.positionState?.updateValue(this.platform.Characteristic.PositionState.STOPPED);
+                    this.positionState?.updateValue(Characteristics.PositionState.STOPPED);
                     if(this.stateless) {
                         if(this.defaultPosition) {
                             this.currentPosition?.updateValue(this.defaultPosition);
@@ -82,7 +83,7 @@ export default class RollerShutter extends Mapper {
                     }
                     break;
                 case ExecutionState.FAILED:
-                    this.positionState?.updateValue(this.platform.Characteristic.PositionState.STOPPED);
+                    this.positionState?.updateValue(Characteristics.PositionState.STOPPED);
                     this.obstructionDetected?.updateValue(data.failureType === 'WHILEEXEC_BLOCKED_BY_HAZARD');
                     if(this.currentPosition) {
                         this.targetPosition?.updateValue(this.currentPosition.value);

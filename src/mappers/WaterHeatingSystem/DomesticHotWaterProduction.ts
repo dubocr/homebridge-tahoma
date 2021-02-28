@@ -1,3 +1,4 @@
+import { Characteristics } from '../../Platform';
 import { Characteristic, Perms } from 'homebridge';
 import { Command } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
@@ -5,7 +6,7 @@ import WaterHeatingSystem from '../WaterHeatingSystem';
 export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     protected registerServices() {
         this.registerThermostatService();
-        this.registerSwitchService('Boost');
+        this.registerSwitchService('boost');
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {

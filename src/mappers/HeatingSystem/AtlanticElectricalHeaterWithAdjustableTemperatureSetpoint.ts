@@ -1,3 +1,4 @@
+import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
@@ -10,16 +11,16 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
     protected getTargetStateCommands(value): Command | Array<Command> {
         let mode;
         switch(value) {
-            case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+            case Characteristics.TargetHeatingCoolingState.AUTO:
                 mode = 'auto';
                 break;
-            case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+            case Characteristics.TargetHeatingCoolingState.HEAT:
                 mode = 'normal';
                 break;
-            case this.platform.Characteristic.TargetHeatingCoolingState.COOL:
+            case Characteristics.TargetHeatingCoolingState.COOL:
                 mode = 'eco';
                 break;
-            case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
+            case Characteristics.TargetHeatingCoolingState.OFF:
                 mode = 'standby';
                 break;
         }
@@ -40,27 +41,27 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
             case 'off':
             case 'away':
             case 'frostprotection':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.OFF);
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.OFF);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.OFF);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                 break;
             case 'auto':
             case 'prog':
             case 'program':
             case 'internal':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.AUTO);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
                 if(this.device.get('io:TargetHeatingLevelState') === 'eco') {
-                    this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.COOL);
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                 } else {
-                    this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
                 break;
             case 'comfort':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.HEAT);
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.HEAT);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 break;
             case 'eco':
-                this.targetState?.updateValue(this.platform.Characteristic.TargetHeatingCoolingState.COOL);
-                this.currentState?.updateValue(this.platform.Characteristic.CurrentHeatingCoolingState.COOL);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.COOL);
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                 break; 
         }
     }

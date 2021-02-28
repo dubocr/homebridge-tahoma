@@ -1,3 +1,4 @@
+import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import Alarm from '../Alarm';
 
@@ -5,13 +6,13 @@ export default class MyFoxAlarmController extends Alarm {
     protected getTargetCommands(value): Command | Array<Command> {
         switch(value) {
             default:
-            case this.platform.Characteristic.SecuritySystemTargetState.STAY_ARM:
+            case Characteristics.SecuritySystemTargetState.STAY_ARM:
                 return [];
-            case this.platform.Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+            case Characteristics.SecuritySystemTargetState.NIGHT_ARM:
                 return new Command('partial');
-            case this.platform.Characteristic.SecuritySystemTargetState.AWAY_ARM:
+            case Characteristics.SecuritySystemTargetState.AWAY_ARM:
                 return new Command('arm');
-            case this.platform.Characteristic.SecuritySystemTargetState.DISARM:
+            case Characteristics.SecuritySystemTargetState.DISARM:
                 return new Command('disarm');
         }
     }
@@ -22,16 +23,16 @@ export default class MyFoxAlarmController extends Alarm {
                 switch(value) {
                     default:
                     case 'disarmed': 
-                        this.currentState?.updateValue(this.platform.Characteristic.SecuritySystemCurrentState.DISARMED);
-                        this.targetState?.updateValue(this.platform.Characteristic.SecuritySystemTargetState.DISARM);
+                        this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.DISARMED);
+                        this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.DISARM);
                         break;
                     case 'armed': 
-                        this.currentState?.updateValue(this.platform.Characteristic.SecuritySystemCurrentState.AWAY_ARM);
-                        this.targetState?.updateValue(this.platform.Characteristic.SecuritySystemTargetState.AWAY_ARM);
+                        this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.AWAY_ARM);
+                        this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.AWAY_ARM);
                         break;
                     case 'partial': 
-                        this.currentState?.updateValue(this.platform.Characteristic.SecuritySystemCurrentState.NIGHT_ARM);
-                        this.targetState?.updateValue(this.platform.Characteristic.SecuritySystemTargetState.NIGHT_ARM);
+                        this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.NIGHT_ARM);
+                        this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.NIGHT_ARM);
                         break;
                 }
                 break;

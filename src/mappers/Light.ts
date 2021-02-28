@@ -1,3 +1,4 @@
+import { Characteristics, Services } from '../Platform';
 import { Characteristic, CharacteristicSetCallback } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
@@ -9,11 +10,11 @@ export default class Light extends Mapper {
     protected saturation: Characteristic | undefined;
 
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.Lightbulb);
-        this.on = service.getCharacteristic(this.platform.Characteristic.On);
-        this.hue = service.getCharacteristic(this.platform.Characteristic.Hue);
-        this.brightness = service.getCharacteristic(this.platform.Characteristic.Brightness);
-        this.saturation = service.getCharacteristic(this.platform.Characteristic.Saturation);
+        const service = this.registerService(Services.Lightbulb);
+        this.on = service.getCharacteristic(Characteristics.On);
+        this.hue = service.getCharacteristic(Characteristics.Hue);
+        this.brightness = service.getCharacteristic(Characteristics.Brightness);
+        this.saturation = service.getCharacteristic(Characteristics.Saturation);
 
         this.on.on('set', this.setOn.bind(this));
         this.brightness.on('set', this.setBrightness.bind(this));

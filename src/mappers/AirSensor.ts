@@ -1,4 +1,5 @@
 
+import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import Mapper from '../Mapper';
 
@@ -7,9 +8,9 @@ export default class AirSensor extends Mapper {
     protected co2: Characteristic | undefined;
     
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.AirQualitySensor);
-        this.quality = service.getCharacteristic(this.platform.Characteristic.AirQuality);
-        this.co2 = service.addCharacteristic(this.platform.Characteristic.CarbonDioxideLevel);
+        const service = this.registerService(Services.AirQualitySensor);
+        this.quality = service.getCharacteristic(Characteristics.AirQuality);
+        this.co2 = service.addCharacteristic(Characteristics.CarbonDioxideLevel);
     }
 
     protected onStateChanged(name: string, value) {
@@ -23,15 +24,15 @@ export default class AirSensor extends Mapper {
 
     private co2ToQuality(value) {
         if(value < 350) {
-            return this.platform.Characteristic.AirQuality.EXCELLENT;
+            return Characteristics.AirQuality.EXCELLENT;
         } else if(value < 1000) {
-            return this.platform.Characteristic.AirQuality.GOOD;
+            return Characteristics.AirQuality.GOOD;
         } else if(value < 2000) {
-            return this.platform.Characteristic.AirQuality.FAIR;
+            return Characteristics.AirQuality.FAIR;
         } else if(value < 5000) {
-            return this.platform.Characteristic.AirQuality.INFERIOR;
+            return Characteristics.AirQuality.INFERIOR;
         } else {
-            return this.platform.Characteristic.AirQuality.POOR;
+            return Characteristics.AirQuality.POOR;
         }
     }
 }

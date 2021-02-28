@@ -2,15 +2,14 @@ import { Characteristics, Services } from '../Platform';
 import { Characteristic } from 'homebridge';
 import Mapper from '../Mapper';
 
-export default class OccupancySensor extends Mapper {
-    protected occupancy: Characteristic | undefined;
+export default class RainSensor extends Mapper {
+    protected rain: Characteristic | undefined;
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
     
     protected registerServices() {
-        const motion = this.device.widget.startsWith('Motion');
-        const service = this.registerService(motion ? Services.MotionSensor : Services.OccupancySensor);
-        this.occupancy = service.getCharacteristic(motion ? Characteristics.MotionDetected : Characteristics.OccupancyDetected);
+        const service = this.registerService(Services.ContactSensor);
+        this.rain = service.getCharacteristic(Characteristics.ContactSensorState);
         if(this.device.hasState('core:SensorDefectState')) {
             this.fault = service.addCharacteristic(Characteristics.StatusFault);
             this.battery = service.addCharacteristic(Characteristics.StatusLowBattery);
@@ -19,8 +18,8 @@ export default class OccupancySensor extends Mapper {
 
     protected onStateChanged(name: string, value) {
         switch(name) {
-            case 'core:OccupancyState':
-                this.occupancy?.updateValue(value === 'personInside');
+            case 'core:RainState':
+                this.rain?.updateValue(value === 'detected');
                 break;
             case 'core:SensorDefectState':
                 switch(value) {
