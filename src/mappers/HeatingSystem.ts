@@ -40,7 +40,7 @@ export default class HeatingSystem extends Mapper {
         return service;
     }
 
-    protected getTargetStateCommands(value): Command | Array<Command> {
+    protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         switch(value) {
             case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
                 return new Command('auto');
@@ -60,10 +60,14 @@ export default class HeatingSystem extends Mapper {
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    this.currentState?.updateValue(value);
+                    if(this.stateless) {
+                        this.currentState?.updateValue(value);
+                    }
                     break;
                 case ExecutionState.FAILED:
-                    this.targetState?.updateValue(!value);
+                    if(this.currentState) {
+                        this.targetState?.updateValue(this.currentState.value);
+                    }
                     break;
             }
         });
@@ -107,9 +111,11 @@ export default class HeatingSystem extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        this.debug(name + ' => ' + value);
         switch(name) {
             case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
+            case 'core:TargetTemperatureState': 
+                this.targetTemperature?.updateValue(value);
+                break;
         }
     }
 }

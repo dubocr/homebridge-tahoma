@@ -55,7 +55,9 @@ export default class VenetianBlind extends RollerShutter {
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.FAILED:
-                    this.targetAngle?.updateValue(this.currentAngle?.value || 0); 
+                    if(this.currentAngle) {
+                        this.targetAngle?.updateValue(this.currentAngle.value);
+                    }
                     break;
             }
         });

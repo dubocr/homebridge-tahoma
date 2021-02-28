@@ -84,7 +84,9 @@ export default class RollerShutter extends Mapper {
                 case ExecutionState.FAILED:
                     this.positionState?.updateValue(this.platform.Characteristic.PositionState.STOPPED);
                     this.obstructionDetected?.updateValue(data.failureType === 'WHILEEXEC_BLOCKED_BY_HAZARD');
-                    this.targetPosition?.updateValue(this.currentPosition?.value || 0); // Update target position in case of cancellation
+                    if(this.currentPosition) {
+                        this.targetPosition?.updateValue(this.currentPosition.value);
+                    }
                     break;
             }
         });

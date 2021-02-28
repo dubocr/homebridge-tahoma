@@ -1,14 +1,15 @@
 import { Characteristic } from 'homebridge';
 import Mapper from '../Mapper';
 
-export default class SmokeSensor extends Mapper {
-    protected smoke: Characteristic | undefined;
+export default class OccupancySensor extends Mapper {
+    protected occupancy: Characteristic | undefined;
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
     
     protected registerServices() {
-        const service = this.registerService(this.platform.Service.SmokeSensor);
-        this.smoke = service.getCharacteristic(this.platform.Characteristic.SmokeDetected);
+        const motion = this.device.widget.startsWith('Motion');
+        const service = this.registerService(motion ? this.platform.Service.MotionSensor : this.platform.Service.OccupancySensor);
+        this.occupancy = service.getCharacteristic(motion ? this.platform.Characteristic.MotionDetected : this.platform.Characteristic.OccupancyDetected);
         if(this.device.hasState('core:SensorDefectState')) {
             this.fault = service.addCharacteristic(this.platform.Characteristic.StatusFault);
             this.battery = service.addCharacteristic(this.platform.Characteristic.StatusLowBattery);
@@ -17,8 +18,8 @@ export default class SmokeSensor extends Mapper {
 
     protected onStateChanged(name: string, value) {
         switch(name) {
-            case 'core:SmokeState':
-                this.smoke?.updateValue(value === 'detected');
+            case 'core:OccupancyState':
+                this.occupancy?.updateValue(value === 'personInside');
                 break;
             case 'core:SensorDefectState':
                 switch(value) {

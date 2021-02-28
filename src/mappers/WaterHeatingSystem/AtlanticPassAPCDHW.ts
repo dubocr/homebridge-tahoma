@@ -2,6 +2,12 @@ import { Command, State } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
 
 export default class AtlanticPassAPCDHW extends WaterHeatingSystem {  
+    protected registerServices() {
+        this.registerThermostatService();
+        if(this.device.hasCommand('setBoostOnOffState')) {
+            this.registerSwitchService('Boost');
+        }
+    }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
         const commands: Array<Command> = [];
@@ -36,6 +42,10 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
         }
     }
 
+    protected getOnCommands(value): Command | Array<Command> {
+        return new Command('setBoostOnOffState', value ? 'on' : 'off');
+    }
+
     protected onStateChanged(name: string, value) {
         switch(name) {
             case 'core:TargetDHWTemperatureState':
@@ -48,6 +58,9 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
             case 'core:ComfortTargetDHWTemperatureState':
             case 'core:EcoTargetDHWTemperatureState':
                 this.postpone(this.computeStates);
+                break;
+            case 'core:BoostOnOffState':
+                this.on?.updateValue(value === 'on');
                 break;
         }
     }
