@@ -62,7 +62,7 @@ export default class Mapper {
         //
     }
 
-    protected registerService(type: WithUUID<typeof Service>, subtype?: string) {
+    protected registerService(type: WithUUID<typeof Service>, subtype?: string): Service {
         let service: Service;
         const name = subtype ? this.translate(subtype) : this.device.label;
         if(subtype) {

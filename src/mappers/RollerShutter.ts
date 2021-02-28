@@ -1,8 +1,10 @@
-import { Characteristic, CharacteristicSetCallback } from 'homebridge';
+import { Characteristic, CharacteristicSetCallback, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 
 export default class RollerShutter extends Mapper {
+    protected windowService: Service | undefined;
+    
     protected currentPosition: Characteristic | undefined;
     protected targetPosition: Characteristic | undefined;
     protected positionState: Characteristic | undefined;
@@ -23,24 +25,40 @@ export default class RollerShutter extends Mapper {
         this.currentPosition = service.getCharacteristic(this.platform.Characteristic.CurrentPosition);
         this.targetPosition = service.getCharacteristic(this.platform.Characteristic.TargetPosition);
         this.positionState = service.getCharacteristic(this.platform.Characteristic.PositionState);
-        
-        this.positionState.updateValue(this.platform.Characteristic.PositionState.STOPPED);
-        this.targetPosition.on('set', this.debounce(this.setTargetPosition));
-
         if(this.stateless) {
-            this.currentPosition?.updateValue(this.initPosition);
-            this.targetPosition?.updateValue(this.initPosition);
+            this.currentPosition.updateValue(this.initPosition);
+            this.targetPosition.updateValue(this.initPosition);
         } else {
             this.obstructionDetected = service.getCharacteristic(this.platform.Characteristic.ObstructionDetected);
         }
+        this.positionState.updateValue(this.platform.Characteristic.PositionState.STOPPED);
+        this.targetPosition.on('set', this.debounce(this.setTargetPosition));
     }
 
     protected getTargetCommands(value) {
-        const target = this.reverse ? (100 - value) : value;
-        return new Command('setClosure', (100-target));
+        if(this.stateless) {
+            if(value === 100) {
+                return new Command('open');
+            } else if(value === 0) {
+                return new Command('close');
+            } else {
+                return new Command('my');
+            }
+        } else {
+            return new Command('setClosure', this.reversedValue(value));
+        }
     }
 
+    /**
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition
+	* HomeKit '0' (Close) => 100% Closure
+	* HomeKit '100' (Open) => 0% Closure
+	**/
     async setTargetPosition(value, callback: CharacteristicSetCallback) {
+        if(this.device.isCommandInProgress() && (value === 100 || value === 0)) {
+            callback();
+            return this.device.cancelCommand();//.then(callback).catch(callback);
+        }
         const action = await this.executeCommands(this.getTargetCommands(value), callback);
         action.on('update', (state, data) => {
             const positionState = (value === 100 || value > (this.currentPosition?.value || 0)) ? 
@@ -59,8 +77,9 @@ export default class RollerShutter extends Mapper {
                         } else {
                             this.currentPosition?.updateValue(value);
                         }
+                    } else {
+                        this.obstructionDetected?.updateValue(false);
                     }
-                    this.obstructionDetected?.updateValue(false);
                     break;
                 case ExecutionState.FAILED:
                     this.positionState?.updateValue(this.platform.Characteristic.PositionState.STOPPED);
@@ -79,8 +98,8 @@ export default class RollerShutter extends Mapper {
         switch(name) {
             case 'core:ClosureState':
                 this.currentPosition?.updateValue(this.reversedValue(value));
-                if(this.targetPosition && !this.device.hasState('core:TargetClosureState')) {
-                    this.targetPosition.value = this.reversedValue(value);
+                if(!this.device.hasState('core:TargetClosureState')) {
+                    this.targetPosition?.updateValue(this.reversedValue(value));
                 }
                 break;
             case 'core:TargetClosureState':
