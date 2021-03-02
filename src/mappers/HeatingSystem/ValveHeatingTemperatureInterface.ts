@@ -63,7 +63,7 @@ export default class ValveHeatingTemperatureInterface extends HeatingSystem {
                 targetState = Characteristics.TargetHeatingCoolingState.OFF;
                 break;
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.device.isIdle) {
+        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.value = targetState;
         }
     }

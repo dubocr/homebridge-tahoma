@@ -21,7 +21,7 @@ export default class GarageDoor extends Mapper {
         const service = this.registerService(Services.GarageDoorOpener);
         this.currentState = service.getCharacteristic(Characteristics.CurrentDoorState);
         this.targetState = service.getCharacteristic(Characteristics.TargetDoorState);
-        this.targetState.on('set', this.setTargetState.bind(this));
+        this.targetState.onSet(this.setTargetState.bind(this));
 
         if(this.stateless || this.device.hasCommand('cycle')) {
             this.currentState.updateValue(Characteristics.CurrentDoorState.CLOSED);
@@ -39,8 +39,8 @@ export default class GarageDoor extends Mapper {
         }
     }
 
-    protected async setTargetState(value, callback: CharacteristicSetCallback) {
-        const action = await this.executeCommands(this.getTargetCommands(value), callback);
+    protected async setTargetState(value) {
+        const action = await this.executeCommands(this.getTargetCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
@@ -74,20 +74,20 @@ export default class GarageDoor extends Mapper {
                     case 'unknown':
                     case 'open' :
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.OPEN);
-                        if(this.device.isIdle) {
+                        if(this.isIdle) {
                             this.targetState?.updateValue(Characteristics.TargetDoorState.OPEN);
                         }
                         break;
                     case 'pedestrian' :
                     case 'partial' :
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.STOPPED);
-                        if(this.device.isIdle) {
+                        if(this.isIdle) {
                             this.targetState?.updateValue(Characteristics.TargetDoorState.OPEN);
                         }
                         break;
                     case 'closed' :
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSED);
-                        if(this.device.isIdle) {
+                        if(this.isIdle) {
                             this.targetState?.updateValue(Characteristics.TargetDoorState.CLOSED);
                         }
                         break;

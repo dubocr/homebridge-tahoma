@@ -16,24 +16,22 @@ export default class Light extends Mapper {
         this.brightness = service.getCharacteristic(Characteristics.Brightness);
         this.saturation = service.getCharacteristic(Characteristics.Saturation);
 
-        this.on.on('set', this.setOn.bind(this));
-        this.brightness.on('set', this.setBrightness.bind(this));
-        this.saturation.on('set', this.setSaturation.bind(this));
+        this.on.onSet(this.setOn.bind(this));
+        this.brightness.onSet(this.setBrightness.bind(this));
+        this.saturation.onSet(this.setSaturation.bind(this));
     }
 
     protected getOnOffCommands(value): Command | Array<Command> {
         return new Command(value ? 'on' : 'off');
     }
 
-    protected async setOn(value, callback: CharacteristicSetCallback) {
+    protected async setOn(value) {
         const action = await this.executeCommands(this.getOnOffCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    callback();
                     break;
                 case ExecutionState.FAILED:
-                    callback(data);
                     break;
             }
         });
@@ -43,15 +41,13 @@ export default class Light extends Mapper {
         return new Command('setIntensity', value);
     }
 
-    protected async setBrightness(value, callback: CharacteristicSetCallback) {
+    protected async setBrightness(value) {
         const action = await this.executeCommands(this.getBrightnessCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    callback();
                     break;
                 case ExecutionState.FAILED:
-                    callback(data);
                     break;
             }
         });
@@ -61,15 +57,13 @@ export default class Light extends Mapper {
         return new Command('setHueAndSaturation', [ this.hue?.value, value]);
     }
 
-    protected async setSaturation(value, callback: CharacteristicSetCallback) {
+    protected async setSaturation(value) {
         const action = await this.executeCommands(this.getSaturationCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    callback();
                     break;
                 case ExecutionState.FAILED:
-                    callback(data);
                     break;
             }
         });

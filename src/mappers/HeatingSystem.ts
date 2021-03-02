@@ -28,8 +28,9 @@ export default class HeatingSystem extends Mapper {
         this.currentState = service.getCharacteristic(Characteristics.CurrentHeatingCoolingState);
         this.targetState = service.getCharacteristic(Characteristics.TargetHeatingCoolingState);
         
-        this.targetState?.on('set', this.setTargetState.bind(this));
-        this.targetTemperature?.on('set', this.debounce(this.setTargetTemperature));
+        this.targetState?.onSet(this.setTargetState.bind(this));
+        this.targetTemperature?.onSet(this.debounce(this.setTargetTemperature));
+        this.targetTemperature?.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
         return service;
     }
 
@@ -37,7 +38,7 @@ export default class HeatingSystem extends Mapper {
         const service = this.registerService(Services.Switch, subtype);
         this.on = service.getCharacteristic(Characteristics.On);
         
-        this.on?.on('set', this.setOn.bind(this));
+        this.on?.onSet(this.setOn.bind(this));
         return service;
     }
 
@@ -56,8 +57,8 @@ export default class HeatingSystem extends Mapper {
         }
     }
 
-    protected async setTargetState(value, callback) {
-        const action = await this.executeCommands(this.getTargetStateCommands(value), callback);
+    protected async setTargetState(value) {
+        const action = await this.executeCommands(this.getTargetStateCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
@@ -78,8 +79,8 @@ export default class HeatingSystem extends Mapper {
         return new Command('setTargetTemperature', value);
     }
 
-    protected async setTargetTemperature(value, callback) {
-        const action = await this.executeCommands(this.getTargetTemperatureCommands(value), callback);
+    protected async setTargetTemperature(value) {
+        const action = await this.executeCommands(this.getTargetTemperatureCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
@@ -96,8 +97,8 @@ export default class HeatingSystem extends Mapper {
         return new Command('setOn', value);
     }
 
-    protected async setOn(value, callback) {
-        const action = await this.executeCommands(this.getOnCommands(value), callback);
+    protected async setOn(value) {
+        const action = await this.executeCommands(this.getOnCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.FAILED:

@@ -23,14 +23,14 @@ export default class Mapper {
         const service = this.accessory.getService(Services.Switch) || this.accessory.addService(Services.Switch);
         this.on = service.getCharacteristic(Characteristics.On);
 
-        this.on.on('set', this.setOn.bind(this));
+        this.on.onSet(this.setOn.bind(this));
     }
 
     private get isInProgress() {
         return (this.lastExecId in this.platform.client.executionPool);
     }
 
-    protected async setOn(value, callback: CharacteristicSetCallback) {
+    protected async setOn(value) {
         if (this.isInProgress) {
             await this.platform.client.cancelCommand(this.lastExecId);
         }
@@ -39,7 +39,6 @@ export default class Mapper {
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.INITIALIZED:
-                    callback();
                     break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
@@ -48,7 +47,6 @@ export default class Mapper {
                     break;
             }
         });
-        callback();
     }
 
     protected onStateChanged(name: string, value): boolean {

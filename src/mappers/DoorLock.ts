@@ -13,7 +13,7 @@ export default class VentilationSystem extends Mapper {
         this.currentState = service.getCharacteristic(Characteristics.LockCurrentState);
         this.targetState = service.getCharacteristic(Characteristics.LockTargetState);
 
-        this.targetState?.on('set', this.setTargetState.bind(this));
+        this.targetState?.onSet(this.setTargetState.bind(this));
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
@@ -26,8 +26,8 @@ export default class VentilationSystem extends Mapper {
         }
     }
 
-    protected async setTargetState(value, callback) {
-        const action = await this.executeCommands(this.getTargetStateCommands(value), callback);
+    protected async setTargetState(value) {
+        const action = await this.executeCommands(this.getTargetStateCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
@@ -55,7 +55,7 @@ export default class VentilationSystem extends Mapper {
                         this.currentState?.updateValue(Characteristics.LockCurrentState.UNSECURED);
                         break;
                 }
-                if(this.device.isIdle && this.currentState) {
+                if(this.isIdle && this.currentState) {
                     this.targetState?.updateValue(this.currentState.value);
                 }
                 break;

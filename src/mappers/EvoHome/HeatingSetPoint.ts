@@ -7,5 +7,6 @@ export default class HeatingSetPoint extends HeatingSystem {
         this.targetState?.setProps({ validValues: [
             Characteristics.TargetHeatingCoolingState.AUTO,
         ] });
+        this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
     }
 }

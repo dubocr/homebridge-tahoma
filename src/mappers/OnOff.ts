@@ -10,22 +10,20 @@ export default class OnOff extends Mapper {
         const service = this.registerService(Services.Switch);
         this.on = service.getCharacteristic(Characteristics.On);
 
-        this.on.on('set', this.setOn.bind(this));
+        this.on.onSet(this.setOn.bind(this));
     }
 
     protected getOnOffCommands(value): Command | Array<Command> {
         return new Command(value ? 'on' : 'off');
     }
 
-    protected async setOn(value, callback: CharacteristicSetCallback) {
+    protected async setOn(value) {
         const action = await this.executeCommands(this.getOnOffCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    callback();
                     break;
                 case ExecutionState.FAILED:
-                    callback(data);
                     break;
             }
         });

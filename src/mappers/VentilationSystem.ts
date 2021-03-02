@@ -14,7 +14,7 @@ export default class VentilationSystem extends Mapper {
         this.currentState = service.getCharacteristic(Characteristics.CurrentAirPurifierState);
         this.targetState = service.getCharacteristic(Characteristics.TargetAirPurifierState);
 
-        this.targetState?.on('set', this.setTargetState.bind(this));
+        this.targetState?.onSet(this.setTargetState.bind(this));
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
@@ -27,8 +27,8 @@ export default class VentilationSystem extends Mapper {
         }
     }
 
-    protected async setTargetState(value, callback) {
-        const action = await this.executeCommands(this.getTargetStateCommands(value), callback);
+    protected async setTargetState(value) {
+        const action = await this.executeCommands(this.getTargetStateCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:

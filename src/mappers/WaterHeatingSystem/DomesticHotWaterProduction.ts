@@ -23,10 +23,10 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                 this.on?.updateValue(value === 'on');
                 break;
             case 'core:WaterTemperatureState':
-                this.currentState?.updateValue(value);
+                this.currentTemperature?.updateValue(value);
                 break;
             case 'core:WaterTargetTemperatureState':
-                this.targetState?.updateValue(value);
+                this.targetTemperature?.updateValue(value);
                 break;
         }
     }

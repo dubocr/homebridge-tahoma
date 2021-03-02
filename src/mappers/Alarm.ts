@@ -23,7 +23,7 @@ export default class Alarm extends Mapper {
         this.currentState = service.getCharacteristic(Characteristics.SecuritySystemCurrentState);
         this.targetState = service.getCharacteristic(Characteristics.SecuritySystemTargetState);
 
-        this.targetState.on('set', this.setTargetState.bind(this));
+        this.targetState.onSet(this.setTargetState.bind(this));
     }
 
     protected getTargetCommands(value): Command | Array<Command> {
@@ -40,8 +40,8 @@ export default class Alarm extends Mapper {
         }
     }
 
-    async setTargetState(value, callback: CharacteristicSetCallback) {
-        const action = await this.executeCommands(this.getTargetCommands(value), callback);
+    async setTargetState(value) {
+        const action = await this.executeCommands(this.getTargetCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:

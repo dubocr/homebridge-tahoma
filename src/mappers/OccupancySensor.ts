@@ -12,8 +12,8 @@ export default class OccupancySensor extends Mapper {
         const service = this.registerService(motion ? Services.MotionSensor : Services.OccupancySensor);
         this.occupancy = service.getCharacteristic(motion ? Characteristics.MotionDetected : Characteristics.OccupancyDetected);
         if(this.device.hasState('core:SensorDefectState')) {
-            this.fault = service.addCharacteristic(Characteristics.StatusFault);
-            this.battery = service.addCharacteristic(Characteristics.StatusLowBattery);
+            this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
+            this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
         }
     }
 

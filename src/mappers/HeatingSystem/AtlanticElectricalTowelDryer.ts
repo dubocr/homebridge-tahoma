@@ -20,7 +20,7 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
             const service = this.registerService(Services.Switch, 'drying');
             this.drying = service.getCharacteristic(Characteristics.On);
             
-            this.drying?.on('set', this.setDrying.bind(this));
+            this.drying?.onSet(this.setDrying.bind(this));
         }
     }
 
@@ -49,13 +49,13 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
         return commands;
     }
 
-    protected async setDrying(value, callback) {
+    protected async setDrying(value) {
         const commands = new Array<Command>();
         commands.push(new Command('setTowelDryerTemporaryState', value ? 'drying' : 'permanentHeating'));
         if(value) {
             commands.push(new Command('setDryingDuration', 60));
         }
-        const action = await this.executeCommands(commands, callback);
+        const action = await this.executeCommands(commands);
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.FAILED:

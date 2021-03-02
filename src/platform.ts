@@ -30,7 +30,7 @@ export class Platform implements DynamicPlatformPlugin {
         this.client = new Client(log, config);
 
         this.exclude = config.exclude || [];
-        this.exclude.push('internal', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway');
+        this.exclude.push('internal', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
         this.loadScenes = config.loadScenes || false;
         this.exposeScenes = config.exposeScenes;
 

@@ -13,6 +13,7 @@ export default class Mapper {
     private debounceTimer;
     protected stateless = false;
     //protected config: Record<string, string | boolean | number> = {};
+    private executionId;
 
     constructor(
         protected readonly platform: Platform,
@@ -89,12 +90,13 @@ export default class Mapper {
     }
 
     protected debounce(task) {
-        return (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+        return (value: CharacteristicValue) => {
             if(this.debounceTimer !== null) {
                 clearTimeout(this.debounceTimer);
             }
-            this.debounceTimer = setTimeout(task.bind(this), 2000, value, (err) => err);
-            callback();
+            this.debounceTimer = setTimeout(() => {
+                task.bind(this)(value).catch(() => null);
+            }, 2000);
         };
     }
 
@@ -105,7 +107,7 @@ export default class Mapper {
         this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
-    protected executeCommands(commands: Command|Array<Command>|undefined, callback?: CharacteristicSetCallback): Promise<Action> {
+    protected async executeCommands(commands: Command|Array<Command>|undefined, callback?: CharacteristicSetCallback): Promise<Action> {
         let title = '';
         if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
@@ -125,24 +127,26 @@ export default class Mapper {
             title = commands.name;
             commands = [commands];
         }
-        
-        return this.device.executeCommands(title + ' - HomeKit', commands)
-            .then((action) => {
-                action.on('update', (state, event) => {
-                    this.debug(title + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
-                });
-                if(callback) {
-                    callback();
-                }
-                return action;
-            })
-            .catch((error) => {
-                this.debug(title + ' ' + error.message);
-                if(callback) {
-                    callback(error);
-                }
-                throw error;
-            });
+
+        if (!this.isIdle) {
+            this.cancelCommand();
+        }
+
+        const highPriority = this.device.hasState('io:PriorityLockLevelState') ? true : false;
+        const action = new Action(this.device.label + ' - ' + title + ' - HomeKit', highPriority);
+        action.deviceURL = this.device.deviceURL;
+        action.commands = commands;
+        action.on('update', (state, event) => {
+            this.debug(title + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
+        });
+
+        try {
+            await this.platform.client.executeAction(action);
+            return action;
+        } catch(error) {
+            this.error(title + ' ' + error.message);
+            throw error;
+        }
     }
     
     /**
@@ -151,6 +155,10 @@ export default class Mapper {
 
     protected debug(message) {
         this.platform.log.debug('[' + this.device.label + '] ' + message);
+    }
+
+    protected info(message) {
+        this.platform.log.info('[' + this.device.label + '] ' + message);
     }
 
     protected warn(message) {
@@ -184,5 +192,14 @@ export default class Mapper {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected onStateChanged(name: string, value) {
         //
+    }
+
+    // OLD
+    get isIdle() {
+        return !(this.executionId in this.platform.client.executionPool);
+    }
+
+    cancelCommand() {
+        this.platform.client.cancelCommand(this.executionId);
     }
 }

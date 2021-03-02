@@ -107,7 +107,7 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
             this.targetTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
             this.currentTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.device.isIdle) {
+        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.value = targetState;
         }
     }

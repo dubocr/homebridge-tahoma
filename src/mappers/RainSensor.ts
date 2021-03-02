@@ -11,8 +11,8 @@ export default class RainSensor extends Mapper {
         const service = this.registerService(Services.ContactSensor);
         this.rain = service.getCharacteristic(Characteristics.ContactSensorState);
         if(this.device.hasState('core:SensorDefectState')) {
-            this.fault = service.addCharacteristic(Characteristics.StatusFault);
-            this.battery = service.addCharacteristic(Characteristics.StatusLowBattery);
+            this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
+            this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
         }
     }
 

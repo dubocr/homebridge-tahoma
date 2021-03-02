@@ -6,7 +6,7 @@ export default class SomfyThermostat extends HeatingSystem {
     
     protected registerServices() {
         this.registerThermostatService();
-        this.targetState?.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
+        this.targetTemperature?.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
@@ -62,7 +62,7 @@ export default class SomfyThermostat extends HeatingSystem {
                 break;
         }
 
-        if(this.targetState !== undefined && targetState !== undefined && this.device.isIdle) {
+        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.value = targetState;
         }
     }

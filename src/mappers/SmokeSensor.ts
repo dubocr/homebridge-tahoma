@@ -11,8 +11,8 @@ export default class SmokeSensor extends Mapper {
         const service = this.registerService(Services.SmokeSensor);
         this.smoke = service.getCharacteristic(Characteristics.SmokeDetected);
         if(this.device.hasState('core:SensorDefectState')) {
-            this.fault = service.addCharacteristic(Characteristics.StatusFault);
-            this.battery = service.addCharacteristic(Characteristics.StatusLowBattery);
+            this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
+            this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
         }
     }
 

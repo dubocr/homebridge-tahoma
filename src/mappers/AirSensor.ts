@@ -10,7 +10,7 @@ export default class AirSensor extends Mapper {
     protected registerServices() {
         const service = this.registerService(Services.AirQualitySensor);
         this.quality = service.getCharacteristic(Characteristics.AirQuality);
-        this.co2 = service.addCharacteristic(Characteristics.CarbonDioxideLevel);
+        this.co2 = this.registerCharacteristic(service, Characteristics.CarbonDioxideLevel);
     }
 
     protected onStateChanged(name: string, value) {

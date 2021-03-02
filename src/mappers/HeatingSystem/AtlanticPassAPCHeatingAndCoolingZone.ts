@@ -108,7 +108,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
             this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.device.isIdle) {
+        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.value = targetState;
         }
     }

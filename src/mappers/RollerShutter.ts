@@ -27,13 +27,13 @@ export default class RollerShutter extends Mapper {
         this.targetPosition = service.getCharacteristic(Characteristics.TargetPosition);
         this.positionState = service.getCharacteristic(Characteristics.PositionState);
         if(this.stateless) {
-            this.currentPosition.updateValue(this.initPosition);
-            this.targetPosition.updateValue(this.initPosition);
+            //this.currentPosition.updateValue(this.initPosition);
+            //this.targetPosition.updateValue(this.initPosition);
         } else {
             this.obstructionDetected = service.getCharacteristic(Characteristics.ObstructionDetected);
         }
         this.positionState.updateValue(Characteristics.PositionState.STOPPED);
-        this.targetPosition.on('set', this.debounce(this.setTargetPosition));
+        this.targetPosition.onSet(this.debounce(this.setTargetPosition));
     }
 
     protected getTargetCommands(value) {
@@ -55,12 +55,11 @@ export default class RollerShutter extends Mapper {
 	* HomeKit '0' (Close) => 100% Closure
 	* HomeKit '100' (Open) => 0% Closure
 	**/
-    async setTargetPosition(value, callback: CharacteristicSetCallback) {
-        if(!this.device.isIdle && (value === 100 || value === 0)) {
-            callback();
-            return this.device.cancelCommand();//.then(callback).catch(callback);
+    async setTargetPosition(value) {
+        if(!this.isIdle && (value === 100 || value === 0)) {
+            return this.cancelCommand();//.then(callback).catch(callback);
         }
-        const action = await this.executeCommands(this.getTargetCommands(value), callback);
+        const action = await this.executeCommands(this.getTargetCommands(value));
         action.on('update', (state, data) => {
             const positionState = (value === 100 || value > (this.currentPosition?.value || 0)) ? 
                 Characteristics.PositionState.INCREASING : 

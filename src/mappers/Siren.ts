@@ -12,8 +12,8 @@ export default class Siren extends Mapper {
         this.mute = service.getCharacteristic(Characteristics.Mute);
         this.volume = service.getCharacteristic(Characteristics.Volume);
 
-        this.mute.on('set', this.setMute.bind(this));
-        this.volume.on('set', this.setVolume.bind(this));
+        this.mute.onSet(this.setMute.bind(this));
+        this.volume.onSet(this.setVolume.bind(this));
 
         this.mute.updateValue(true);
     }
@@ -22,15 +22,13 @@ export default class Siren extends Mapper {
         return new Command(value ? 'off' : 'on');
     }
 
-    protected async setMute(value, callback: CharacteristicSetCallback) {
+    protected async setMute(value) {
         const action = await this.executeCommands(this.getMuteCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    callback();
                     break;
                 case ExecutionState.FAILED:
-                    callback(data);
                     break;
             }
         });
@@ -40,15 +38,13 @@ export default class Siren extends Mapper {
         return new Command('setVolume', value);
     }
 
-    protected async setVolume(value, callback: CharacteristicSetCallback) {
+    protected async setVolume(value) {
         const action = await this.executeCommands(this.getVolumeCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    callback();
                     break;
                 case ExecutionState.FAILED:
-                    callback(data);
                     break;
             }
         });

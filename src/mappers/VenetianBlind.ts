@@ -23,7 +23,7 @@ export default class VenetianBlind extends RollerShutter {
                 this.currentAngle = this.registerCharacteristic(service, Characteristics.CurrentHorizontalTiltAngle);
                 this.targetAngle = this.registerCharacteristic(service, Characteristics.TargetHorizontalTiltAngle);
                 this.targetAngle?.setProps({ minStep: 10 });
-                this.targetAngle?.on('set', this.debounce(this.setTargetAnglePosition));
+                this.targetAngle?.onSet(this.debounce(this.setTargetAnglePosition));
             }
         }
     }
@@ -51,8 +51,8 @@ export default class VenetianBlind extends RollerShutter {
         }
     }
 
-    async setTargetAnglePosition(value, callback: CharacteristicSetCallback) {
-        const action = await this.executeCommands(this.getTargetAngleCommands(value), callback);
+    async setTargetAnglePosition(value) {
+        const action = await this.executeCommands(this.getTargetAngleCommands(value));
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.FAILED:
@@ -127,7 +127,7 @@ export default class VenetianBlind extends RollerShutter {
         if(currentPosition !== undefined) {
             this.currentPosition?.updateValue(currentPosition);
         }
-        if(this.device.isIdle && targetPosition !== undefined) {
+        if(this.isIdle && targetPosition !== undefined) {
             this.targetPosition?.updateValue(targetPosition);
         }
     }
