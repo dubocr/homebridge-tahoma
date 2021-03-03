@@ -15,7 +15,7 @@ class Thermostat extends AbstractService {
         this.tempComfort = this.temperature.comfort || 19;
         this.tempEco = this.temperature.eco || 17;
 		this.tempDiff = (this.tempComfort-this.tempEco);
-        this.derogationDuration = this.derogationDuration || 1;
+        this.derogationDuration = config['derogationDuration'] || 1;
 
         this.service = new Service.Thermostat(device.getName());
 
@@ -74,8 +74,8 @@ class Thermostat extends AbstractService {
                 this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
                 break;
             case 'AtlanticPassAPCHeatingAndCoolingZone':
-                if(this.device.parent.states['core:ProductModelNameState'] != 'R002414300') {
-                    this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
+                if(this.device.states['core:ProductModelNameState'] != 'R002414300') {
+                    //this.targetState.setProps({validValues: [Characteristic.TargetHeatingCoolingState.OFF, Characteristic.TargetHeatingCoolingState.AUTO]});
                 }
                 break;
 
