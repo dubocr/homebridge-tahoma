@@ -132,7 +132,7 @@ TahomaPlatform.prototype = {
 						if(deviceDefinition == undefined) {
 							Log.info('No definition found for ' + device.uiClass + ' > ' + device.widget + ' in mapping.json file');
 						} else {
-  						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.uiClass) == -1 && that.exclusions.indexOf(deviceDefinition) == -1 && that.exclusions.indexOf(device.label) == -1) {
+						if(that.exclusions.indexOf(protocol) == -1 && that.exclusions.indexOf(device.uiClass) == -1 && that.exclusions.indexOf(deviceDefinition) == -1 && that.exclusions.indexOf(device.label) == -1 && that.exclusions.indexOf(device.widget) == -1) {
   							device = new OverkizDevice(Homebridge, Log, this.api, device);
 							
 								var forced = this.forceType[device.name] || this.forceType[device.widget];
