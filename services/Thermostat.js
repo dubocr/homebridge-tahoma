@@ -367,17 +367,17 @@ class Thermostat extends AbstractService {
                             commands.push(new Command('setHeatingOnOffState', 'on'));
                             commands.push(new Command('setCoolingOnOffState', 'on'));
                             break;
-            
+
                         case Characteristic.TargetHeatingCoolingState.HEAT:
                             commands.push(new Command('setHeatingOnOffState', 'on'));
                             commands.push(new Command('setCoolingOnOffState', 'off'));
                             break;
-            
+
                         case Characteristic.TargetHeatingCoolingState.COOL:
                             commands.push(new Command('setHeatingOnOffState', 'off'));
                             commands.push(new Command('setCoolingOnOffState', 'on'));
                             break;
-            
+
                         case Characteristic.TargetHeatingCoolingState.OFF:
                             commands.push(new Command('setHeatingOnOffState', 'off'));
                             commands.push(new Command('setCoolingOnOffState', 'off'));
@@ -602,11 +602,11 @@ class Thermostat extends AbstractService {
                         this.device.states['io:PassAPCHeatingModeState'] == 'internalScheduling' ||
                         this.device.states['io:PassAPCCoolingModeState'] == 'internalScheduling'
                     ) {
-            
+
                         commands.push(new Command('setDerogatedTargetTemperature', value));
                         commands.push(new Command('setDerogationTime', this.derogationDuration));
                         commands.push(new Command('setDerogationOnOffState', 'on'));
-            
+
                     } else {
                         if(this.device.states['io:PassAPCHeatingModeState'] == 'comfort') {
                             commands.push(new Command('setComfortHeatingTargetTemperature', value));
@@ -1108,18 +1108,26 @@ class Thermostat extends AbstractService {
         } else if(this.device.states['core:HeatingOnOffState'] == 'on') {
             targetState = Characteristic.TargetHeatingCoolingState.HEAT;
             currentState = Characteristic.CurrentHeatingCoolingState.HEAT;
-            if(this.device.states['io:PassAPCHeatingProfileState'] == 'comfort') {
+            if(this.device.states['io:PassAPCHeatingProfileState'] == 'derogation') {
+                targetTemperature = this.device.states['core:DerogatedTargetTemperatureState'];
+            } else if(this.device.states['io:PassAPCHeatingProfileState'] == 'comfort') {
                 targetTemperature = this.device.states['core:ComfortHeatingTargetTemperatureState'];
-            } else {
+            } else if(this.device.states['io:PassAPCHeatingProfileState'] == 'eco') {
                 targetTemperature = this.device.states['core:EcoHeatingTargetTemperatureState'];
+            } else {
+                targetTemperature = this.device.states['core:TargetTemperatureState'];
             }
         } else if(this.device.states['core:CoolingOnOffState'] == 'on') {
             targetState = Characteristic.TargetHeatingCoolingState.COOL;
             currentState = Characteristic.CurrentHeatingCoolingState.COOL;
-            if(this.device.states['io:PassAPCHeatingProfileState'] == 'comfort') {
+            if(this.device.states['io:PassAPCHeatingProfileState'] == 'derogation') {
+                targetTemperature = this.device.states['core:DerogatedTargetTemperatureState'];
+            } else if(this.device.states['io:PassAPCHeatingProfileState'] == 'comfort') {
                 targetTemperature = this.device.states['core:ComfortCoolingTargetTemperatureState'];
-            } else {
+            } else if(this.device.states['io:PassAPCHeatingProfileState'] == 'eco') {
                 targetTemperature = this.device.states['core:EcoCoolingTargetTemperatureState'];
+            } else {
+                targetTemperature = this.device.states['core:TargetTemperatureState'];
             }
         } else {
             targetState = Characteristic.TargetHeatingCoolingState.OFF;
