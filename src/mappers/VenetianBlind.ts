@@ -72,17 +72,20 @@ export default class VenetianBlind extends RollerShutter {
 
         switch(name) {
             case 'core:DeploymentState':
-                currentPosition = this.reverse ? (100 - value) : value;
+                currentPosition = this.reversedValue(value);
                 targetPosition = currentPosition;
                 break;
 
             case 'core:TargetClosureState':
+                targetPosition = currentPosition;
+                break;
+
             case 'core:ClosureState':
+            case 'core:ClosureOrRockerPositionState':
                 if(value === 99) {
                     value = 100;
                 } // Workaround for io:RollerShutterVeluxIOComponent remains 1% opened
-                currentPosition = this.reverse ? value : (100 - value);
-                targetPosition = currentPosition;
+                currentPosition = this.reversedValue(value);
                 break;
 
             case 'core:SlateOrientationState':
@@ -92,7 +95,7 @@ export default class VenetianBlind extends RollerShutter {
 
 
             case 'core:SlatsOrientationState':
-                currentPosition = this.reverse ? (100 - value) : value;
+                currentPosition = this.reversedValue(value);
                 targetPosition = currentPosition;
                 currentAngle = Math.round(value * 1.8 - 90);
                 targetAngle = currentAngle;
@@ -111,9 +114,9 @@ export default class VenetianBlind extends RollerShutter {
         if(this.blindMode === 'orientation' && ['core:OpenClosedState', 'core:SlateOrientationState'].includes(name)) {
             if(this.device.get('core:OpenClosedState') === 'closed') {
                 const orientation = this.reversedValue(this.device.get('core:SlateOrientationState'));
-                if(Number.isInteger(orientation)) {
+                if(Number.isInteger(orientation) && this.targetPosition?.value) {
                     currentPosition = orientation;
-                    const t = this.targetPosition?.getValue() ||0;
+                    const t = parseInt(this.targetPosition.value.toString());
                     if(Math.round(orientation/5) === Math.round(t/5)) {
                         this.targetPosition?.updateValue(orientation);
                     }

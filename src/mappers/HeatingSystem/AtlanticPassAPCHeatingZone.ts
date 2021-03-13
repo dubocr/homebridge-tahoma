@@ -80,11 +80,19 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
                 case 'internalScheduling':
                 case 'externalScheduling':
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
-                    this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
                     if(this.device.get('io:PassAPCHeatingProfileState') === 'comfort') {
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     } else {
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                    }
+                    if(this.device.get('io:PassAPCHeatingProfileState') === 'derogation') {
+                        this.targetTemperature?.updateValue(this.device.get('core:DerogatedTargetTemperatureState'));
+                    } else if(this.device.get('io:PassAPCHeatingProfileState') === 'comfort') {
+                        this.targetTemperature?.updateValue(this.device.get('core:ComfortHeatingTargetTemperatureState'));
+                    } else if(this.device.get('io:PassAPCHeatingProfileState') === 'eco') {
+                        this.targetTemperature?.updateValue(this.device.get('core:EcoHeatingTargetTemperatureState'));
+                    } else {
+                        this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
                     }
                     break;
                 case 'comfort':

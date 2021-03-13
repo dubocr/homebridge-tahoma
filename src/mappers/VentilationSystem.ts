@@ -50,10 +50,10 @@ export default class VentilationSystem extends Mapper {
             case 'io:AirDemandModeState':
                 switch(value) {
                     case 'auto':
-                        this.currentState?.updateValue(Characteristics.TargetAirPurifierState.AUTO);
+                        this.targetState?.updateValue(Characteristics.TargetAirPurifierState.AUTO);
                         break;
                     default:
-                        this.currentState?.updateValue(Characteristics.TargetAirPurifierState.MANUAL);
+                        this.targetState?.updateValue(Characteristics.TargetAirPurifierState.MANUAL);
                         break;
                 }
                 break;

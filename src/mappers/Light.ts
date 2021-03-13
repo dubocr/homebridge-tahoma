@@ -10,15 +10,21 @@ export default class Light extends Mapper {
     protected saturation: Characteristic | undefined;
 
     protected registerServices() {
-        const service = this.registerService(Services.Lightbulb);
+        const service = this.registerService(this.device.hasCommand('setIntensity') ? Services.Lightbulb : Services.Switch);
         this.on = service.getCharacteristic(Characteristics.On);
-        this.hue = service.getCharacteristic(Characteristics.Hue);
-        this.brightness = service.getCharacteristic(Characteristics.Brightness);
-        this.saturation = service.getCharacteristic(Characteristics.Saturation);
 
         this.on.onSet(this.setOn.bind(this));
-        this.brightness.onSet(this.setBrightness.bind(this));
-        this.saturation.onSet(this.setSaturation.bind(this));
+
+        if(this.device.hasCommand('setIntensity')) {
+            this.brightness = service.getCharacteristic(Characteristics.Brightness);
+            this.brightness.onSet(this.setBrightness.bind(this));
+
+            if(this.device.hasCommand('setHueAndSaturation')) {
+                this.hue = service.getCharacteristic(Characteristics.Hue);
+                this.saturation = service.getCharacteristic(Characteristics.Saturation);
+                this.saturation.onSet(this.setSaturation.bind(this));
+            }
+        }
     }
 
     protected getOnOffCommands(value): Command | Array<Command> {

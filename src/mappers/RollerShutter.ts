@@ -106,6 +106,9 @@ export default class RollerShutter extends Mapper {
                 break;
             case 'core:TargetClosureState':
                 this.targetPosition?.updateValue(this.reversedValue(value));
+                if(!this.device.hasState('core:ClosureState')) {
+                    this.currentPosition?.updateValue(this.reversedValue(value));
+                }
                 break;
         }
     }

@@ -4,22 +4,65 @@ import HeatingSystem from '../HeatingSystem';
 
 export default class HitachiAirToAirHeatPump extends HeatingSystem {
 
+    protected registerServices() {
+        this.registerThermostatService();
+    }
+
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
-        return this.getCommands(value, this.targetTemperature?.getValue());
+        return this.getCommands(value, this.targetTemperature?.value);
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
-        return this.getCommands(this.targetState?.getValue(), value);
+        return this.getCommands(this.targetState?.value, value);
+    }
+
+    protected onStateChanged(name: string, value) {
+        switch(name) {
+            case 'ovp:ModeChangeState':
+            case 'ovp:MainOperationState':
+                if(this.device.get('ovp:MainOperationState') === 'Off' || this.device.get('ovp:MainOperationState') === 'off') {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
+                    this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.OFF);
+                } else {
+                    switch(this.device.get('ovp:ModeChangeState')?.toLowerCase()) {
+                        case 'auto cooling':
+                            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                            this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
+                            break;
+                        case 'auto heating':
+                            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                            this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
+                            break;
+                        case 'cooling':
+                            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                            this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.COOL);
+                            break;
+                        case 'heating':
+                            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                            this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
+                            break;
+                    }
+                }
+                break;
+            case 'ovp:RoomTemperatureState': this.onTemperatureUpdate(value); break;
+            case 'ovp:TemperatureChangeState':
+                if(value <= 5 && this.currentTemperature) {
+                    this.targetTemperature?.updateValue(this.currentTemperature.value + value);
+                } else {
+                    this.targetTemperature?.updateValue(value);
+                }
+                break;
+        }
     }
 
     private getCommands(state, temperature) {
-        const currentState = this.currentState ? this.currentState.getValue() : 0;
-        const currentTemperature = this.currentTemperature?.getValue() || 0;
+        const currentState = this.currentState ? this.currentState.value : 0;
+        const currentTemperature = this.currentTemperature && this.currentTemperature.value !== null ? this.currentTemperature.value : 0;
         let onOff = 'on';
         const fanMode = 'auto';
         const progMode = 'manu';
         let heatMode = 'auto';
-        const autoTemp = Math.trunc(Math.max(Math.min(temperature - currentTemperature, 5), -5));
+        const autoTemp = Math.trunc(Math.max(Math.min(temperature - parseInt(currentTemperature.toString()), 5), -5));
 
         switch(state) {
             case Characteristics.TargetHeatingCoolingState.OFF:
