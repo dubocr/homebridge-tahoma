@@ -4,6 +4,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { Client } from 'overkiz-client';
 import Mapper from './Mapper';
 import SceneMapper from './SceneMapper';
+import { Action, Execution } from 'overkiz-client/dist/Client';
 
 
 export let Services: typeof Service;
@@ -15,12 +16,14 @@ export let Characteristics: typeof Characteristic;
  */
 export class Platform implements DynamicPlatformPlugin {
     // this is used to track restored cached accessories
-    public readonly accessories: PlatformAccessory[] = [];
+    private readonly accessories: PlatformAccessory[] = [];
     public readonly client: Client;
 
     private readonly exclude: Array<string>;
     private readonly loadScenes: boolean;
     private readonly exposeScenes: Array<string>;
+
+    private executionPromise;
 
     constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
         Services = this.api.hap.Service;
@@ -144,5 +147,27 @@ export class Platform implements DynamicPlatformPlugin {
 
         const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
+    }
+
+    /*
+    	action: The action to execute
+    */
+    public executeAction(label: string, action: Action, highPriority = false) {
+        if(this.executionPromise) {
+            this.executionPromise.execution.addAction(action);
+            this.executionPromise.execution.label = 'Execute scene (' + 
+                this.executionPromise.execution.actions.length + ' devices) - HomeKit';
+        } else {
+            this.executionPromise = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    this.client.execute(highPriority ? 'apply/highPriority' : 'apply', this.executionPromise.execution)
+                        .then(resolve)
+                        .catch(reject);
+                    this.executionPromise = null;
+                }, 100);
+            });
+            this.executionPromise.execution = new Execution(label + ' - HomeKit', action);
+        }
+        return this.executionPromise;
     }
 }

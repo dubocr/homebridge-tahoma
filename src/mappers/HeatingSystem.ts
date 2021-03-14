@@ -23,6 +23,7 @@ export default class HeatingSystem extends Mapper {
 
     protected registerThermostatService(subtype?: string): Service {
         const service = this.registerService(Services.Thermostat, subtype);
+        service.setPrimaryService(true);
         this.currentTemperature = service.getCharacteristic(Characteristics.CurrentTemperature);
         this.targetTemperature = service.getCharacteristic(Characteristics.TargetTemperature);
         this.currentState = service.getCharacteristic(Characteristics.CurrentHeatingCoolingState);

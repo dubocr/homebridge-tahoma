@@ -32,7 +32,7 @@ export default class Mapper {
 
     protected async setOn(value) {
         if (this.isInProgress) {
-            await this.platform.client.cancelCommand(this.lastExecId);
+            await this.platform.client.cancelExecution(this.lastExecId);
         }
 
         const action = await this.platform.client.execute(this.action.oid, null);
@@ -42,7 +42,7 @@ export default class Mapper {
                     break;
                 case ExecutionState.COMPLETED:
                 case ExecutionState.FAILED:
-                    this.log.info('[Scenario] ' + this.action.label + ' ' + (data === null ? state : data));
+                    this.log.info('[Scene] ' + this.action.label + ' ' + (data === null ? state : data));
                     this.on?.updateValue(0);
                     break;
             }

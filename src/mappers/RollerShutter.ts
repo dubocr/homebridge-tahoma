@@ -56,8 +56,8 @@ export default class RollerShutter extends Mapper {
 	* HomeKit '100' (Open) => 0% Closure
 	**/
     async setTargetPosition(value) {
-        if(!this.isIdle && (value === 100 || value === 0)) {
-            return this.cancelCommand();//.then(callback).catch(callback);
+        if(this.stateless && !this.isIdle) {
+            return await this.cancelExecution();
         }
         const action = await this.executeCommands(this.getTargetCommands(value));
         action.on('update', (state, data) => {
@@ -84,7 +84,7 @@ export default class RollerShutter extends Mapper {
                 case ExecutionState.FAILED:
                     this.positionState?.updateValue(Characteristics.PositionState.STOPPED);
                     this.obstructionDetected?.updateValue(data.failureType === 'WHILEEXEC_BLOCKED_BY_HAZARD');
-                    if(this.currentPosition) {
+                    if(!this.device.hasState('core:TargetClosureState') && this.currentPosition) {
                         this.targetPosition?.updateValue(this.currentPosition.value);
                     }
                     break;

@@ -14,6 +14,7 @@ export default class Mapper {
     protected stateless = false;
     //protected config: Record<string, string | boolean | number> = {};
     private executionId;
+    private actionPromise;
 
     constructor(
         protected readonly platform: Platform,
@@ -96,6 +97,7 @@ export default class Mapper {
             }
             this.debounceTimer = setTimeout(() => {
                 task.bind(this)(value).catch(() => null);
+                this.debounceTimer = null;
             }, 2000);
         };
     }
@@ -108,45 +110,61 @@ export default class Mapper {
     }
 
     protected async executeCommands(commands: Command|Array<Command>|undefined, callback?: CharacteristicSetCallback): Promise<Action> {
-        let title = '';
+        let commandName = '';
         if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
         } else if(Array.isArray(commands)) {
             if(commands.length === 0) {
                 throw new Error('No target command for ' + this.device.label);
             } else if(commands.length > 1) {
-                title = commands[0].name + ' +' + (commands.length-1) + ' others';
+                commandName = commands[0].name + ' +' + (commands.length-1) + ' others';
             } else {
-                title = commands[0].name;
+                commandName = commands[0].name;
             }
             for(const c of commands) {
                 this.debug(c.name + JSON.stringify(c.parameters));
             }
         } else {
             this.debug(commands.name +JSON.stringify(commands.parameters));
-            title = commands.name;
+            commandName = commands.name;
             commands = [commands];
         }
 
+        /*
         if (!this.isIdle) {
-            this.cancelCommand();
+            this.cancelExecution();
         }
+        */
 
         const highPriority = this.device.hasState('io:PriorityLockLevelState') ? true : false;
-        const action = new Action(this.device.label + ' - ' + title + ' - HomeKit', highPriority);
-        action.deviceURL = this.device.deviceURL;
-        action.commands = commands;
-        action.on('update', (state, event) => {
-            this.debug(title + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
-        });
+        const label = this.device.label + ' - ' + commandName;
 
-        try {
-            await this.platform.client.executeAction(action);
-            return action;
-        } catch(error) {
-            this.error(title + ' ' + error.message);
-            throw error;
+        if(this.actionPromise) {
+            this.actionPromise.action.addCommands(commands);
+        } else {
+            this.actionPromise = new Promise((resolve, reject) => {
+                setTimeout(async () => {
+                    try {
+                        this.executionId = await this.platform.executeAction(label, this.actionPromise.action, highPriority);
+                        resolve(this.actionPromise.action);
+                    } catch(error) {
+                        this.error(commandName + ' ' + error.message);
+                        reject(error);
+                    }
+                    this.actionPromise = null;
+                }, 100);
+                
+            });
+            this.actionPromise.action = new Action(this.device.deviceURL, commands);
+            this.actionPromise.action.on('update', (state, event) => {
+                this.debug(commandName + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
+            });
         }
+        return this.actionPromise;
+    }
+
+    private async delay(duration) {
+        return new Promise(resolve => setTimeout(resolve, duration));
     }
     
     /**
@@ -199,7 +217,7 @@ export default class Mapper {
         return !(this.executionId in this.platform.client.executionPool);
     }
 
-    cancelCommand() {
-        this.platform.client.cancelCommand(this.executionId);
+    cancelExecution() {
+        this.platform.client.cancelExecution(this.executionId);
     }
 }
