@@ -1,11 +1,7 @@
 import { Characteristics, Services } from './Platform';
-import { Characteristic, CharacteristicSetCallback, CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
-import { Action, ExecutionState } from 'overkiz-client';
-import { State } from 'overkiz-client';
-import { Command } from 'overkiz-client';
-import { Device } from 'overkiz-client';
+import { Characteristic, Logger, PlatformAccessory, Service } from 'homebridge';
+import { ExecutionState, ActionGroup, Execution } from 'overkiz-client';
 import { Platform } from './Platform';
-import { ActionGroup } from 'overkiz-client/dist/Client';
 
 export default class Mapper {
     protected log: Logger;
@@ -24,6 +20,7 @@ export default class Mapper {
         this.on = service.getCharacteristic(Characteristics.On);
 
         this.on.onSet(this.setOn.bind(this));
+        this.on.updateValue(0);
     }
 
     private get isInProgress() {
@@ -31,30 +28,20 @@ export default class Mapper {
     }
 
     protected async setOn(value) {
-        if (this.isInProgress) {
+        if(value) {
+            const execution = new Execution('');
+            this.lastExecId = await this.platform.client.execute(this.action.oid, execution);
+            execution.on('update', (state, event) => {
+                switch (state) {
+                    case ExecutionState.COMPLETED:
+                    case ExecutionState.FAILED:
+                        this.log.info('[Scene] ' + this.action.label + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
+                        this.on?.updateValue(0);
+                        break;
+                }
+            });
+        } else if(this.isInProgress) {
             await this.platform.client.cancelExecution(this.lastExecId);
         }
-
-        const action = await this.platform.client.execute(this.action.oid, null);
-        action.on('update', (state, data) => {
-            switch (state) {
-                case ExecutionState.INITIALIZED:
-                    break;
-                case ExecutionState.COMPLETED:
-                case ExecutionState.FAILED:
-                    this.log.info('[Scene] ' + this.action.label + ' ' + (data === null ? state : data));
-                    this.on?.updateValue(0);
-                    break;
-            }
-        });
-    }
-
-    protected onStateChanged(name: string, value): boolean {
-        switch(name) {
-            case 'core:OnOffState':
-                this.on?.updateValue(value === 'on');
-                break;
-        }
-        return false;
     }
 }

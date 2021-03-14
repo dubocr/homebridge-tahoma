@@ -1,10 +1,9 @@
 import { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { Client } from 'overkiz-client';
+import { Client, Execution, Action } from 'overkiz-client';
 import Mapper from './Mapper';
 import SceneMapper from './SceneMapper';
-import { Action, Execution } from 'overkiz-client/dist/Client';
 
 
 export let Services: typeof Service;
@@ -20,8 +19,7 @@ export class Platform implements DynamicPlatformPlugin {
     public readonly client: Client;
 
     private readonly exclude: Array<string>;
-    private readonly loadScenes: boolean;
-    private readonly exposeScenes: Array<string>;
+    private readonly exposeScenes: boolean | Array<string>;
 
     private executionPromise;
 
@@ -34,7 +32,6 @@ export class Platform implements DynamicPlatformPlugin {
 
         this.exclude = config.exclude || [];
         this.exclude.push('internal', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
-        this.loadScenes = config.loadScenes || false;
         this.exposeScenes = config.exposeScenes;
 
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
@@ -116,12 +113,12 @@ export class Platform implements DynamicPlatformPlugin {
         let uuids = devices.map((device) => device.uuid);
 
 
-        if(this.loadScenes) {
+        if(this.exposeScenes) {
             const actionGroups = await this.client.getActionGroups();
 
             for (const actionGroup of actionGroups) {
                 if(
-                    this.exposeScenes &&
+                    Array.isArray(this.exposeScenes) &&
                     !this.exposeScenes.includes(actionGroup.label)
                 ) {
                     continue;

@@ -1,9 +1,6 @@
 import { Characteristics, Services } from './Platform';
-import { CharacteristicSetCallback, CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
-import { Action, ExecutionState } from 'overkiz-client';
-import { State } from 'overkiz-client';
-import { Command } from 'overkiz-client';
-import { Device } from 'overkiz-client';
+import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
 
 export default class Mapper {
@@ -61,6 +58,7 @@ export default class Mapper {
     /**
      * Helper methods
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected applyConfig(config) {
         //
     }
@@ -109,7 +107,7 @@ export default class Mapper {
         this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
-    protected async executeCommands(commands: Command|Array<Command>|undefined, callback?: CharacteristicSetCallback): Promise<Action> {
+    protected async executeCommands(commands: Command|Array<Command>|undefined): Promise<Action> {
         let commandName = '';
         if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
