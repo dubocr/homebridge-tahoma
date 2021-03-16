@@ -111,7 +111,6 @@ export default class VenetianBlind extends RollerShutter {
             switch(name) {
                 case 'core:SlateOrientationState':
                     this.currentAngle?.updateValue(this.orientationToAngle(value));
-                    this.debug('is idle ' + (this.isIdle ? 'true' : 'false'));
                     if(this.isIdle) {
                         this.targetAngle?.updateValue(this.orientationToAngle(value));
                     }

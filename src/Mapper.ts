@@ -120,10 +120,10 @@ export default class Mapper {
                 commandName = commands[0].name;
             }
             for(const c of commands) {
-                this.debug(c.name + JSON.stringify(c.parameters));
+                this.info(c.name + JSON.stringify(c.parameters));
             }
         } else {
-            this.debug(commands.name +JSON.stringify(commands.parameters));
+            this.info(commands.name + JSON.stringify(commands.parameters));
             commandName = commands.name;
             commands = [commands];
         }
@@ -155,7 +155,13 @@ export default class Mapper {
             });
             this.actionPromise.action = new Action(this.device.deviceURL, commands);
             this.actionPromise.action.on('update', (state, event) => {
-                this.debug(commandName + ' ' + (state === ExecutionState.FAILED ? event.failureType : state));
+                if(state === ExecutionState.FAILED) {
+                    this.error(commandName, event.failureType);
+                } else if(state === ExecutionState.COMPLETED) {
+                    this.info(commandName, state);
+                } else {
+                    this.debug(commandName, state);
+                }
             });
         }
         return this.actionPromise;
@@ -169,20 +175,20 @@ export default class Mapper {
      * Logging methods
      */
 
-    protected debug(message) {
-        this.platform.log.debug('[' + this.device.label + '] ' + message);
+    protected debug(...args) {
+        this.platform.log.debug('[' + this.device.label + ']', ...args);
     }
 
-    protected info(message) {
-        this.platform.log.info('[' + this.device.label + '] ' + message);
+    protected info(...args) {
+        this.platform.log.info('[' + this.device.label + ']', ...args);
     }
 
-    protected warn(message) {
-        this.platform.log.warn('[' + this.device.label + '] ' + message);
+    protected warn(...args) {
+        this.platform.log.warn('[' + this.device.label + ']', ...args);
     }
 
-    protected error(message) {
-        this.platform.log.error('[' + this.device.label + '] ' + message);
+    protected error(...args) {
+        this.platform.log.error('[' + this.device.label + ']', ...args);
     }
 
     /**
@@ -195,7 +201,7 @@ export default class Mapper {
 
     protected onStatesChanged(states: Array<State>) {
         states.forEach((state: State) => {
-            this.debug(state.name + ' => ' + state.value);
+            //this.debug(state.name + ' => ' + state.value);
             this.onStateChanged(state.name, state.value);
         });
     }

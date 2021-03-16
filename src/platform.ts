@@ -61,89 +61,95 @@ export class Platform implements DynamicPlatformPlugin {
      * must not be registered again to prevent "duplicate UUID" errors.
      */
     async discoverDevices() {
-        const devices = await this.client.getDevices();
+        try {
+            const devices = await this.client.getDevices();
 
-        // loop over the discovered devices and register each one if it has not already been registered
-        for (const device of devices) {
-            if(
-                this.exclude.includes(device.uiClass) ||
-                    this.exclude.includes(device.widget) ||
-                    this.exclude.includes(device.label) ||
-                    this.exclude.includes(device.protocol)
-            ) {
-                continue;
-            }
-
-            // see if an accessory with the same uuid has already been registered and restored from
-            // the cached devices we stored in the `configureAccessory` method above
-            let accessory = this.accessories.find(accessory => accessory.UUID === device.uuid);
-
-            if (accessory) {
-                // the accessory already exists
-                //this.log.info('Updating accessory:', accessory.displayName);
-                /*
-                const newaccessory = new this.api.platformAccessory(device.label, device.uuid);
-                newaccessory.context.device = device;
-                await this.configureAccessory(newaccessory);
-                const services = newaccessory.services.map((service) => service.UUID);
-                accessory.services
-                    .filter((service) => !services.includes(service.UUID))
-                    .forEach((services) => accessory?.removeService(services));
-                this.api.updatePlatformAccessories([accessory]);
-                */
-            } else {
-                // the accessory does not yet exist, so we need to create it
-                this.log.info('Adding new accessory:', device.label);
-                accessory = new this.api.platformAccessory(device.label, device.uuid);
-                //accessory.context.device = device;
-                await this.configureAccessory(accessory);
-                this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-            }
-
-
-            this.log.info('Configuring accessory:', accessory.displayName);
-            this.log.debug('\t' + device.uiClass + ' > ' + device.widget);
-
-            const mapper = await import('./mappers/' + device.uiClass + '/' + device.widget)
-                .catch(() => import('./mappers/' + device.uiClass))
-                .then((c) => c.default)
-                .catch(() => Mapper);
-            new mapper(this, accessory, device);
-        }
-        let uuids = devices.map((device) => device.uuid);
-
-
-        if(this.exposeScenes) {
-            const actionGroups = await this.client.getActionGroups();
-
-            for (const actionGroup of actionGroups) {
+            // loop over the discovered devices and register each one if it has not already been registered
+            for (const device of devices) {
                 if(
-                    Array.isArray(this.exposeScenes) &&
-                    !this.exposeScenes.includes(actionGroup.label)
+                    this.exclude.includes(device.uiClass) ||
+                        this.exclude.includes(device.widget) ||
+                        this.exclude.includes(device.label) ||
+                        this.exclude.includes(device.protocol)
                 ) {
                     continue;
                 }
 
-                let accessory = this.accessories.find(accessory => accessory.UUID === actionGroup.oid);
+                // see if an accessory with the same uuid has already been registered and restored from
+                // the cached devices we stored in the `configureAccessory` method above
+                let accessory = this.accessories.find(accessory => accessory.UUID === device.uuid);
 
-                if (!accessory) {
+                if (accessory) {
+                    // the accessory already exists
+                    //this.log.info('Updating accessory:', accessory.displayName);
+                    /*
+                    const newaccessory = new this.api.platformAccessory(device.label, device.uuid);
+                    newaccessory.context.device = device;
+                    await this.configureAccessory(newaccessory);
+                    const services = newaccessory.services.map((service) => service.UUID);
+                    accessory.services
+                        .filter((service) => !services.includes(service.UUID))
+                        .forEach((services) => accessory?.removeService(services));
+                    this.api.updatePlatformAccessories([accessory]);
+                    */
+                } else {
                     // the accessory does not yet exist, so we need to create it
-                    this.log.info('Adding new accessory:', actionGroup.label);
-                    accessory = new this.api.platformAccessory(actionGroup.label, actionGroup.oid);
+                    this.log.info('Create accessory:', device.label);
+                    accessory = new this.api.platformAccessory(device.label, device.uuid);
+                    //accessory.context.device = device;
                     await this.configureAccessory(accessory);
                     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
                 }
 
 
-                this.log.info('Configuring scene accessory:', accessory.displayName);
+                this.log.info('Map device', accessory.displayName);
+                this.log.debug('  ' + device.uiClass + ' > ' + device.widget);
 
-                new SceneMapper(this, accessory, actionGroup);
+                const mapper = await import('./mappers/' + device.uiClass + '/' + device.widget)
+                    .catch(() => import('./mappers/' + device.uiClass))
+                    .then((c) => c.default)
+                    .catch(() => Mapper);
+                new mapper(this, accessory, device);
             }
-            uuids = uuids.concat(actionGroups.map((device) => device.oid));
-        }
+            let uuids = devices.map((device) => device.uuid);
 
-        const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
-        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
+
+            if(this.exposeScenes) {
+                const actionGroups = await this.client.getActionGroups();
+
+                for (const actionGroup of actionGroups) {
+                    if(
+                        Array.isArray(this.exposeScenes) &&
+                        !this.exposeScenes.includes(actionGroup.label)
+                    ) {
+                        continue;
+                    }
+
+                    let accessory = this.accessories.find(accessory => accessory.UUID === actionGroup.oid);
+
+                    if (!accessory) {
+                        // the accessory does not yet exist, so we need to create it
+                        this.log.info('Create accessory', actionGroup.label);
+                        accessory = new this.api.platformAccessory(actionGroup.label, actionGroup.oid);
+                        await this.configureAccessory(accessory);
+                        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+                    }
+
+
+                    this.log.info('Map scene', accessory.displayName);
+
+                    new SceneMapper(this, accessory, actionGroup);
+                }
+                uuids = uuids.concat(actionGroups.map((device) => device.oid));
+            }
+
+            const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
+            this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
+        } catch(error) {
+            this.log.error(error);
+            this.log.error('Retry in 60 sec...');
+            setTimeout(this.discoverDevices.bind(this), 60 * 1000);
+        }
     }
 
     /*
