@@ -1,7 +1,7 @@
 {
   "name": "homebridge-tahoma",
   "displayName": "Homebridge TaHoma",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Sample Platform plugin for TaHoma and Cozytouch services (Somfy,Atlantic,Thermor,Sauter): https://github.com/dubocr/homebridge-tahoma",
   "author": "Romain DUBOC",
   "license": "Apache-2.0",
@@ -33,7 +33,7 @@
     "axios": "^0.21.1",
     "event": "^1.0.0",
     "js": ">=0.0.1",
-    "overkiz-client": "^0.1.1",
+    "overkiz-client": "^0.1.2",
     "path": ">=0.0.1",
     "polling-to-event": ">=2.0.2"
   },
