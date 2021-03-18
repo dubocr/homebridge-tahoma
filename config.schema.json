@@ -18,10 +18,190 @@
         "oneOf": [
           { "title": "TaHoma", "enum": ["tahoma"] },
           { "title": "Cozytouch", "enum": ["cozytouch"] },
-          { "title": "Connexoon", "enum": ["connexoon"] }
+          { "title": "Connexoon", "enum": ["connexoon"] },
+          { "title": "Connexoon RTS", "enum": ["connexoon_rts"] },
+          { "title": "Rexel", "enum": ["Rexel"] }
         ],
         "required": true
+      },
+      "user": {
+        "title": "User",
+        "type": "string",
+        "required": true,
+        "description": "Your username for selected service"
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true,
+        "description": "Your password for selected service"
+      },
+      "pollingPeriod": {
+        "title": "Polling period",
+        "type": "number",
+        "minimum": 10,
+        "placeholder": 60,
+        "description": "Period (in seconds) for fetching device changes made from other controller (with TaHoma app for eg.)"
+      },
+      "refreshPeriod": {
+        "title": "Refresh period",
+        "type": "number",
+        "minimum": 10,
+        "placeholder": 30,
+        "description": "Period (in minutes) for refreshing device changes made locally (with remote control for eg.)"
+      },
+      "exposeScenarios": {
+        "title": "Expose scenarios",
+        "type": "boolean",
+        "description": "Expose scenarios as HomeKit switch to trigger them"
+      },
+      "exclude": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "devicesConfig": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "title": "Device name",
+              "type": "string",
+              "required": true,
+              "description": "Device name, widget or uiClass type"
+            },
+            "blindMode": {
+              "title": "Blind mode",
+              "type": "boolean",
+              "description": "Manage blind orientation with main slider"
+            },
+            "reverse": {
+              "title": "Reverse",
+              "type": "boolean",
+              "description": "Reverse behaviour for open/close commands"
+            },
+            "defaultPosition": {
+              "title": "Default position",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Restore specific default position for stateless covering"
+            },
+            "cyclic": {
+              "title": "Cyclic",
+              "type": "boolean",
+              "description": "Emulate cyclic door"
+            },
+            "occupancySensor": {
+              "title": "Occupancy sensor",
+              "type": "boolean",
+              "description": "Expose an occupancy sensor, active when alarm trigered"
+            },
+            "stayZones": {
+              "title": "Stay Zones",
+              "type": "string",
+              "description": "Zones to activate in Presence mode"
+            },
+            "nightZones": {
+              "title": "Night Zones",
+              "type": "string",
+              "description": "Zones to activate in Night mode"
+            }
+          }
+        }
       }
     }
-  }
+  },
+  "layout": [
+    "name",
+    "service",
+    "user",
+    "password",
+    {
+      "type": "fieldset",
+      "title": "What",
+      "description": "Select what kind of ressources to expose.",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "exposeScenarios",
+        {
+          "title": "Exclude devices or scenarios",
+          "description": "Exclude devices or scenarios from being exposed",
+          "key": "exclude",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Device or scenarios name, widget, uiClass or protocol."
+          }
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Device specific config",
+      "description": "Apply specific config for some devices or kind of devices.",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        {
+          "key": "devicesConfig",
+          "type": "array",
+          "items": [
+            {
+              "type": "div",
+              "items": [
+                "devicesConfig[].key",
+                {
+                  "title": "Window Covering",
+                  "type": "section",
+                  "expandable": true,
+                  "expanded": false,
+                  "items" : [
+                    "devicesConfig[].reverse",
+                    "devicesConfig[].defaultPosition",
+                    "devicesConfig[].blindMode"
+                  ]
+                },
+                {
+                  "title": "Garage Door",
+                  "type": "section",
+                  "expandable": true,
+                  "expanded": false,
+                  "items" : [
+                    "devicesConfig[].reverse",
+                    "devicesConfig[].cyclic"
+                  ]
+                },
+                {
+                  "title": "Alarm",
+                  "type": "section",
+                  "expandable": true,
+                  "expanded": false,
+                  "items" : [
+                    "devicesConfig[].occupancySensor",
+                    "devicesConfig[].stayZones",
+                    "devicesConfig[].nightZones"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Advanced Settings",
+      "description": "Don't change these, unless you understand what you're doing.",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "pollingPeriod",
+        "refreshPeriod"
+      ]
+    }
+  ]
 }

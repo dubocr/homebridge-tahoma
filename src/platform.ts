@@ -19,7 +19,8 @@ export class Platform implements DynamicPlatformPlugin {
     public readonly client: Client;
 
     private readonly exclude: Array<string>;
-    private readonly exposeScenes: boolean | Array<string>;
+    private readonly exposeScenarios: boolean | Array<string>;
+    public readonly devicesConfig: Array<unknown> = [];
 
     private executionPromise;
 
@@ -32,7 +33,8 @@ export class Platform implements DynamicPlatformPlugin {
 
         this.exclude = config.exclude || [];
         this.exclude.push('internal', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
-        this.exposeScenes = config.exposeScenes;
+        this.exposeScenarios = config.exposeScenarios;
+        config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
         // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -68,9 +70,9 @@ export class Platform implements DynamicPlatformPlugin {
             for (const device of devices) {
                 if(
                     this.exclude.includes(device.uiClass) ||
-                        this.exclude.includes(device.widget) ||
-                        this.exclude.includes(device.label) ||
-                        this.exclude.includes(device.protocol)
+                    this.exclude.includes(device.widget) ||
+                    this.exclude.includes(device.label) ||
+                    this.exclude.includes(device.protocol)
                 ) {
                     continue;
                 }
@@ -114,14 +116,11 @@ export class Platform implements DynamicPlatformPlugin {
             let uuids = devices.map((device) => device.uuid);
 
 
-            if(this.exposeScenes) {
+            if(this.exposeScenarios) {
                 const actionGroups = await this.client.getActionGroups();
 
                 for (const actionGroup of actionGroups) {
-                    if(
-                        Array.isArray(this.exposeScenes) &&
-                        !this.exposeScenes.includes(actionGroup.label)
-                    ) {
+                    if(this.exclude.includes(actionGroup.label)) {
                         continue;
                     }
 

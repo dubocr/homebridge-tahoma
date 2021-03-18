@@ -19,10 +19,10 @@ export default class Mapper {
         protected readonly device: Device,
     ) {
         this.log = platform.log;
-        const config = platform.config[device.oid] ||
-            platform.config[device.label] ||
-            platform.config[device.widget] ||
-            platform.config[device.uiClass] ||
+        const config = platform.devicesConfig[device.oid] ||
+            platform.devicesConfig[device.label] ||
+            platform.devicesConfig[device.widget] ||
+            platform.devicesConfig[device.uiClass] ||
             {};
         this.applyConfig(config);
 
