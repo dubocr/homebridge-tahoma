@@ -20,7 +20,7 @@
           { "title": "Cozytouch", "enum": ["cozytouch"] },
           { "title": "Connexoon", "enum": ["connexoon"] },
           { "title": "Connexoon RTS", "enum": ["connexoon_rts"] },
-          { "title": "Rexel", "enum": ["Rexel"] }
+          { "title": "Rexel", "enum": ["rexel"] }
         ],
         "required": true
       },
