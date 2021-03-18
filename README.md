@@ -49,11 +49,11 @@ Configuration parameters:
 | `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon', 'connexoon_rts', 'cozytouch' or 'rexel')	|
 | `user`					| String		| null			| mandatory, your service account username	|
 | `password`				| String		| null			| mandatory, your service account password	|
-| `refreshPeriod`			| Integer		| 1800			| optional, device states refresh period in seconds	|
-| `pollingPeriod`			| Integer		| 0				| optional, bridge polling period in seconds for sensors events (0: no polling)	|
+| `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|
+| `refreshPeriod`			| Integer		| 30			| optional, device states refresh period in minutes	|
 | `exclude`					| String[]		| []			| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude	|
 | `exposeScenarios`			| Boolean		| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
-| `devicesConfig`			| Array			| []			| optional list of device specific configuration (see below)	|
+| `devicesConfig`			| Object[]		| []			| optional list of device specific configuration (see below)	|
 
 # Specific device configuration
 
