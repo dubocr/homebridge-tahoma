@@ -44,18 +44,16 @@ Minimal configuration sample:
 
 Configuration parameters:
 
-| Parameter                  | Type			| Default		| Note                                                                                                                                                                  |
-|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `service`              	 | String		| 'tahoma'			| optional, service name ('tahoma', 'connexoon', 'connexoon_rts', 'cozytouch' or 'rexel')																																																											|
-
-| `user`               		 | String		| null				| mandatory, your TaHoma/Connexoon/Cozytouch/E.Connect account username                                                                                                                     |
-| `password`             	 | String		| null				| mandatory, your TaHoma/Connexoon/Cozytouch/E.Connect account password                                                                                                                     |
-
-| `refreshPeriod`            | Integer	| 1800					| optional, device states refresh period in seconds							 																										 																										|
-| `pollingPeriod`            | Integer	| 0						| optional, bridge polling period in seconds for sensors events (0: no polling)							 																										 																										|
-| `exclude`		             | String[]	| []					| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude																																										|
-| `exposeScenarios`	         | Boolean	| false					| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose												|
-| `devicesConfig`		             | Array		| []				| optional list of device specific configuration (see below)										|																 																																|
+| Parameter					| Type			| Default		| Note							|
+|---------------------------|--------------|---------------|-------------------------------|
+| `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon', 'connexoon_rts', 'cozytouch' or 'rexel')	|
+| `user`					| String		| null			| mandatory, your service account username	|
+| `password`				| String		| null			| mandatory, your service account password	|
+| `refreshPeriod`			| Integer		| 1800			| optional, device states refresh period in seconds	|
+| `pollingPeriod`			| Integer		| 0				| optional, bridge polling period in seconds for sensors events (0: no polling)	|
+| `exclude`					| String[]		| []			| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude	|
+| `exposeScenarios`			| Boolean		| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
+| `devicesConfig`			| Array			| []			| optional list of device specific configuration (see below)	|
 
 # Specific device configuration
 
@@ -66,25 +64,26 @@ One configuration is composed of a `key` attribute containing device name, widge
 {
 	"key": "Bedroom door",
 	"param1": "value1"
+	...
 }
 ```
 
-| Alarm parameters           | Type			| Default			| Note                                                                                                                                                                  |
-|----------------------------|--------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `stayZones`               	 | String		| 'A'				| optional, active zones (A,B,C) in 'Stay' mode                                                                             																						|
-| `nightZones`             	 | String		| 'B'				| optional, active zones (A,B,C) in 'Night' mode                                                                          																							|
-| `occupancySensor`        	 | Boolean		| false				| optional, add an occupancy widget linked to the alarm                                                                          																							|
+| Alarm parameters	| Type		| Default		| Note					|
+|-------------------|-----------|---------------|-----------------------|
+| `stayZones`		| String	| 'A'			| optional, active zones (A,B,C) in 'Stay' mode	|
+| `nightZones`		| String	| 'B'			| optional, active zones (A,B,C) in 'Night' mode	|
+| `occupancySensor`	| Boolean	| false			| optional, add an occupancy widget linked to the alarm	|
 
-| WindowCovering parameters   | Type			| Default		| Note                                                                                                                                                                  |
-|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `defaultPosition`	         | Integer	| 0				| optional, final position for UpDown rollershutter after any command												|
-| `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
-| `blindMode`	       		 | String	| null			| optional, change main slider action to orientation. By default, both closure and orientation will be set. When setting ``blindMode: true`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light. |
+| WindowCovering parameters	| Type		| Default		| Note			|
+|---------------------------|-----------|---------------|---------------|
+| `defaultPosition`			| Integer	| 0				| optional, final position for UpDown rollershutter after any command	|
+| `reverse`					| Boolean	| false			| optional, reverse up/down in case of bad mounting	|
+| `blindMode`				| String	| null			| optional, change main slider action to orientation. By default, both closure and orientation will be set. When setting ``blindMode: true`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light. |
 
-| GarageDoorOpener parameters| Type			| Default		| Note                                                                                                                                                                  |
-|----------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `cyclic`	         		| Boolean	| false			| optional, activate restoring initial state for cyclic device without states							|
-| `reverse`	         		 | Boolean	| false			| optional, reverse up/down in case of bad mounting												|
+| GarageDoorOpener parameters	| Type			| Default		| Note				|
+|-------------------------------|---------------|---------------|-------------------|
+| `cyclic`						| Boolean		| false			| optional, activate restoring initial state for cyclic device without states	|
+| `reverse`						| Boolean		| false			| optional, reverse up/down in case of bad mounting	|
 
 
 Full configuration example:
