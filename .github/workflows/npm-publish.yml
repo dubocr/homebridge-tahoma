@@ -1,16 +1,19 @@
 name: Deploy NPM release
 
-on: push
+push:
+  branches:
+    - main
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
         with:
-          node-version: 10
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
       - run: npm install
-      - uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.NPM_AUTH_TOKEN }}
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
