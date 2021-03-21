@@ -11,6 +11,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{github.event.issue.number}}
+          comment-author: 'dubocr'
           body: |
             Thank you for using Homebridge TaHoma plugin.
 
