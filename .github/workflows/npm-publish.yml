@@ -16,11 +16,17 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Setup GIT
         run: |
-          git config --global user.email "OWNER_EMAIL"
+          git config --global user.email "dubocr@gmail.com"
           git config --global user.name ${{github.repository_owner}}
+      - name: Install & Test
+        run: |
           npm install
           npm run lint
+      - name: Deploy
+        run: |
           npm version patch --m 'Release %s' --force
+          git add -A dist
+          git push
           git push --tags
           npm publish
         env:
