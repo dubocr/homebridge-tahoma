@@ -89,6 +89,12 @@
               "maximum": 100,
               "description": "Restore specific default position for stateless covering"
             },
+            "movementDuration": {
+              "title": "Movement Duration",
+              "type": "integer",
+              "minimum": 0,
+              "description": "Duration from 'opened' to 'closed' position to estimate intermediate positions"
+            },
             "cyclic": {
               "title": "Cyclic",
               "type": "boolean",
@@ -162,7 +168,8 @@
                   "items" : [
                     "devicesConfig[].reverse",
                     "devicesConfig[].defaultPosition",
-                    "devicesConfig[].blindMode"
+                    "devicesConfig[].blindMode",
+                    "devicesConfig[].movementDuration"
                   ]
                 },
                 {

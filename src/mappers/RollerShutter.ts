@@ -14,11 +14,13 @@ export default class RollerShutter extends Mapper {
     protected reverse;
     protected initPosition;
     protected defaultPosition;
+    protected movementDuration;
 
     protected applyConfig(config) {
         this.defaultPosition = config['defaultPosition'] || 0;
         this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
         this.reverse = config['reverse'] || false;
+        this.movementDuration = config['movementDuration'] || 0;
     }
 
     protected registerServices() {
@@ -43,7 +45,16 @@ export default class RollerShutter extends Mapper {
             } else if(value === 0) {
                 return new Command('close');
             } else {
-                return new Command('my');
+                if(this.movementDuration > 0) {
+                    const delta = value - Number(this.currentPosition!.value);
+                    const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
+                    setTimeout(() => {
+                        this.cancelExecution();
+                    }, duration);
+                    return new Command(delta > 0 ? 'open' : 'close');
+                } else {
+                    return new Command('my');
+                }
             }
         } else {
             return new Command('setClosure', this.reversedValue(value));
