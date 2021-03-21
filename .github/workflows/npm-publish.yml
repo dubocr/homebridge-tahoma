@@ -20,6 +20,7 @@ jobs:
           git config --global user.name ${{github.repository_owner}}
           npm install
           npm run lint
+          npm run build
           npm version patch --m 'Release %s' --force
           git add -A dist
           git push
