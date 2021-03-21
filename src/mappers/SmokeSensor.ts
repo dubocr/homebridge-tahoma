@@ -4,6 +4,7 @@ import Mapper from '../Mapper';
 
 export default class SmokeSensor extends Mapper {
     protected smoke: Characteristic | undefined;
+    protected active: Characteristic | undefined;
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
     
@@ -14,10 +15,16 @@ export default class SmokeSensor extends Mapper {
             this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
             this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
         }
+        if(this.device.hasState('core:StatusState')) {
+            this.active = this.registerCharacteristic(service, Characteristics.StatusActive);
+        }
     }
 
     protected onStateChanged(name: string, value) {
         switch(name) {
+            case 'core:StatusState':
+                this.active?.updateValue(value === 'available');
+                break;
             case 'core:SmokeState':
                 this.smoke?.updateValue(value === 'detected');
                 break;
