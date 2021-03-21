@@ -22,8 +22,9 @@
     "watch": "npm run build && npm link && nodemon",
     "clean": "rimraf ./dist",
     "build": "rimraf ./dist && tsc",
-    "prepublishOnly": "npm run lint && npm run build && npm version patch --m 'Release %s' --force",
-    "postpublish": "git push && git push --tags && npm run clean"
+    "release": "npm run lint && npm version patch --m 'Release %s' --force && npm publish",
+    "prepublishOnly": "npm run build",
+    "postpublish": "npm run clean"
   },
   "keywords": [
     "homebridge-plugin"

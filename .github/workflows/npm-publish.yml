@@ -14,7 +14,14 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm install
-      - run: npm publish
+      - name: Setup GIT
+        run: |
+          git config --global user.email "OWNER_EMAIL"
+          git config --global user.name ${{github.repository_owner}}
+          npm install
+          npm run lint
+          npm version patch --m 'Release %s' --force
+          git push --tags
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
