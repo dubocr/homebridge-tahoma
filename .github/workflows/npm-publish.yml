@@ -1,3 +1,5 @@
+name: Deploy NPM release
+
 on: push
 
 jobs:
