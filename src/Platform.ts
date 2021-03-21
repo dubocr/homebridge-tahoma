@@ -32,7 +32,7 @@ export class Platform implements DynamicPlatformPlugin {
         this.client = new Client(log, config);
 
         this.exclude = config.exclude || [];
-        this.exclude.push('ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
+        this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 
