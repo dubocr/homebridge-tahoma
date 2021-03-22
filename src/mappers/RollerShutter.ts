@@ -16,6 +16,8 @@ export default class RollerShutter extends Mapper {
     protected defaultPosition;
     protected movementDuration;
 
+    protected cancelTimeout;
+
     protected applyConfig(config) {
         this.defaultPosition = config['defaultPosition'] || 0;
         this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
@@ -48,7 +50,11 @@ export default class RollerShutter extends Mapper {
                 if(this.movementDuration > 0) {
                     const delta = value - Number(this.currentPosition!.value);
                     const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
-                    setTimeout(() => {
+                    if(this.cancelTimeout !== null) {
+                        clearTimeout(this.cancelTimeout);
+                    }
+                    this.cancelTimeout = setTimeout(() => {
+                        this.cancelTimeout = null;
                         this.cancelExecution();
                     }, duration);
                     return new Command(delta > 0 ? 'open' : 'close');
@@ -93,6 +99,14 @@ export default class RollerShutter extends Mapper {
                     }
                     break;
                 case ExecutionState.FAILED:
+                    if(this.stateless && data.failureType === 'CMDCANCELLED' && this.movementDuration > 0) {
+                        if(this.defaultPosition) {
+                            this.currentPosition?.updateValue(this.defaultPosition);
+                            this.targetPosition?.updateValue(this.defaultPosition);
+                        } else {
+                            this.currentPosition?.updateValue(value);
+                        }
+                    }
                     this.positionState?.updateValue(Characteristics.PositionState.STOPPED);
                     this.obstructionDetected?.updateValue(data.failureType === 'WHILEEXEC_BLOCKED_BY_HAZARD');
                     if(!this.device.hasState('core:TargetClosureState') && this.currentPosition) {
