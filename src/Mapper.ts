@@ -221,7 +221,7 @@ export default class Mapper {
         return !(this.executionId in this.platform.client.executionPool);
     }
 
-    cancelExecution() {
-        this.platform.client.cancelExecution(this.executionId);
+    async cancelExecution() {
+        await this.platform.client.cancelExecution(this.executionId);
     }
 }

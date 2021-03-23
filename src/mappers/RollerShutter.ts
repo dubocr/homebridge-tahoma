@@ -55,7 +55,7 @@ export default class RollerShutter extends Mapper {
                     }
                     this.cancelTimeout = setTimeout(() => {
                         this.cancelTimeout = null;
-                        this.cancelExecution();
+                        this.cancelExecution().catch(this.error.bind(this));
                     }, duration);
                     return new Command(delta > 0 ? 'open' : 'close');
                 } else {
