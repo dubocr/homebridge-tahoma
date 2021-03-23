@@ -64,6 +64,7 @@ export class Platform implements DynamicPlatformPlugin {
      */
     async discoverDevices() {
         try {
+            const uuids = Array<string>();
             const devices = await this.client.getDevices();
 
             // loop over the discovered devices and register each one if it has not already been registered
@@ -112,8 +113,9 @@ export class Platform implements DynamicPlatformPlugin {
                     .then((c) => c.default)
                     .catch(() => Mapper);
                 new mapper(this, accessory, device);
+
+                uuids.push(device.uuid);
             }
-            let uuids = devices.map((device) => device.uuid);
 
 
             if(this.exposeScenarios) {
@@ -138,8 +140,8 @@ export class Platform implements DynamicPlatformPlugin {
                     this.log.info('Map scene', accessory.displayName);
 
                     new SceneMapper(this, accessory, actionGroup);
+                    uuids.push(actionGroup.oid);
                 }
-                uuids = uuids.concat(actionGroups.map((device) => device.oid));
             }
 
             const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
