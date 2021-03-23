@@ -16,13 +16,18 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     protected getOnCommands(value): Command | Array<Command> {
         return new Command('setBoostMode', value ? 'on' : 'off');
     }
-
+    
     protected onStateChanged(name: string, value) {
         switch(name) {
             case 'io:DHWBoostModeState':
                 this.on?.updateValue(value === 'on');
                 break;
             case 'core:WaterTemperatureState':
+                if(!this.device.hasState('core:MiddleWaterTemperatureInState')) {
+                    this.currentTemperature?.updateValue(value);
+                }
+                break;
+            case 'core:MiddleWaterTemperatureInState':
                 this.currentTemperature?.updateValue(value);
                 break;
             case 'core:WaterTargetTemperatureState':
