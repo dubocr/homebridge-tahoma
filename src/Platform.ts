@@ -16,7 +16,7 @@ export let Characteristics: typeof Characteristic;
 export class Platform implements DynamicPlatformPlugin {
     // this is used to track restored cached accessories
     private readonly accessories: PlatformAccessory[] = [];
-    public readonly client: Client | undefined;
+    public readonly client: Client;
 
     private readonly exclude: Array<string>;
     private readonly exposeScenarios: boolean | Array<string>;
@@ -38,6 +38,7 @@ export class Platform implements DynamicPlatformPlugin {
             this.client = new Client(log, config);
         } catch(error) {
             this.log.error(error.message);
+            throw error;
         }
 
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
