@@ -29,12 +29,16 @@ export class Platform implements DynamicPlatformPlugin {
         Characteristics = this.api.hap.Characteristic;
         this.log.debug('Finished initializing platform:', this.config.name);
 
-        this.client = new Client(log, config);
-
         this.exclude = config.exclude || [];
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
+
+        try {
+            this.client = new Client(log, config);
+        } catch(error) {
+            this.log.error(error.message);
+        }
 
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
         // Dynamic Platform plugins should only register new accessories after this event was fired,
