@@ -16,7 +16,7 @@ export let Characteristics: typeof Characteristic;
 export class Platform implements DynamicPlatformPlugin {
     // this is used to track restored cached accessories
     private readonly accessories: PlatformAccessory[] = [];
-    public readonly client: Client;
+    public readonly client: Client | undefined;
 
     private readonly exclude: Array<string>;
     private readonly exposeScenarios: boolean | Array<string>;
