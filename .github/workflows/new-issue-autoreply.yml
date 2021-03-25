@@ -16,7 +16,7 @@ jobs:
             Thank you for using Homebridge TaHoma plugin.
 
             Please follow these step to obtain better support :
-            1. Execute failling operations from official app (TaHoma/Cozytouch/etc.) then execute same operation from Homekit
+            1. Execute available commands (on,off,T°,mode,etc...) from official app (TaHoma/Cozytouch/etc.)
             2. Report your config by browsing [https://dev.duboc.pro/tahoma](https://dev.duboc.pro/tahoma)
             3. Search issues with title corresponding to your device widget name (see picture below). If no opened issue, rename your issue with this widget name.
             4. Provide your bridge last 4 digits (number visible as SETUP-XXXX-XXXX-XXXX at step 2.)

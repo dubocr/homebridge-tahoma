@@ -54,11 +54,13 @@ export default class VenetianBlind extends RollerShutter {
             } else {
                 return new Command('setClosureAndOrientation', [100, this.reversedValue(value)]);
             }
-        } else {
+        } else if(this.device.hasState('core:SlateOrientationState')) {
             return new Command('setClosureAndOrientation', [
                 this.reversedValue(value),
                 this.angleToOrientation(this.targetAngle?.value),
             ]);
+        } else {
+            return new Command('setClosure', this.reversedValue(value));
         }
     }
 

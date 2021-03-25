@@ -30,7 +30,9 @@ export class Platform implements DynamicPlatformPlugin {
         this.log.debug('Finished initializing platform:', this.config.name);
 
         this.exclude = config.exclude || [];
-        this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor');
+        this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
+            'AtlanticPassAPCZoneControl',
+        );
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 

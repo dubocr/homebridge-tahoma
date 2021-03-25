@@ -22,16 +22,16 @@
     "watch": "npm run build && npm link && nodemon",
     "clean": "rimraf ./dist",
     "build": "rimraf ./dist && tsc",
-    "prepublishOnly": "npm run lint && npm run build",
+    "prepublishOnly": "npm run lint && npm run build && npm version patch --m 'Release %s'",
     "postpublish": "npm run clean",
-    "release": "npm run lint && npm version patch --m 'Release %s' && npm publish"
+    "release": "npm run lint && npm run build && npm version patch --m 'Release %s' & npm publish"
   },
   "keywords": [
     "homebridge-plugin"
   ],
   "homepage": "https://github.com/dubocr/homebridge-tahoma#readme",
   "dependencies": {
-    "overkiz-client": "^0.1.4"
+    "overkiz-client": "^0.1.11"
   },
   "devDependencies": {
     "@types/node": "^14.14.20",
