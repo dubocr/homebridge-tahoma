@@ -23,8 +23,7 @@
     "clean": "rimraf ./dist",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build && npm version patch --m 'Release %s'",
-    "postpublish": "npm run clean",
-    "release": "npm run lint && npm run build && npm version patch --m 'Release %s' & npm publish"
+    "postpublish": "npm run clean"
   },
   "keywords": [
     "homebridge-plugin"
