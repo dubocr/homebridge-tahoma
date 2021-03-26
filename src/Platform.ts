@@ -4,10 +4,12 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { Client, Execution, Action } from 'overkiz-client';
 import Mapper from './Mapper';
 import SceneMapper from './SceneMapper';
+import { CustomCharacteristics } from './CustomCharacteristics';
 
 
 export let Services: typeof Service;
 export let Characteristics: typeof Characteristic;
+
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
@@ -27,6 +29,7 @@ export class Platform implements DynamicPlatformPlugin {
     constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
         Services = this.api.hap.Service;
         Characteristics = this.api.hap.Characteristic;
+        new CustomCharacteristics(this.api.hap);
         this.log.debug('Finished initializing platform:', this.config.name);
 
         this.exclude = config.exclude || [];
