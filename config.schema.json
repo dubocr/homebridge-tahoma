@@ -100,6 +100,11 @@
               "type": "boolean",
               "description": "Emulate cyclic door"
             },
+            "cycleDuration": {
+              "title": "Cycle Duration",
+              "type": "integer",
+              "description": "Cycle duration if cyclic mode enabled"
+            },
             "occupancySensor": {
               "title": "Occupancy sensor",
               "type": "boolean",
@@ -179,7 +184,8 @@
                   "expanded": false,
                   "items" : [
                     "devicesConfig[].reverse",
-                    "devicesConfig[].cyclic"
+                    "devicesConfig[].cyclic",
+                    "devicesConfig[].cycleDuration"
                   ]
                 },
                 {

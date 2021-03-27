@@ -84,6 +84,7 @@ One configuration is composed of a `key` attribute containing device name, widge
 | GarageDoorOpener parameters	| Type			| Default		| Note				|
 |-------------------------------|---------------|---------------|-------------------|
 | `cyclic`						| Boolean		| false			| optional, activate restoring initial state for cyclic device without states	|
+| `cycleDuration`				| Integer		| false			| optional, cycle duration (in seconds) for cyclic mode (default: 5 sec)				|
 | `reverse`						| Boolean		| false			| optional, reverse up/down in case of bad mounting	|
 
 

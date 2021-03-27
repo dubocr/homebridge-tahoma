@@ -7,14 +7,14 @@ export default class GarageDoor extends Mapper {
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
 
-    protected cycle;
+    protected cyclic;
     protected reverse;
     protected cycleDuration;
 
     protected applyConfig(config) {
-        this.cycle = config['cycle'] || false;
+        this.cyclic = config['cyclic'] || false;
         this.reverse = config['reverse'] || false;
-        this.cycleDuration = config['cycleDuration'] || 5000;
+        this.cycleDuration = (config['cycleDuration'] || 5) * 1000;
     }
 
     protected registerServices() {
@@ -32,7 +32,7 @@ export default class GarageDoor extends Mapper {
     protected getTargetCommands(value) {
         value = this.reverse ? !value : value;
         if(this.device.hasCommand('cycle')) {
-            this.cycle = true;
+            this.cyclic = true;
             return new Command('cycle'); 
         } else {
             return new Command(value ? 'close' : 'open');
@@ -47,7 +47,7 @@ export default class GarageDoor extends Mapper {
                     if(this.stateless) {
                         this.currentState?.updateValue(value);
                     }
-                    if(this.cycle && this.currentState) {
+                    if(this.cyclic && this.currentState) {
                         const current = this.currentState.value;
                         setTimeout(() => {
                             this.currentState?.updateValue(current);
