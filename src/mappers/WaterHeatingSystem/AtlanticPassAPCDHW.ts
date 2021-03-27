@@ -51,7 +51,7 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
         switch(name) {
             case 'core:TargetDHWTemperatureState':
                 this.onTemperatureUpdate(value);
-                this.postpone(this.computeStates);
+                //this.postpone(this.computeStates);
                 break;
             case 'core:DHWOnOffState':
             case 'io:PassAPCDHWModeState':
@@ -75,37 +75,33 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
                     targetState = Characteristics.TargetHeatingCoolingState.OFF;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                     this.targetTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
-                    this.currentTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
                     break;
                 case 'internalScheduling':
                 case 'externalScheduling':
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
-                    this.targetTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
-                    this.currentTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
                     if(this.device.get('io:PassAPCDHWProfileState') === 'comfort') {
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                        this.targetTemperature?.updateValue(this.device.get('core:ComfortTargetDHWTemperatureState'));
                     } else {
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                        this.targetTemperature?.updateValue(this.device.get('core:EcoTargetDHWTemperatureState'));
                     }
                     break;
                 case 'comfort':
                     targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     this.targetTemperature?.updateValue(this.device.get('core:ComfortTargetDHWTemperatureState'));
-                    this.currentTemperature?.updateValue(this.device.get('core:ComfortTargetDHWTemperatureState'));
                     break;
                 case 'eco':
                     targetState = Characteristics.TargetHeatingCoolingState.COOL;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                     this.targetTemperature?.updateValue(this.device.get('core:EcoTargetDHWTemperatureState'));
-                    this.currentTemperature?.updateValue(this.device.get('core:EcoTargetDHWTemperatureState'));
                     break;
             }
         } else {
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
             this.targetTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
-            this.currentTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
         }
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.value = targetState;
