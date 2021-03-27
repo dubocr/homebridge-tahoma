@@ -13,6 +13,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 Characteristics.TargetHeatingCoolingState.HEAT,
                 Characteristics.TargetHeatingCoolingState.OFF,
             ],
+            maxValue: 30,
         });
     }
 
@@ -26,7 +27,13 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 break;
 
             case Characteristics.TargetHeatingCoolingState.HEAT:
-                //commands.push(new Command('setDerogationOnOffState', 'off'));
+                if(
+                    this.device.hasCommand('setDerogationOnOffState') &&
+                    this.device.get('io:PassAPC' + heatingCooling + 'ProfileState') === 'derogation'
+                ) {
+                    // AtlanticPassAPCHeatPump
+                    commands.push(new Command('setDerogationOnOffState', 'off'));
+                }
                 commands.push(new Command('set' + heatingCooling + 'OnOffState', 'on'));
                 commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', 'manu'));
                 this.targetTemperature?.updateValue(this.device.get('core:Comfort' + heatingCooling + 'TargetTemperatureState'));
@@ -44,30 +51,28 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
         const heatingCooling = this.getHeatingCooling();
-        const commands: Array<Command> = [];
-        if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'internalScheduling') {
+        if(this.targetState?.value === Characteristics.TargetHeatingCoolingState.AUTO) {
 
             if(this.device.hasCommand('setDerogatedTargetTemperature')) {
-                commands.push(new Command('setDerogatedTargetTemperature', value));
-                commands.push(new Command('setDerogationTime', this.derogationDuration));
-                commands.push(new Command('setDerogationOnOffState', 'on'));
+                // AtlanticPassAPCHeatPump
+                return [
+                    new Command('setDerogatedTargetTemperature', value),
+                    new Command('setDerogationTime', this.derogationDuration),
+                    new Command('setDerogationOnOffState', 'on'),
+                ];
             } else {
-                // ZoneControl
-                commands.push(new Command('set' + heatingCooling + 'TargetTemperature', value));
+                // AtlanticPassAPCZoneControl (need to be removed ?)
+                return new Command('set' + heatingCooling + 'TargetTemperature', value);
             }
-
         } else {
-            // ZoneControl
-            commands.push(new Command('set' + heatingCooling + 'TargetTemperature', value));
-            /*
-            if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'comfort') {
-                commands.push(new Command('setComfort' + heatingCooling + 'TargetTemperature', value));
-            } else if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'eco') {
-                commands.push(new Command('setEco' + heatingCooling + 'TargetTemperature', value));
+            if(this.device.hasCommand('set' + heatingCooling + 'TargetTemperature')) {
+                // AtlanticPassAPCZoneControl
+                return new Command('set' + heatingCooling + 'TargetTemperature', value);
+            } else {
+                // AtlanticPassAPCHeatPump
+                return new Command('setComfort' + heatingCooling + 'TargetTemperature', value);
             }
-            */
         }
-        return commands;
     }
 
     protected onStateChanged(name, value) {

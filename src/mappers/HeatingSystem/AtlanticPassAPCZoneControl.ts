@@ -3,7 +3,7 @@ import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem { 
+export default class AtlanticPassAPCZoneControl extends HeatingSystem { 
     protected registerServices() {
         this.registerThermostatService();
         this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] });
