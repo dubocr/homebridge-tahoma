@@ -42,9 +42,13 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         const commands: Array<Command> = [];
         if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'internalScheduling') {
 
-            commands.push(new Command('setDerogatedTargetTemperature', value));
-            commands.push(new Command('setDerogationTime', this.derogationDuration));
-            commands.push(new Command('setDerogationOnOffState', 'on'));
+            if(this.device.hasCommand('setDerogatedTargetTemperature')) {
+                commands.push(new Command('setDerogatedTargetTemperature', value));
+                commands.push(new Command('setDerogationTime', this.derogationDuration));
+                commands.push(new Command('setDerogationOnOffState', 'on'));
+            } else {
+                commands.push(new Command('set' + heatingCooling + 'TargetTemperature', value));
+            }
 
         } else {
             if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'comfort') {
