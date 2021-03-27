@@ -3,8 +3,17 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem { 
+    private refreshStatesTimeout;
+
     protected registerServices() {
         this.registerThermostatService();
+        this.targetState?.setProps({ 
+            validValues: [
+                Characteristics.TargetHeatingCoolingState.AUTO,
+                Characteristics.TargetHeatingCoolingState.HEAT,
+                Characteristics.TargetHeatingCoolingState.OFF,
+            ],
+        });
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
@@ -17,15 +26,10 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 break;
 
             case Characteristics.TargetHeatingCoolingState.HEAT:
-                commands.push(new Command('setDerogationOnOffState', 'off'));
+                //commands.push(new Command('setDerogationOnOffState', 'off'));
                 commands.push(new Command('set' + heatingCooling + 'OnOffState', 'on'));
-                commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', 'comfort'));
-                break;
-
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                commands.push(new Command('setDerogationOnOffState', 'off'));
-                commands.push(new Command('set' + heatingCooling + 'OnOffState', 'on'));
-                commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', 'eco'));
+                commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', 'manu'));
+                this.targetTemperature?.updateValue(this.device.get('core:Comfort' + heatingCooling + 'TargetTemperatureState'));
                 break;
 
             case Characteristics.TargetHeatingCoolingState.OFF:
@@ -34,6 +38,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 //commands.push(new Command('setPassAPCHeatingMode', 'absence'));
                 break;
         }
+        
         return commands;
     }
 
@@ -47,15 +52,20 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 commands.push(new Command('setDerogationTime', this.derogationDuration));
                 commands.push(new Command('setDerogationOnOffState', 'on'));
             } else {
+                // ZoneControl
                 commands.push(new Command('set' + heatingCooling + 'TargetTemperature', value));
             }
 
         } else {
+            // ZoneControl
+            commands.push(new Command('set' + heatingCooling + 'TargetTemperature', value));
+            /*
             if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'comfort') {
                 commands.push(new Command('setComfort' + heatingCooling + 'TargetTemperature', value));
             } else if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'eco') {
                 commands.push(new Command('setEco' + heatingCooling + 'TargetTemperature', value));
             }
+            */
         }
         return commands;
     }
@@ -64,26 +74,15 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         switch(name) {
             case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
             case 'core:TargetTemperatureState':
+                this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
+                break;
             case 'core:HeatingOnOffState':
             case 'core:CoolingOnOffState':
             case 'io:PassAPCHeatingModeState':
             case 'io:PassAPCCoolingModeState':
-            case 'core:ComfortHeatingTargetTemperatureState':
-            case 'core:EcoHeatingTargetTemperatureState':
-            case 'core:ComfortCoolingTargetTemperatureState':
-            case 'core:EcoCoolingTargetTemperatureState':
+            case 'io:PassAPCHeatingProfileState':
+            case 'io:PassAPCCoolingProfileState':
                 this.postpone(this.computeStates);
-        }
-    }
-
-    private getHeatingCooling() {
-        if(
-            this.device.get('io:PassAPCHeatingProfileState') === 'stop' &&
-            this.device.get('io:PassAPCCoolingProfileState') !== 'stop'
-        ) {
-            return 'Cooling';
-        } else {
-            return 'Heating';
         }
     }
 
@@ -91,36 +90,54 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         let targetState;
         const heatingCooling = this.getHeatingCooling();
 
-        if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'internalScheduling') {
-            targetState = Characteristics.TargetHeatingCoolingState.AUTO;
-            if(this.device.get('io:PassAPC' + heatingCooling + 'ProfileState') === 'derogation') {
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
-                this.targetTemperature?.updateValue(this.device.get('core:DerogatedTargetTemperatureState'));
-            } else if(this.device.get('io:PassAPC' + heatingCooling + 'ProfileState') === 'comfort') {
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
-                this.targetTemperature?.updateValue(this.device.get('core:Comfort' + heatingCooling + 'TargetTemperatureState'));
-            } else if(this.device.get('io:PassAPC' + heatingCooling + 'ProfileState') === 'eco') {
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
-                this.targetTemperature?.updateValue(this.device.get('core:Eco' + heatingCooling + 'TargetTemperatureState'));
-            } else {
-                this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
-            }
-        } else if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'comfort') {
-            targetState = Characteristics.TargetHeatingCoolingState.HEAT;
-            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
-            this.targetTemperature?.updateValue(this.device.get('core:Comfort' + heatingCooling + 'TargetTemperatureState'));
-        } else if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'eco') {
-            targetState = Characteristics.TargetHeatingCoolingState.COOL;
-            this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
-            this.targetTemperature?.updateValue(this.device.get('core:Eco' + heatingCooling + 'TargetTemperatureState'));
-        } else {
+        if(this.device.get('core:' + heatingCooling + 'OnOffState') === 'off') {
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
-            this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
+        } else {
+            if(heatingCooling === 'Heating') {
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+            } else {
+                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+            }
+            if(this.device.get('io:PassAPC' + heatingCooling + 'ModeState') === 'internalScheduling') {
+                targetState = Characteristics.TargetHeatingCoolingState.AUTO;
+            } else {
+                targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+            }
         }
         
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.value = targetState;
         }
+    }
+
+    /**
+     * Helpers
+     */
+    private getHeatingCooling() {
+        const operatingMode = this.device.parent?.get('io:PassAPCOperatingModeState');
+        if(operatingMode === 'cooling') {
+            return 'Cooling';
+        } else {
+            return 'Heating';
+        }
+    }
+
+    private launchRefreshStates() {
+        clearTimeout(this.refreshStatesTimeout);
+        this.refreshStatesTimeout = setTimeout(() => {
+            const commands = [
+                new Command('refreshTargetTemperature'),
+                new Command('refreshPassAPCHeatingProfile'),
+            ];
+            this.executeCommands(commands);
+        }, 30 * 1000);
+    }
+
+    private launchRefreshTemperature() {
+        clearTimeout(this.refreshStatesTimeout);
+        this.refreshStatesTimeout = setTimeout(() => {
+            this.executeCommands(new Command('refreshTargetTemperature'));
+        }, 30 * 1000);
     }
 }

@@ -59,6 +59,9 @@ export default class HeatingSystem extends Mapper {
     }
 
     protected async setTargetState(value) {
+        if(value === this.targetState?.value) {
+            return;
+        }
         const action = await this.executeCommands(this.getTargetStateCommands(value));
         action.on('update', (state) => {
             switch (state) {
