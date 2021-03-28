@@ -11,7 +11,12 @@ export default class SmokeSensor extends Mapper {
     protected registerServices() {
         const service = this.registerService(Services.SmokeSensor);
         this.smoke = service.getCharacteristic(Characteristics.SmokeDetected);
-        if(this.device.hasState('core:SensorDefectState')) {
+        if(
+            this.device.hasState('core:SensorDefectState') ||
+            this.device.hasState('io:SensorDefMaintenanceSensorPartBatteryStateectState') ||
+            this.device.hasState('io:MaintenanceRadioPartBatteryState') ||
+            this.device.hasState('io:SensorRoomState')
+        ) {
             this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
             this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
         }
@@ -40,6 +45,28 @@ export default class SmokeSensor extends Mapper {
                     case 'noDefect':
                         this.fault?.updateValue(Characteristics.StatusFault.NO_FAULT);
                         this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+                        break;
+                }
+                break;
+            case 'io:MaintenanceRadioPartBatteryState':
+            case 'io:MaintenanceSensorPartBatteryState':
+                switch(value) {
+                    case 'absence':
+                    case 'normal':
+                        this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+                        break;
+                    case 'low':
+                        this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_LOW);
+                        break;
+                }
+                break;
+            case 'io:SensorRoomState':
+                switch(value) {
+                    case 'clean':
+                        this.fault?.updateValue(Characteristics.StatusFault.NO_FAULT);
+                        break;
+                    case 'dirty':
+                        this.fault?.updateValue(Characteristics.StatusFault.GENERAL_FAULT);
                         break;
                 }
                 break;
