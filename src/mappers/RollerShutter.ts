@@ -10,6 +10,7 @@ export default class RollerShutter extends Mapper {
     protected targetPosition: Characteristic | undefined;
     protected positionState: Characteristic | undefined;
     protected obstructionDetected: Characteristic | undefined;
+    protected my: Characteristic | undefined;
 
     protected reverse;
     protected initPosition;
@@ -22,7 +23,7 @@ export default class RollerShutter extends Mapper {
         this.defaultPosition = config['defaultPosition'] || 0;
         this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
         this.reverse = config['reverse'] || false;
-        this.movementDuration = config['movementDuration'] || 0;
+        this.movementDuration = config['movementDuration'] || 25;
     }
 
     protected registerServices() {
@@ -35,6 +36,10 @@ export default class RollerShutter extends Mapper {
             //this.targetPosition.updateValue(this.initPosition);
         } else {
             this.obstructionDetected = service.getCharacteristic(Characteristics.ObstructionDetected);
+        }
+        if(this.device.hasCommand('my')) {
+            this.my = service.getCharacteristic(Characteristics.On);
+            this.my.onSet(this.setMy.bind(this));
         }
         this.positionState.updateValue(Characteristics.PositionState.STOPPED);
         this.targetPosition.onSet(this.debounce(this.setTargetPosition));
@@ -49,14 +54,6 @@ export default class RollerShutter extends Mapper {
             } else {
                 if(this.movementDuration > 0) {
                     const delta = value - Number(this.currentPosition!.value);
-                    const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
-                    if(this.cancelTimeout !== null) {
-                        clearTimeout(this.cancelTimeout);
-                    }
-                    this.cancelTimeout = setTimeout(() => {
-                        this.cancelTimeout = null;
-                        this.cancelExecution().catch(this.error.bind(this));
-                    }, duration);
                     return new Command(delta > 0 ? 'open' : 'close');
                 } else {
                     return new Command('my');
@@ -76,12 +73,27 @@ export default class RollerShutter extends Mapper {
         if(this.stateless && !this.isIdle) {
             return await this.cancelExecution();
         }
-        const action = await this.executeCommands(this.getTargetCommands(value));
+        if(this.cancelTimeout !== null) {
+            clearTimeout(this.cancelTimeout);
+        }
+        const standalone = this.stateless && value !== 100 && value !== 0;
+        const action = await this.executeCommands(this.getTargetCommands(value), standalone);
         action.on('update', (state, data) => {
             const positionState = (value === 100 || value > (this.currentPosition?.value || 0)) ? 
                 Characteristics.PositionState.INCREASING : 
                 Characteristics.PositionState.DECREASING;
             switch (state) {
+                case ExecutionState.TRANSMITTED:
+                    if(standalone) {
+                        const delta = value - Number(this.currentPosition!.value);
+                        const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
+                        this.debug('Start movement for ' + duration + ' millisec');
+                        this.cancelTimeout = setTimeout(() => {
+                            this.cancelTimeout = null;
+                            this.cancelExecution().catch(this.error.bind(this));
+                        }, duration);
+                    }
+                    break;
                 case ExecutionState.IN_PROGRESS:
                     this.positionState?.updateValue(positionState);
                     break;
@@ -108,6 +120,39 @@ export default class RollerShutter extends Mapper {
                         }
                     }
                     this.positionState?.updateValue(Characteristics.PositionState.STOPPED);
+                    this.obstructionDetected?.updateValue(data.failureType === 'WHILEEXEC_BLOCKED_BY_HAZARD');
+                    if(!this.device.hasState('core:TargetClosureState') && this.currentPosition) {
+                        this.targetPosition?.updateValue(this.currentPosition.value);
+                    }
+                    break;
+            }
+        });
+    }
+
+    /**
+	* Set My position
+	**/
+    async setMy(value) {
+        if(!value) {
+            return;
+        }
+        const action = await this.executeCommands(new Command('my'));
+        action.on('update', (state, data) => {
+            switch (state) {
+                case ExecutionState.COMPLETED:
+                    this.my?.updateValue(0);
+                    if(this.stateless) {
+                        if(this.defaultPosition) {
+                            this.currentPosition?.updateValue(this.defaultPosition);
+                            this.targetPosition?.updateValue(this.defaultPosition);
+                        } else {
+                            this.currentPosition?.updateValue(50);
+                            this.targetPosition?.updateValue(50);
+                        }
+                    }
+                    break;
+                case ExecutionState.FAILED:
+                    this.my?.updateValue(0);
                     this.obstructionDetected?.updateValue(data.failureType === 'WHILEEXEC_BLOCKED_BY_HAZARD');
                     if(!this.device.hasState('core:TargetClosureState') && this.currentPosition) {
                         this.targetPosition?.updateValue(this.currentPosition.value);

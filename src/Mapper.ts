@@ -107,7 +107,7 @@ export default class Mapper {
         this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
-    protected async executeCommands(commands: Command|Array<Command>|undefined): Promise<Action> {
+    protected async executeCommands(commands: Command|Array<Command>|undefined, standalone = false): Promise<Action> {
         let commandName = '';
         if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             throw new Error('No target command for ' + this.device.label);
@@ -143,7 +143,7 @@ export default class Mapper {
             this.actionPromise = new Promise((resolve, reject) => {
                 setTimeout(async () => {
                     try {
-                        this.executionId = await this.platform.executeAction(label, this.actionPromise.action, highPriority);
+                        this.executionId = await this.platform.executeAction(label, this.actionPromise.action, highPriority, standalone);
                         resolve(this.actionPromise.action);
                     } catch(error) {
                         this.error(commandName + ' ' + error.message);

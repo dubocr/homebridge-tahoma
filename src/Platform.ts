@@ -34,7 +34,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         this.exclude = config.exclude || [];
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
-            'OnOffHeatingSystem', 'Wifi',
+            'OnOffHeatingSystem', 'Wifi', 'RemoteController',
         );
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
@@ -166,22 +166,27 @@ export class Platform implements DynamicPlatformPlugin {
     /*
     	action: The action to execute
     */
-    public executeAction(label: string, action: Action, highPriority = false) {
-        if(this.executionPromise) {
-            this.executionPromise.execution.addAction(action);
-            this.executionPromise.execution.label = 'Execute scene (' + 
-                this.executionPromise.execution.actions.length + ' devices) - HomeKit';
+    public executeAction(label: string, action: Action, highPriority = false, standalone = false) {
+        if(standalone) {
+            // Run action in standalone execution
+            return this.client.execute(highPriority ? 'apply/highPriority' : 'apply', new Execution(label + ' - HomeKit', action));
         } else {
-            this.executionPromise = new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    this.client.execute(highPriority ? 'apply/highPriority' : 'apply', this.executionPromise.execution)
-                        .then(resolve)
-                        .catch(reject);
-                    this.executionPromise = null;
-                }, 100);
-            });
-            this.executionPromise.execution = new Execution(label + ' - HomeKit', action);
+            if(this.executionPromise) {
+                this.executionPromise.execution.addAction(action);
+                this.executionPromise.execution.label = 'Execute scene (' + 
+                    this.executionPromise.execution.actions.length + ' devices) - HomeKit';
+            } else {
+                this.executionPromise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        this.client.execute(highPriority ? 'apply/highPriority' : 'apply', this.executionPromise.execution)
+                            .then(resolve)
+                            .catch(reject);
+                        this.executionPromise = null;
+                    }, 100);
+                });
+                this.executionPromise.execution = new Execution(label + ' - HomeKit', action);
+            }
+            return this.executionPromise;
         }
-        return this.executionPromise;
     }
 }
