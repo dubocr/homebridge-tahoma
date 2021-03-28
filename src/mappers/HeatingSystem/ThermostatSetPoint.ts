@@ -6,11 +6,13 @@ export default class ThermostatSetPoint extends HeatingSystem {
     
     protected registerServices() {
         this.registerThermostatService();
-        
+
         if(this.targetState) {
-            this.targetState.setProps({ validValues: [
-                Characteristics.TargetHeatingCoolingState.HEAT,
-            ] });
+            this.targetState.setProps({
+                validValues: [
+                    Characteristics.TargetHeatingCoolingState.HEAT,
+                ],
+            });
             this.targetState.value = Characteristics.TargetHeatingCoolingState.HEAT;
         }
         if(this.currentState) {
@@ -24,7 +26,13 @@ export default class ThermostatSetPoint extends HeatingSystem {
 
     protected onStateChanged(name, value) {
         switch(name) {
-            case 'zwave:SetPointHeatingValueState': this.onTemperatureUpdate(value); break;
+            case 'zwave:SetPointHeatingValueState':
+            case 'core:RoomTemperatureState':
+                this.onTemperatureUpdate(value);
+                break;
+            case 'core:HeatingTargetTemperatureState':
+                this.targetTemperature?.updateValue(value);
+                break;
         }
     }
 }
