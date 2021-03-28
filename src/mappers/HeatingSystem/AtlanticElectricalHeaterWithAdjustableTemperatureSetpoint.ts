@@ -6,49 +6,56 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
     
     protected registerServices() {
         this.registerThermostatService();
+        this.targetState?.setProps({ 
+            validValues: [
+                Characteristics.TargetHeatingCoolingState.AUTO,
+                Characteristics.TargetHeatingCoolingState.HEAT,
+                Characteristics.TargetHeatingCoolingState.OFF,
+            ],
+        });
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
-        let mode;
         switch(value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
-                mode = 'auto';
-                break;
+                return new Command('setOperatingMode', 'auto');
             case Characteristics.TargetHeatingCoolingState.HEAT:
-                mode = 'normal';
-                break;
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                mode = 'eco';
-                break;
+                return new Command('setOperatingMode', 'manual');
             case Characteristics.TargetHeatingCoolingState.OFF:
-                mode = 'standby';
-                break;
+                return new Command('setOperatingMode', 'standby');
         }
-        return new Command('setOperatingMode', [mode]);
+        return [];
     }
 
     protected onStateChanged(name: string, value) {
-        this.debug(name + ' => ' + value);
         switch(name) {
-            case 'core:ComfortRoomTemperatureState': this.onTemperatureUpdate(value); break;
-            case 'io:EffectiveTemperatureSetpointState': this.targetTemperature?.updateValue(value); break;
+            case 'core:ComfortRoomTemperatureState': 
+                this.onTemperatureUpdate(value);
+                break;
+            case 'io:EffectiveTemperatureSetpointState': 
+                this.targetTemperature?.updateValue(value);
+                break;
+            case 'io:TargetHeatingLevelState':
+            case 'core:OperatingModeState':
+                this.postpone(this.computeStates);
+                break;
         }
     }
 
-    protected onStatesUpdate() {
-        this.debug('States updated => ' + this.device.get('core:OperatingModeState'));
+    protected computeStates() {
+        let targetState;
         switch(this.device.get('core:OperatingModeState')) {
             case 'off':
             case 'away':
             case 'frostprotection':
-                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.OFF);
+                targetState = Characteristics.TargetHeatingCoolingState.OFF;
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                 break;
             case 'auto':
             case 'prog':
             case 'program':
             case 'internal':
-                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
+                targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                 if(this.device.get('io:TargetHeatingLevelState') === 'eco') {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                 } else {
@@ -56,13 +63,15 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 }
                 break;
             case 'comfort':
-                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
+            case 'eco':
+            case 'manual':
+                targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 break;
-            case 'eco':
-                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.COOL);
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
-                break; 
+        }
+
+        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+            this.targetState.value = targetState;
         }
     }
 }

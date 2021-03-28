@@ -26,7 +26,6 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                     return new Command('setDHWMode', 'manualEcoActive');
                 case Characteristics.TargetHeatingCoolingState.OFF:
                     return new Command('setAbsenceMode', 'on');
-                    //return new Command('setCurrentOperatingMode', { 'relaunch': 'off', 'absence': 'on' });
             }
         } else if(this.device.hasCommand('setCurrentOperatingMode')) {
             switch(value) {

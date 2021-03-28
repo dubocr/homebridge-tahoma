@@ -30,7 +30,7 @@ export default class Mapper {
         if(info) {
             info.setCharacteristic(Characteristics.Manufacturer, device.manufacturer);
             info.setCharacteristic(Characteristics.Model, device.model);
-            info.setCharacteristic(Characteristics.SerialNumber, device.serialNumber);
+            info.setCharacteristic(Characteristics.SerialNumber, device.address);
             this.services.push(info);
         }
         this.stateless = (device.states.length === 0);
