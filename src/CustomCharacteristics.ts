@@ -1,4 +1,4 @@
-import { HAP, Characteristic, Perms, Formats, Units, WithUUID } from 'homebridge';
+import { HAP, Characteristic, Perms, Formats, WithUUID } from 'homebridge';
 
 export let ShowersCharacteristic: WithUUID<{new (): Characteristic}>;
 

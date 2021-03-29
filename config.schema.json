@@ -77,6 +77,11 @@
               "type": "boolean",
               "description": "Manage blind orientation with main slider"
             },
+            "blindsOnRollerShutter": {
+              "title": "Blinds on roller shutter",
+              "type": "boolean",
+              "description": "Manage blinds installed on roller shutter motors"
+            },
             "reverse": {
               "title": "Reverse",
               "type": "boolean",
@@ -174,6 +179,7 @@
                     "devicesConfig[].reverse",
                     "devicesConfig[].defaultPosition",
                     "devicesConfig[].blindMode",
+                    "devicesConfig[].blindsOnRollerShutter",
                     "devicesConfig[].movementDuration"
                   ]
                 },

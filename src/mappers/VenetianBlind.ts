@@ -1,5 +1,5 @@
 import { Characteristics, Services } from '../Platform';
-import { Characteristic, CharacteristicSetCallback } from 'homebridge';
+import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import RollerShutter from './RollerShutter';
 
