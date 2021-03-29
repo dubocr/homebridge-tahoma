@@ -18,9 +18,13 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
     protected getTargetStateCommands(value): Command | Array<Command> {
         switch(value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
-                return new Command('setOperatingMode', 'auto');
+                if(this.device.get('io:NativeFunctionalLevelState') === 'Top') {
+                    return new Command('setOperatingMode', 'auto');
+                } else {
+                    return new Command('setOperatingMode', 'internal');
+                }
             case Characteristics.TargetHeatingCoolingState.HEAT:
-                return new Command('setOperatingMode', 'manual');
+                return new Command('setOperatingMode', 'basic');
             case Characteristics.TargetHeatingCoolingState.OFF:
                 return new Command('setOperatingMode', 'standby');
         }
@@ -65,13 +69,14 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
             case 'comfort':
             case 'eco':
             case 'manual':
+            case 'basic':
                 targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 break;
         }
 
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
-            this.targetState.value = targetState;
+            this.targetState.updateValue(targetState);
         }
     }
 }

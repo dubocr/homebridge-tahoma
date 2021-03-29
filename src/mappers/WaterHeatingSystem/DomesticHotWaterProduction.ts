@@ -16,17 +16,26 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
+        const commands = Array<Command>();
         if(this.device.hasCommand('setDHWMode')) {
+            if(this.targetState?.value === Characteristics.TargetHeatingCoolingState.OFF) {
+                commands.push(new Command('setAbsenceMode', 'off'));
+            }
             switch(value) {
                 case Characteristics.TargetHeatingCoolingState.AUTO:
-                    return new Command('setDHWMode', 'autoMode');
+                    commands.push(new Command('setDHWMode', 'autoMode'));
+                    break;
                 case Characteristics.TargetHeatingCoolingState.HEAT:
-                    return new Command('setDHWMode', 'manualEcoInactive');
+                    commands.push(new Command('setDHWMode', 'manualEcoInactive'));
+                    break;
                 case Characteristics.TargetHeatingCoolingState.COOL:
-                    return new Command('setDHWMode', 'manualEcoActive');
+                    commands.push(new Command('setDHWMode', 'manualEcoActive'));
+                    break;
                 case Characteristics.TargetHeatingCoolingState.OFF:
-                    return new Command('setAbsenceMode', 'on');
+                    commands.push(new Command('setAbsenceMode', 'on'));
+                    break;
             }
+            return commands;
         } else if(this.device.hasCommand('setCurrentOperatingMode')) {
             switch(value) {
                 case Characteristics.TargetHeatingCoolingState.AUTO:
@@ -74,7 +83,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     protected onStateChanged(name: string, value) {
         switch(name) {
             case 'io:DHWBoostModeState':
-                this.on?.updateValue(value === 'on');
+                this.on?.updateValue(value !== 'off');
                 break;
             case 'core:WaterTemperatureState':
                 if(!this.device.hasState('io:MiddleWaterTemperatureState')) {
@@ -119,7 +128,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         }
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
-            this.targetState.value = targetState;
+            this.targetState.updateValue(targetState);
         }
     }
 }

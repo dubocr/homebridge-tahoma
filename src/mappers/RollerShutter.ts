@@ -23,7 +23,7 @@ export default class RollerShutter extends Mapper {
         this.defaultPosition = config['defaultPosition'] || 0;
         this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
         this.reverse = config['reverse'] || false;
-        this.movementDuration = config['movementDuration'] || 25;
+        this.movementDuration = config['movementDuration'] || 0;
     }
 
     protected registerServices() {
@@ -37,9 +37,9 @@ export default class RollerShutter extends Mapper {
         } else {
             this.obstructionDetected = service.getCharacteristic(Characteristics.ObstructionDetected);
         }
-        if(this.device.hasCommand('my')) {
+        if(service.testCharacteristic(Characteristics.On)) {
             this.my = service.getCharacteristic(Characteristics.On);
-            this.my.onSet(this.setMy.bind(this));
+            service.removeCharacteristic(this.my);
         }
         this.positionState.updateValue(Characteristics.PositionState.STOPPED);
         this.targetPosition.onSet(this.debounce(this.setTargetPosition));

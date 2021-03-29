@@ -25,6 +25,7 @@ export class Platform implements DynamicPlatformPlugin {
     public readonly devicesConfig: Array<unknown> = [];
 
     private executionPromise;
+    private retryDelay = 60;
 
     constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
         Services = this.api.hap.Service;
@@ -158,8 +159,9 @@ export class Platform implements DynamicPlatformPlugin {
             this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
         } catch(error) {
             this.log.error(error);
-            this.log.error('Retry in 60 sec...');
-            setTimeout(this.discoverDevices.bind(this), 60 * 1000);
+            this.log.error('Retry in ' + this.retryDelay + ' sec...');
+            this.retryDelay = this.retryDelay * 2;
+            setTimeout(this.discoverDevices.bind(this), this.retryDelay * 1000);
         }
     }
 

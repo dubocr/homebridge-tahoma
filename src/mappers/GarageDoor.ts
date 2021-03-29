@@ -8,12 +8,10 @@ export default class GarageDoor extends Mapper {
     protected targetState: Characteristic | undefined;
 
     protected cyclic;
-    protected reverse;
     protected cycleDuration;
 
     protected applyConfig(config) {
         this.cyclic = config['cyclic'] || false;
-        this.reverse = config['reverse'] || false;
         this.cycleDuration = (config['cycleDuration'] || 5) * 1000;
     }
 
@@ -23,16 +21,15 @@ export default class GarageDoor extends Mapper {
         this.targetState = service.getCharacteristic(Characteristics.TargetDoorState);
         this.targetState.onSet(this.setTargetState.bind(this));
 
-        if(this.stateless || this.device.hasCommand('cycle')) {
+        this.cyclic = this.device.hasCommand('cycle');
+        if(this.stateless) {
             this.currentState.updateValue(Characteristics.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
         }
     }
 
     protected getTargetCommands(value) {
-        value = this.reverse ? !value : value;
-        if(this.device.hasCommand('cycle')) {
-            this.cyclic = true;
+        if(this.cyclic) {
             return new Command('cycle'); 
         } else {
             return new Command(value ? 'close' : 'open');
@@ -46,13 +43,12 @@ export default class GarageDoor extends Mapper {
                 case ExecutionState.COMPLETED:
                     if(this.stateless) {
                         this.currentState?.updateValue(value);
-                    }
-                    if(this.cyclic && this.currentState) {
-                        const current = this.currentState.value;
-                        setTimeout(() => {
-                            this.currentState?.updateValue(current);
-                            this.targetState?.updateValue(current);
-                        }, this.cycleDuration);
+                        if(this.cyclic) {
+                            setTimeout(() => {
+                                this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSED);
+                                this.targetState?.updateValue(Characteristics.TargetDoorState.CLOSED);
+                            }, this.cycleDuration);
+                        }
                     }
                     break;
                 case ExecutionState.FAILED:

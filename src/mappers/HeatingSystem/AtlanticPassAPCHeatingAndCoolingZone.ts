@@ -112,7 +112,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         }
         
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
-            this.targetState.value = targetState;
+            this.targetState.updateValue(targetState);
         }
     }
 
