@@ -78,6 +78,7 @@ One configuration is composed of a `key` attribute containing device name, widge
 |---------------------------|-----------|---------------|---------------|
 | `defaultPosition`			| Integer	| 0				| optional, final position for UpDown rollershutter after any command	|
 | `reverse`					| Boolean	| false			| optional, reverse up/down in case of bad mounting	|
+| `lowSpeed`				| Boolean	| false			| optional, use low speed for roller shutter supporting it	|
 | `blindMode`				| String	| null			| optional, change main slider action to orientation. By default, both closure and orientation will be set. When setting ``blindMode: true`` the blinds work in the following way: Opening the blinds or setting them to 100% will fully open them. Closing the blinds or setting them to 0% will fully close them. Setting the blinds to a value between 1% and 99% will first close the blinds and then adjust thier horizontal tilt in a way that 99% means fully horizonal = more light, and 1% means nearly closed = less light. |
 | `blindsOnRollerShutter`	| Boolean	| false				| optional, when blinds are installed on roller shutter motors allow slats to stay horizontal (opened) at intermediate position |
 | `movementDuration`		| Integer	| 0				| optional, duration of a full shutter movement from 'open' to 'close' in seconds. Will be used to approximate shutter intermediate position. (0 = disable feature) |
