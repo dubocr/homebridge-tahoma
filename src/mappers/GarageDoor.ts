@@ -1,11 +1,12 @@
 import { Characteristics, Services } from '../Platform';
-import { Characteristic, CharacteristicSetCallback } from 'homebridge';
+import {Characteristic, Service} from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 
 export default class GarageDoor extends Mapper {
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
+    protected on: Characteristic | undefined;
 
     protected cyclic;
     protected reverse;
@@ -27,16 +28,42 @@ export default class GarageDoor extends Mapper {
             this.currentState.updateValue(Characteristics.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
         }
+        if(this.device.hasCommand('setPedestrianPosition')) {
+            this.registerSwitchService('pedestrian');
+        }
     }
 
     protected getTargetCommands(value) {
         value = this.reverse ? !value : value;
         if(this.device.hasCommand('cycle')) {
             this.cyclic = true;
-            return new Command('cycle'); 
+            return new Command('cycle');
         } else {
             return new Command(value ? 'close' : 'open');
         }
+    }
+
+    protected registerSwitchService(subtype?: string): Service {
+        const service = this.registerService(Services.Switch, subtype);
+        this.on = service.getCharacteristic(Characteristics.On);
+
+        this.on?.onSet(this.setOn.bind(this));
+        return service;
+    }
+
+    protected async setOn(value) {
+        const action = await this.executeCommands(this.getOnCommands(value));
+        action.on('update', (state) => {
+            switch (state) {
+                case ExecutionState.FAILED:
+                    this.on?.updateValue(!value);
+                    break;
+            }
+        });
+    }
+
+    protected getOnCommands(value): Command | Array<Command> {
+        return new Command(value ? 'setPedestrianPosition' : 'close');
     }
 
     protected async setTargetState(value) {
@@ -73,6 +100,7 @@ export default class GarageDoor extends Mapper {
                 switch(value) {
                     case 'unknown':
                     case 'open' :
+                        this.on?.updateValue(false);
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.OPEN);
                         if(this.isIdle) {
                             this.targetState?.updateValue(Characteristics.TargetDoorState.OPEN);
@@ -80,12 +108,14 @@ export default class GarageDoor extends Mapper {
                         break;
                     case 'pedestrian' :
                     case 'partial' :
+                        this.on?.updateValue(true);
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.STOPPED);
                         if(this.isIdle) {
                             this.targetState?.updateValue(Characteristics.TargetDoorState.OPEN);
                         }
                         break;
                     case 'closed' :
+                        this.on?.updateValue(false);
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSED);
                         if(this.isIdle) {
                             this.targetState?.updateValue(Characteristics.TargetDoorState.CLOSED);
