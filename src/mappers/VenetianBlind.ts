@@ -46,7 +46,12 @@ export default class VenetianBlind extends RollerShutter {
             } else if(value === 0) {
                 return new Command('close');
             } else {
-                return new Command('my');
+                if(this.movementDuration > 0) {
+                    const delta = value - Number(this.currentPosition!.value);
+                    return new Command(delta > 0 ? 'open' : 'close');
+                } else {
+                    return new Command('my');
+                }
             }
         } else if(this.blindMode) {
             if(value === 100) {

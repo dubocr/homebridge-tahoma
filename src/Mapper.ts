@@ -2,7 +2,6 @@ import { Characteristics, Services } from './Platform';
 import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
-import { threadId } from 'node:worker_threads';
 
 export default class Mapper {
     protected log: Logger;
