@@ -20,12 +20,17 @@ export default class Mapper {
         protected readonly device: Device,
     ) {
         this.log = platform.log;
-        const config = platform.devicesConfig[device.oid] ||
-            platform.devicesConfig[device.label] ||
-            platform.devicesConfig[device.widget] ||
-            platform.devicesConfig[device.uiClass] ||
-            {};
+        const config = Object.assign({}, 
+            platform.devicesConfig[device.uiClass],
+            platform.devicesConfig[device.widget],
+            platform.devicesConfig[device.label],
+            platform.devicesConfig[device.oid],
+        );
         this.applyConfig(config);
+        if(Object.keys(config).length > 0) {
+            delete config.key;
+            this.log.info('  Config: ' + JSON.stringify(config));
+        }
 
         const info = this.accessory.getService(Services.AccessoryInformation);
         if(info) {

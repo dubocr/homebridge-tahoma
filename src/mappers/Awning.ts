@@ -9,21 +9,13 @@ export default class Awning extends RollerShutter {
 	**/
     protected getTargetCommands(value) {
         if(this.stateless) {
-            if(value === 0) {
-                return new Command('undeploy');
-            } else if(value === 100) {
+            if(value === 100) {
                 return new Command('deploy');
+            } else if(value === 0) {
+                return new Command('undeploy');
             } else {
                 if(this.movementDuration > 0) {
                     const delta = value - Number(this.currentPosition!.value);
-                    const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
-                    if(this.cancelTimeout !== null) {
-                        clearTimeout(this.cancelTimeout);
-                    }
-                    this.cancelTimeout = setTimeout(() => {
-                        this.cancelTimeout = null;
-                        this.cancelExecution().catch(this.error.bind(this));
-                    }, duration);
                     return new Command(delta > 0 ? 'deploy' : 'undeploy');
                 } else {
                     return new Command('my');

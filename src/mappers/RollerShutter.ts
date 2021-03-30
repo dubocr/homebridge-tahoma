@@ -85,17 +85,6 @@ export default class RollerShutter extends Mapper {
                 Characteristics.PositionState.INCREASING : 
                 Characteristics.PositionState.DECREASING;
             switch (state) {
-                case ExecutionState.TRANSMITTED:
-                    if(standalone) {
-                        const delta = value - Number(this.currentPosition!.value);
-                        const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
-                        this.debug('Start movement for ' + duration + ' millisec');
-                        this.cancelTimeout = setTimeout(() => {
-                            this.cancelTimeout = null;
-                            this.cancelExecution().catch(this.error.bind(this));
-                        }, duration);
-                    }
-                    break;
                 case ExecutionState.IN_PROGRESS:
                     this.positionState?.updateValue(positionState);
                     break;
@@ -132,6 +121,15 @@ export default class RollerShutter extends Mapper {
                     break;
             }
         });
+        if(standalone) {
+            const delta = value - Number(this.currentPosition!.value);
+            const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
+            this.info('Will stop movement in ' + duration + ' millisec');
+            this.cancelTimeout = setTimeout(() => {
+                this.cancelTimeout = null;
+                this.cancelExecution().catch(this.error.bind(this));
+            }, duration);
+        }
     }
 
     /**

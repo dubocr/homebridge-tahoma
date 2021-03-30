@@ -116,8 +116,8 @@ export class Platform implements DynamicPlatformPlugin {
                 }
 
 
-                this.log.info('Map device', accessory.displayName);
-                this.log.debug('  ' + device.uiClass + ' > ' + device.widget);
+                this.log.info('Configure device', accessory.displayName);
+                this.log.info('  ' + device.uiClass + ' > ' + device.widget);
 
                 const mapper = await import('./mappers/' + device.uiClass + '/' + device.widget)
                     .catch(() => import('./mappers/' + device.uiClass))
