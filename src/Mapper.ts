@@ -2,6 +2,7 @@ import { Characteristics, Services } from './Platform';
 import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
+import { threadId } from 'node:worker_threads';
 
 export default class Mapper {
     protected log: Logger;
@@ -72,6 +73,14 @@ export default class Mapper {
             service = this.accessory.getService(type) || this.accessory.addService(type);
         }
         service.setCharacteristic(Characteristics.Name, name);
+        /*
+        service.getCharacteristic(Characteristics.Name)
+            .updateValue(name)
+            .onSet((value) => {
+                this.debug('Will rename ' + name + ' to ' + value);
+                this.platform.client.setDeviceName(this.device.deviceURL, value);
+            });
+        */
         this.services.push(service);
         return service;
     }

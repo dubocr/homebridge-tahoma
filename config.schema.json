@@ -87,6 +87,11 @@
               "type": "boolean",
               "description": "Reverse behaviour for open/close commands"
             },
+            "lowSpeed": {
+              "title": "Low speed mode",
+              "type": "boolean",
+              "description": "Low speed for supported roller shutter"
+            },
             "defaultPosition": {
               "title": "Default position",
               "type": "number",
@@ -179,6 +184,7 @@
                     "devicesConfig[].reverse",
                     "devicesConfig[].defaultPosition",
                     "devicesConfig[].blindMode",
+                    "devicesConfig[].lowSpeed",
                     "devicesConfig[].blindsOnRollerShutter",
                     "devicesConfig[].movementDuration"
                   ]

@@ -78,7 +78,7 @@ export default class RollerShutter extends Mapper {
         if(this.cancelTimeout !== null) {
             clearTimeout(this.cancelTimeout);
         }
-        const standalone = this.stateless && value !== 100 && value !== 0;
+        const standalone = this.stateless && this.movementDuration > 0 && value !== 100 && value !== 0;
         const action = await this.executeCommands(this.getTargetCommands(value), standalone);
         action.on('update', (state, data) => {
             const positionState = (value === 100 || value > (this.currentPosition?.value || 0)) ? 
