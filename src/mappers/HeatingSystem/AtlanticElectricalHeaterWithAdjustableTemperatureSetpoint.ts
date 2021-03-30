@@ -33,7 +33,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
 
     protected onStateChanged(name: string, value) {
         switch(name) {
-            case 'core:ComfortRoomTemperatureState': 
+            case 'core:TemperatureState': 
                 this.onTemperatureUpdate(value);
                 break;
             case 'io:EffectiveTemperatureSetpointState': 
