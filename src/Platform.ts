@@ -5,6 +5,7 @@ import { Client, Execution, Action } from 'overkiz-client';
 import Mapper from './Mapper';
 import SceneMapper from './SceneMapper';
 import { CustomCharacteristics } from './CustomCharacteristics';
+import { BLUE, GREY, RESET } from './colors';
 
 
 export let Services: typeof Service;
@@ -115,9 +116,8 @@ export class Platform implements DynamicPlatformPlugin {
                     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
                 }
 
-
-                this.log.info('Configure device', accessory.displayName);
-                this.log.info('  ' + device.uiClass + ' > ' + device.widget);
+                this.log.info(`Configure device ${BLUE}${accessory.displayName}${RESET}`);
+                this.log.info(`${GREY}  ${device.uiClass} > ${device.widget}`);
 
                 const mapper = await import('./mappers/' + device.uiClass + '/' + device.widget)
                     .catch(() => import('./mappers/' + device.uiClass))

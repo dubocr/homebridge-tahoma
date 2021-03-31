@@ -2,6 +2,7 @@ import { Characteristics, Services } from '../Platform';
 import { Characteristic, CharacteristicSetCallback, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
+import { MyPositionCharacteristic } from '../CustomCharacteristics';
 
 export default class RollerShutter extends Mapper {
     protected windowService: Service | undefined;
@@ -36,6 +37,10 @@ export default class RollerShutter extends Mapper {
         if(this.stateless) {
             //this.currentPosition.updateValue(this.initPosition);
             //this.targetPosition.updateValue(this.initPosition);
+            if(this.device.hasCommand('my')) {
+                this.my = this.registerCharacteristic(service, MyPositionCharacteristic);
+                this.my.onSet(this.setMyPosition.bind(this));
+            }
         } else {
             this.obstructionDetected = service.getCharacteristic(Characteristics.ObstructionDetected);
         }
@@ -85,6 +90,17 @@ export default class RollerShutter extends Mapper {
                 Characteristics.PositionState.INCREASING : 
                 Characteristics.PositionState.DECREASING;
             switch (state) {
+                case ExecutionState.TRANSMITTED:
+                    if(standalone) {
+                        const delta = value - Number(this.currentPosition!.value);
+                        const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
+                        this.info('Will stop movement in ' + duration + ' millisec');
+                        this.cancelTimeout = setTimeout(() => {
+                            this.cancelTimeout = null;
+                            this.cancelExecution().catch(this.error.bind(this));
+                        }, duration);
+                    }
+                    break;
                 case ExecutionState.IN_PROGRESS:
                     this.positionState?.updateValue(positionState);
                     break;
@@ -121,21 +137,12 @@ export default class RollerShutter extends Mapper {
                     break;
             }
         });
-        if(standalone) {
-            const delta = value - Number(this.currentPosition!.value);
-            const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
-            this.info('Will stop movement in ' + duration + ' millisec');
-            this.cancelTimeout = setTimeout(() => {
-                this.cancelTimeout = null;
-                this.cancelExecution().catch(this.error.bind(this));
-            }, duration);
-        }
     }
 
     /**
 	* Set My position
 	**/
-    async setMy(value) {
+    async setMyPosition(value) {
         if(!value) {
             return;
         }

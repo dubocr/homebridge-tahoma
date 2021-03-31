@@ -1,17 +1,24 @@
 import { Characteristics } from '../../Platform';
 import { Characteristic } from 'homebridge';
-import { Command } from 'overkiz-client';
+import { Command, ExecutionState } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
-import { ShowersCharacteristic } from '../../CustomCharacteristics';
+import { CurrentShowerCharacteristic, TargetShowerCharacteristic } from '../../CustomCharacteristics';
 
 export default class DomesticHotWaterProduction extends WaterHeatingSystem {
-    protected showers: Characteristic | undefined;
+    protected currentShower: Characteristic | undefined;
+    protected targetShower: Characteristic | undefined;
 
     protected registerServices() {
         const service = this.registerThermostatService();
         this.registerSwitchService('boost');
         if(this.device.hasState('core:NumberOfShowerRemainingState')) {
-            this.showers = this.registerCharacteristic(service, ShowersCharacteristic);
+            this.currentShower = this.registerCharacteristic(service, CurrentShowerCharacteristic);
+            this.targetShower = this.registerCharacteristic(service, TargetShowerCharacteristic);
+            this.targetShower.setProps({
+                minValue: this.device.getNumber('core:MinimalShowerManualModeState'),
+                maxValue: this.device.getNumber('core:MaximalShowerManualModeState'),
+            });
+            this.targetShower.onSet(this.setTargetShower.bind(this));
         }
     }
 
@@ -80,6 +87,20 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
         return new Command('setBoostMode', value ? 'on' : 'off');
     }
 
+    async setTargetShower(value) {
+        const previous = this.targetShower?.value;
+        const action = await this.executeCommands(new Command('setExpectedNumberOfShower', value));
+        action.on('update', (state, data) => {
+            switch (state) {
+                case ExecutionState.FAILED:
+                    if(previous) {
+                        this.targetShower?.updateValue(previous);
+                    }
+                    break;
+            }
+        });
+    }
+
     protected onStateChanged(name: string, value) {
         switch(name) {
             case 'io:DHWBoostModeState':
@@ -101,7 +122,10 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                 this.postpone(this.computeStates);
                 break;
             case 'core:NumberOfShowerRemainingState':
-                this.showers?.updateValue(value);
+                this.currentShower?.updateValue(value);
+                break;
+            case 'core:ExpectedNumberOfShowerState':
+                this.targetShower?.updateValue(value);
                 break;
         }
     }

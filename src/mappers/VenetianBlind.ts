@@ -17,17 +17,19 @@ export default class VenetianBlind extends RollerShutter {
     protected registerServices() {
         super.registerServices();
 
-        const service = this.accessory.getService(Services.WindowCovering);
-        this.currentAngle = service?.getCharacteristic(Characteristics.CurrentHorizontalTiltAngle);
-        this.targetAngle = service?.getCharacteristic(Characteristics.TargetHorizontalTiltAngle);
-        this.targetAngle?.setProps({ minStep: 10 });
-        this.targetAngle?.onSet(this.debounce(this.setTargetAnglePosition));
-    
-        if(this.blindMode && this.currentAngle) {
-            service?.removeCharacteristic(this.currentAngle);
-        }
-        if(this.blindMode && this.targetAngle) {
-            service?.removeCharacteristic(this.targetAngle);
+        if(!this.stateless) {
+            const service = this.accessory.getService(Services.WindowCovering);
+            this.currentAngle = service?.getCharacteristic(Characteristics.CurrentHorizontalTiltAngle);
+            this.targetAngle = service?.getCharacteristic(Characteristics.TargetHorizontalTiltAngle);
+            this.targetAngle?.setProps({ minStep: 10 });
+            this.targetAngle?.onSet(this.debounce(this.setTargetAnglePosition));
+
+            if(this.blindMode && this.currentAngle) {
+                service?.removeCharacteristic(this.currentAngle);
+            }
+            if(this.blindMode && this.targetAngle) {
+                service?.removeCharacteristic(this.targetAngle);
+            }
         }
     }
 
@@ -70,10 +72,14 @@ export default class VenetianBlind extends RollerShutter {
     }
 
     protected getTargetAngleCommands(value) {
-        return new Command('setClosureAndOrientation', [
-            this.reversedValue(this.targetPosition?.value),
-            this.angleToOrientation(value),
-        ]);
+        if(this.stateless) {
+            return [];
+        } else {
+            return new Command('setClosureAndOrientation', [
+                this.reversedValue(this.targetPosition?.value),
+                this.angleToOrientation(value),
+            ]);
+        }
     }
 
     async setTargetAnglePosition(value) {

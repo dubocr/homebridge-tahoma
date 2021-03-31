@@ -2,6 +2,7 @@ import { Characteristics, Services } from './Platform';
 import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
+import { GREY } from './colors';
 
 export default class Mapper {
     protected log: Logger;
@@ -28,7 +29,11 @@ export default class Mapper {
         this.applyConfig(config);
         if(Object.keys(config).length > 0) {
             delete config.key;
-            this.log.info('  Config: ' + JSON.stringify(config));
+            if(this.platform.config.debug) {
+                this.log.info(`${GREY}  Config: `, JSON.stringify(config));
+            } else {
+                this.log.debug('  Config: ', JSON.stringify(config));
+            }
         }
 
         const info = this.accessory.getService(Services.AccessoryInformation);
@@ -49,12 +54,12 @@ export default class Mapper {
 
         if(!this.stateless) {
             // Init and register states changes
-            this.onStatesChanged(this.device.states);
+            this.onStatesChanged(this.device.states, true);
             device.on('states', states => this.onStatesChanged(states));
 
             // Init and register sensors states changes
             this.device.sensors.forEach((sensor) => {
-                this.onStatesChanged(sensor.states);
+                this.onStatesChanged(sensor.states, true);
                 sensor.on('states', states => this.onStatesChanged(states));
             });
         }
@@ -107,8 +112,8 @@ export default class Mapper {
                 clearTimeout(this.debounceTimer);
             }
             this.debounceTimer = setTimeout(() => {
-                task.bind(this)(value).catch(() => null);
                 this.debounceTimer = null;
+                task.bind(this)(value).catch(() => null);
             }, 2000);
         };
     }
@@ -123,11 +128,10 @@ export default class Mapper {
     protected async executeCommands(commands: Command|Array<Command>|undefined, standalone = false): Promise<Action> {
         let commandName = '';
         if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
+            this.error('No target command for', this.device.label);
             throw new Error('No target command for ' + this.device.label);
         } else if(Array.isArray(commands)) {
-            if(commands.length === 0) {
-                throw new Error('No target command for ' + this.device.label);
-            } else if(commands.length > 1) {
+            if(commands.length > 1) {
                 commandName = commands[0].name + ' +' + (commands.length-1) + ' others';
             } else {
                 commandName = commands[0].name;
@@ -189,19 +193,23 @@ export default class Mapper {
      */
 
     protected debug(...args) {
-        this.platform.log.debug('[' + this.device.label + ']', ...args);
+        if(this.platform.config.debug) {
+            this.platform.log.info(`${GREY}[${this.device.label}]`, ...args);
+        } else {
+            this.platform.log.debug(`[${this.device.label}]`, ...args);
+        }
     }
 
     protected info(...args) {
-        this.platform.log.info('[' + this.device.label + ']', ...args);
+        this.platform.log.info(`[${this.device.label}]`, ...args);
     }
 
     protected warn(...args) {
-        this.platform.log.warn('[' + this.device.label + ']', ...args);
+        this.platform.log.warn(`[${this.device.label}]`, ...args);
     }
 
     protected error(...args) {
-        this.platform.log.error('[' + this.device.label + ']', ...args);
+        this.platform.log.error(`[${this.device.label}]`, ...args);
     }
 
     /**
@@ -212,9 +220,11 @@ export default class Mapper {
         // 
     }
 
-    protected onStatesChanged(states: Array<State>) {
+    protected onStatesChanged(states: Array<State>, init = false) {
         states.forEach((state: State) => {
-            //this.debug(state.name + ' => ' + state.value);
+            if(!init) {
+                this.debug(state.name + ' => ' + state.value);
+            }
             this.onStateChanged(state.name, state.value);
         });
     }
