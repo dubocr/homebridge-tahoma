@@ -45,6 +45,10 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
                 }
                 break;
             case 'ovp:RoomTemperatureState': this.onTemperatureUpdate(value); break;
+            case 'core:TargetTemperatureState': 
+                this.targetTemperature?.updateValue(value);
+                break;
+            /*
             case 'ovp:TemperatureChangeState':
                 if(value <= 5 && this.currentTemperature) {
                     this.targetTemperature?.updateValue(this.currentTemperature.value + value);
@@ -52,6 +56,7 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
                     this.targetTemperature?.updateValue(value);
                 }
                 break;
+            */
         }
     }
 
