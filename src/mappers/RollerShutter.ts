@@ -97,8 +97,11 @@ export default class RollerShutter extends Mapper {
                         this.info('Will stop movement in ' + duration + ' millisec');
                         this.cancelTimeout = setTimeout(() => {
                             this.cancelTimeout = null;
-                            this.executeCommands(new Command('stop'), true);
-                            //this.cancelExecution().catch(this.error.bind(this));
+                            if(this.isIdle) {
+                                this.executeCommands(new Command('stop'), true);
+                            } else {
+                                this.cancelExecution().catch(this.error.bind(this));
+                            }
                         }, duration);
                     }
                     break;
