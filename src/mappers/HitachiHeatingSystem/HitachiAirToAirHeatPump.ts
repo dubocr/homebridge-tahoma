@@ -6,6 +6,11 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
 
     protected registerServices() {
         this.registerThermostatService();
+        this.targetTemperature?.setProps({
+            minValue: 16,
+            maxValue: 30,
+            minStep: 0.5,
+        });
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
