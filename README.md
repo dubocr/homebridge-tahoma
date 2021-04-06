@@ -85,9 +85,15 @@ One configuration is composed of a `key` attribute containing device name, widge
 
 | GarageDoorOpener parameters	| Type			| Default		| Note				|
 |-------------------------------|---------------|---------------|-------------------|
-| `cyclic`						| Boolean		| false			| optional, activate restoring initial state for cyclic device without states	|
+| `cyclic`						| Boolean		| false			| optional, restore closed state after `cycleDuration` seconds for stateless devices with cyclic behaviour	|
 | `cycleDuration`				| Integer		| false			| optional, cycle duration (in seconds) for cyclic mode (default: 5 sec)				|
 | `reverse`						| Boolean		| false			| optional, reverse up/down in case of bad mounting	|
+
+| HeatingSystem parameters		| Type			| Default		| Note				|
+|-------------------------------|---------------|---------------|-------------------|
+| `derogationDuration`			| Integer		| 1				| optional, duration (in hours) for derogation orders	|
+| `comfort`						| Integer		| 19			| optional, comfort temperature used as display for heaters controled by pilot wire	|
+| `eco`							| Integer		| 17			| optional, comfort temperature used as display for heaters controled by pilot wire		|
 
 
 Full configuration example:
