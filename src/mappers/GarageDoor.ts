@@ -22,7 +22,7 @@ export default class GarageDoor extends Mapper {
         this.targetState = service.getCharacteristic(Characteristics.TargetDoorState);
         this.targetState.onSet(this.setTargetState.bind(this));
 
-        this.cyclic = this.device.hasCommand('cycle');
+        this.cyclic = this.cyclic || this.device.hasCommand('cycle');
         if(this.stateless) {
             this.currentState.updateValue(Characteristics.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
@@ -33,7 +33,7 @@ export default class GarageDoor extends Mapper {
     }
 
     protected getTargetCommands(value) {
-        if(this.cyclic) {
+        if(this.device.hasCommand('cycle')) {
             return new Command('cycle'); 
         } else {
             return new Command(value ? 'close' : 'open');

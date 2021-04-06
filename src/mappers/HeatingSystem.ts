@@ -14,8 +14,10 @@ export default class HeatingSystem extends Mapper {
     protected derogationDuration;
     protected comfortTemperature;
     protected ecoTemperature;
+    protected activateProg;
     
     protected applyConfig(config) {
+        this.activateProg = config['activateProg'] || false;
         this.derogationDuration = config['derogationDuration'] || 1;
         this.comfortTemperature = config['comfort'] || 19;
         this.ecoTemperature = config['eco'] || 17;
