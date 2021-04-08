@@ -27,7 +27,7 @@ export default class GarageDoor extends Mapper {
             this.currentState.updateValue(Characteristics.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
         }
-        if(this.device.hasCommand('setPedestrianPosition')) {
+        if(this.device.hasCommand('setPedestrianPosition') || this.device.hasCommand('my')) {
             this.registerSwitchService('pedestrian');
         }
     }
@@ -60,7 +60,11 @@ export default class GarageDoor extends Mapper {
     }
 
     protected getOnCommands(value): Command | Array<Command> {
-        return new Command(value ? 'setPedestrianPosition' : 'close');
+        if(this.device.hasCommand('setPedestrianPosition')) {
+            return new Command(value ? 'setPedestrianPosition' : 'close');
+        } else {
+            return new Command(value ? 'my' : 'close');
+        }
     }
 
     protected async setTargetState(value) {
