@@ -64,11 +64,9 @@ export default class Mapper {
             });
         }
 
-
-
-        // TODO: merge device sensor mapper in same accessory
+        // TODO: instanciate mapper for device sensors
         // Configure accessory sensors
-        // device.sensors.forEach((sensor) => ...)
+        // this.device.sensors.forEach((sensor) => new mapper(platform, accessory, sensor)))
     }
 
     /**

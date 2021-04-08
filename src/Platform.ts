@@ -119,8 +119,9 @@ export class Platform implements DynamicPlatformPlugin {
                 this.log.info(`Configure device ${BLUE}${accessory.displayName}${RESET}`);
                 this.log.info(`${GREY}  ${device.uiClass} > ${device.widget}`);
 
-                const mapper = await import('./mappers/' + device.uiClass + '/' + device.widget)
-                    .catch(() => import('./mappers/' + device.uiClass))
+                const mapper = await import(`./mappers/${device.uiClass}/${device.widget}/${device.uniqueName}`)
+                    .catch(() => import(`./mappers/${device.uiClass}/${device.widget}`))
+                    .catch(() => import(`./mappers/${device.uiClass}`))
                     .then((c) => c.default)
                     .catch(() => Mapper);
                 new mapper(this, accessory, device);

@@ -114,6 +114,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
             case 'io:MiddleWaterTemperatureState':
                 this.currentTemperature?.updateValue(value);
                 break;
+            case 'core:TargetTemperatureState':
             case 'core:WaterTargetTemperatureState':
                 this.targetTemperature?.updateValue(value);
                 break;

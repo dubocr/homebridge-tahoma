@@ -68,9 +68,13 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
 
     protected onStateChanged(name, value) {
         switch(name) {
-            case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
+            case 'core:TemperatureState':
+                this.onTemperatureUpdate(value);
+                break;
             case 'core:TargetTemperatureState':
-                this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
+                if(value > 16) {
+                    this.targetTemperature?.updateValue(value);
+                }
                 break;
             case 'core:HeatingOnOffState':
             case 'core:CoolingOnOffState':
