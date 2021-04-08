@@ -63,6 +63,12 @@ export default class Mapper {
                 sensor.on('states', states => this.onStatesChanged(states));
             });
         }
+
+
+
+        // TODO: merge device sensor mapper in same accessory
+        // Configure accessory sensors
+        // device.sensors.forEach((sensor) => ...)
     }
 
     /**

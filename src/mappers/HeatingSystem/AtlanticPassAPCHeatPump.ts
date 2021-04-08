@@ -1,5 +1,5 @@
-import AtlanticPassAPCBoiler from './AtlanticPassAPCBoiler';
+import AtlanticPassAPCZoneControl from './AtlanticPassAPCZoneControl';
 
-export default class AtlanticPassAPCHeatPump extends AtlanticPassAPCBoiler {  
+export default class AtlanticPassAPCHeatPump extends AtlanticPassAPCZoneControl {  
     
 }

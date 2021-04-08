@@ -36,7 +36,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         this.exclude = config.exclude || [];
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
-            'OnOffHeatingSystem', 'Wifi', 'RemoteController',
+            'ElectricitySensor', 'OnOffHeatingSystem', 'Wifi', 'RemoteController',
         );
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
