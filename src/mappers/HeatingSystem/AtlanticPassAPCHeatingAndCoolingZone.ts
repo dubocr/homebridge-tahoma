@@ -2,7 +2,7 @@ import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem { 
+export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem {
     private refreshStatesTimeout;
 
     protected applyConfig(config) {
@@ -37,7 +37,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 commands.push(new Command('set' + heatingCooling + 'OnOffState', 'off'));
                 break;
         }
-        
+
         return commands;
     }
 
@@ -72,7 +72,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 this.onTemperatureUpdate(value);
                 break;
             case 'core:TargetTemperatureState':
-                if(value > 16) {
+                if(value >= 16) {
                     this.targetTemperature?.updateValue(value);
                 }
                 break;
@@ -95,19 +95,29 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         } else {
+            targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`);
+            const currentTemperature = this.currentTemperature?.value || targetTemperature;
             if(heatingCooling === 'Heating') {
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                if (currentTemperature >= (targetTemperature + 0.5)) {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
+                }else {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                }
             } else {
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                if (currentTemperature <= (targetTemperature - 0.5)) {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
+                }else {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                }
             }
             targetState = Characteristics.TargetHeatingCoolingState.AUTO;
-            targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`);
+
         }
-        
+
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
-        if(this.targetTemperature !== undefined && targetTemperature !== undefined && this.isIdle) {
+        if(this.targetTemperature !== undefined && targetTemperature !== undefined && targetTemperature >= 16 && this.isIdle) {
             this.targetTemperature.updateValue(targetTemperature);
         }
     }
