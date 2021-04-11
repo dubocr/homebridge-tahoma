@@ -37,6 +37,8 @@ export class Platform implements DynamicPlatformPlugin {
         this.exclude = config.exclude || [];
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
             'ElectricitySensor', 'OnOffHeatingSystem', 'Wifi', 'RemoteController',
+            // AtlanticElectricalTowelDryer bad sensors
+            'io:LightIOSystemDeviceSensor', 'io:RelativeHumidityIOSystemDeviceSensor', 'WeatherForecastSensor',
         );
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
@@ -84,6 +86,7 @@ export class Platform implements DynamicPlatformPlugin {
                 if(
                     this.exclude.includes(device.uiClass) ||
                     this.exclude.includes(device.widget) ||
+                    this.exclude.includes(device.controllableName) ||
                     this.exclude.includes(device.label) ||
                     this.exclude.includes(device.protocol)
                 ) {

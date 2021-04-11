@@ -7,6 +7,8 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
     protected registerServices() {
         this.registerThermostatService();
         this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] });
+        this.targetTemperature?.updateValue(19);
+        this.currentTemperature?.updateValue(19);
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
@@ -75,7 +77,8 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
                 break;
         }
         
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        // eslint-disable-next-line eqeqeq
+        if(this.targetState !== undefined && targetState != null && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }
