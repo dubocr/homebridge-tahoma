@@ -12,8 +12,8 @@ export default class Alarm extends Mapper {
     protected occupancySensor: unknown | undefined;
 
     protected applyConfig(config) {
-        this.stayZones = config.STAY_ARM || 'A';
-        this.nightZones = config.NIGHT_ARM || 'B';
+        this.stayZones = config.stayZones || 'A';
+        this.nightZones = config.nightZones || 'B';
         this.occupancySensor = config.occupancySensor || false;
     }
 

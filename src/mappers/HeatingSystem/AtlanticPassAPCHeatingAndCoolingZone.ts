@@ -95,7 +95,8 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         } else {
-            targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`);
+            targetTemperature = targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`) ||
+                this.device.get('core:TargetTemperatureState');
             const currentTemperature = this.currentTemperature?.value || targetTemperature;
             if(heatingCooling === 'Heating') {
                 if (currentTemperature >= (targetTemperature + 0.5)) {
@@ -111,13 +112,13 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 }
             }
             targetState = Characteristics.TargetHeatingCoolingState.AUTO;
-
         }
 
         if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
-        if(this.targetTemperature !== undefined && targetTemperature !== undefined && targetTemperature >= 16 && this.isIdle) {
+
+        if(this.targetTemperature !== undefined && targetTemperature >= 16 && this.isIdle) {
             this.targetTemperature.updateValue(targetTemperature);
         }
     }
