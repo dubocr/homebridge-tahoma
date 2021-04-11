@@ -11,6 +11,9 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
             maxValue: 30,
             minStep: 0.5,
         });
+        if(this.targetTemperature && this.targetTemperature.value! < 16) {
+            this.targetTemperature.value = 16;
+        }
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {

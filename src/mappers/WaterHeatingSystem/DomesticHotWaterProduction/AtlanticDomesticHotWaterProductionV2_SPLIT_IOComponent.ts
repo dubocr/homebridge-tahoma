@@ -1,7 +1,7 @@
 import { Command } from 'overkiz-client';
 import { Characteristics } from '../../../Platform';
 import DomesticHotWaterProduction from '../DomesticHotWaterProduction';
-import {Perms} from "homebridge";
+import {Perms} from 'homebridge';
 
 export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent extends DomesticHotWaterProduction {
 

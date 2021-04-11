@@ -33,7 +33,7 @@ export default class HeatingSystem extends Mapper {
         
         this.targetState?.onSet(this.setTargetState.bind(this));
         this.targetTemperature?.onSet(this.debounce(this.setTargetTemperature));
-        this.targetTemperature?.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
+        this.targetTemperature?.setProps({ minValue: 7, maxValue: 26, minStep: 0.5 });
         return service;
     }
 
