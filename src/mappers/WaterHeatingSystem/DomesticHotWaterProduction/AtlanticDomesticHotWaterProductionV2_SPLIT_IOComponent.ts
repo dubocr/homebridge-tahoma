@@ -9,13 +9,15 @@ export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent exte
         this.targetTemperature?.setProps({
             minValue: 50.0,
             maxValue: 54.5,
-            minStep: 0.5,
+            validValues: [50, 52, 54, 54.5, 55],
+            minStep: 2,
         });
         return service;
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
-        return new Command('setTargetTemperature', value);
+        const safeValue = value === 54 ? 54.5 : value;
+        return new Command('setTargetTemperature', safeValue);
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
