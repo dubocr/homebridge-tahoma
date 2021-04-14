@@ -1,20 +1,23 @@
-import { Command } from 'overkiz-client';
-import { Characteristics } from '../../../Platform';
+import {Command} from 'overkiz-client';
+import {Characteristics} from '../../../Platform';
 import DomesticHotWaterProduction from '../DomesticHotWaterProduction';
-import {Perms} from 'homebridge';
 
 export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent extends DomesticHotWaterProduction {
 
     protected registerThermostatService() {
         const service = super.registerThermostatService();
-        const targetTemperature = this.device.getNumber('core:TargetTemperatureState');
         this.targetTemperature?.setProps({
-            minValue: targetTemperature,
-            maxValue: targetTemperature,
-            minStep: 0.5,
-            perms: [Perms.PAIRED_READ, Perms.EVENTS],
+            minValue: 50.0,
+            maxValue: 54.5,
+            validValues: [50, 52, 54, 54.5, 55],
+            minStep: 2,
         });
         return service;
+    }
+
+    protected getTargetTemperatureCommands(value): Command | Array<Command> {
+        const safeValue = value === 54 ? 54.5 : value;
+        return new Command('setTargetTemperature', safeValue);
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
