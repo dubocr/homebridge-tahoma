@@ -13,6 +13,14 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 Characteristics.TargetHeatingCoolingState.OFF,
             ],
         });
+        this.targetTemperature?.setProps({
+            minValue: 16,
+            maxValue: 28,
+            minStep: 0.5,
+        });
+        if(this.targetTemperature && this.targetTemperature.value! < 16) {
+            this.targetTemperature.value = 16;
+        }
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
@@ -31,12 +39,21 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
         return [];
     }
 
+    protected getTargetTemperatureCommands(value): Command | Array<Command> | undefined {
+        if(this.device.get('core:OperatingModeState') === 'internal') {
+            return new Command('setDerogatedTargetTemperature', value);
+        } else {
+            return new Command('setTargetTemperature', value);
+        }
+    }
+
     protected onStateChanged(name: string, value) {
         switch(name) {
             case 'core:TemperatureState': 
                 this.onTemperatureUpdate(value);
                 break;
-            case 'io:EffectiveTemperatureSetpointState': 
+            case 'io:EffectiveTemperatureSetpointState':
+            //case 'core:TargetTemperatureState': 
                 this.targetTemperature?.updateValue(value);
                 break;
             case 'io:TargetHeatingLevelState':
