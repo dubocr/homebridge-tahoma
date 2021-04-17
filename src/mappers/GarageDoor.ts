@@ -7,13 +7,18 @@ export default class GarageDoor extends Mapper {
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
     protected on: Characteristic | undefined;
+    protected currentPedestrian: Characteristic | undefined;
+    protected targetPedestrian: Characteristic | undefined;
 
     protected cyclic;
     protected cycleDuration;
+    protected pedestrianCommand;
 
     protected applyConfig(config) {
         this.cyclic = config['cyclic'] || false;
         this.cycleDuration = (config['cycleDuration'] || 5) * 1000;
+        this.pedestrianCommand = ['setPedestrianPosition', 'partialPosition', 'my']
+            .find((command: string) => this.device.hasCommand(command));
     }
 
     protected registerServices() {
@@ -27,16 +32,8 @@ export default class GarageDoor extends Mapper {
             this.currentState.updateValue(Characteristics.CurrentDoorState.CLOSED);
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
         }
-        if(this.device.hasCommand('setPedestrianPosition') || this.device.hasCommand('my')) {
-            this.registerSwitchService('pedestrian');
-        }
-    }
-
-    protected getTargetCommands(value) {
-        if(this.device.hasCommand('cycle')) {
-            return new Command('cycle'); 
-        } else {
-            return new Command(value ? 'close' : 'open');
+        if(this.pedestrianCommand && this.device.uiClass === 'Gate') {
+            this.registerLockService('pedestrian');
         }
     }
 
@@ -46,6 +43,23 @@ export default class GarageDoor extends Mapper {
 
         this.on?.onSet(this.setOn.bind(this));
         return service;
+    }
+
+    protected registerLockService(subtype?: string): Service {
+        const service = this.registerService(Services.LockMechanism, subtype);
+        this.currentPedestrian = service.getCharacteristic(Characteristics.LockCurrentState);
+        this.targetPedestrian = service.getCharacteristic(Characteristics.LockTargetState);
+
+        this.targetPedestrian?.onSet(this.setLock.bind(this));
+        return service;
+    }
+
+    protected getTargetCommands(value) {
+        if(this.device.hasCommand('cycle')) {
+            return new Command('cycle'); 
+        } else {
+            return new Command(value ? 'close' : 'open');
+        }
     }
 
     protected async setOn(value) {
@@ -60,17 +74,46 @@ export default class GarageDoor extends Mapper {
     }
 
     protected getOnCommands(value): Command | Array<Command> {
-        if(this.device.hasCommand('setPedestrianPosition')) {
-            return new Command(value ? 'setPedestrianPosition' : 'close');
+        if(value) {
+            return this.pedestrianCommand ? new Command(this.pedestrianCommand) : [];
         } else {
-            return new Command(value ? 'my' : 'close');
+            return new Command('close');
+        }
+    }
+
+    protected async setLock(value) {
+        const action = await this.executeCommands(this.getLockCommands(value));
+        action.on('update', (state) => {
+            switch (state) {
+                case ExecutionState.COMPLETED:
+                    if(value === Characteristics.LockTargetState.SECURED) {
+                        this.targetState?.updateValue(value);
+                    }
+                    break;
+            }
+        });
+    }
+    
+    protected getLockCommands(value): Command | Array<Command> {
+        if(value === Characteristics.LockTargetState.UNSECURED) {
+            return this.pedestrianCommand ? new Command(this.pedestrianCommand) : [];
+        } else {
+            return new Command('close');
         }
     }
 
     protected async setTargetState(value) {
+        const previousTarget = this.targetState?.value;
         const action = await this.executeCommands(this.getTargetCommands(value));
         action.on('update', (state) => {
             switch (state) {
+                case ExecutionState.IN_PROGRESS:
+                    if(value === Characteristics.TargetDoorState.OPEN) {
+                        this.currentState?.updateValue(Characteristics.CurrentDoorState.OPENING);
+                    } else {
+                        this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSING);
+                    }
+                    break;
                 case ExecutionState.COMPLETED:
                     if(this.stateless) {
                         this.currentState?.updateValue(value);
@@ -81,10 +124,11 @@ export default class GarageDoor extends Mapper {
                             }, this.cycleDuration);
                         }
                     }
+                    this.targetPedestrian?.updateValue(value);
                     break;
                 case ExecutionState.FAILED:
-                    if(this.currentState) {
-                        this.targetState?.updateValue(this.currentState.value);
+                    if(previousTarget) {
+                        this.targetState?.updateValue(previousTarget);
                     }
                     break;
             }
@@ -92,6 +136,8 @@ export default class GarageDoor extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
+        let targetState;
+        let targetPedestrian;
         switch(name) {
             case 'core:OpenClosedPedestrianState':
             case 'core:OpenClosedUnknownState':
@@ -101,28 +147,35 @@ export default class GarageDoor extends Mapper {
                     case 'unknown':
                     case 'open' :
                         this.on?.updateValue(false);
+                        this.currentPedestrian?.updateValue(Characteristics.LockCurrentState.UNSECURED);
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.OPEN);
-                        if(this.isIdle) {
-                            this.targetState?.updateValue(Characteristics.TargetDoorState.OPEN);
-                        }
+                        targetPedestrian = Characteristics.LockTargetState.UNSECURED;
+                        targetState = Characteristics.TargetDoorState.OPEN;
                         break;
                     case 'pedestrian' :
                     case 'partial' :
                         this.on?.updateValue(true);
+                        this.currentPedestrian?.updateValue(Characteristics.LockCurrentState.UNSECURED);
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.STOPPED);
-                        if(this.isIdle) {
-                            this.targetState?.updateValue(Characteristics.TargetDoorState.OPEN);
-                        }
+                        targetPedestrian = Characteristics.LockTargetState.UNSECURED;
+                        targetState = Characteristics.TargetDoorState.OPEN;
                         break;
                     case 'closed' :
                         this.on?.updateValue(false);
+                        this.currentPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
                         this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSED);
-                        if(this.isIdle) {
-                            this.targetState?.updateValue(Characteristics.TargetDoorState.CLOSED);
-                        }
+                        targetPedestrian = Characteristics.LockTargetState.SECURED;
+                        targetState = Characteristics.TargetDoorState.CLOSED;
                         break;
                 }
                 break;
+        }
+
+        if(this.targetState && targetState !== undefined && this.isIdle) {
+            this.targetState.updateValue(targetState);
+        }
+        if(this.targetPedestrian && targetPedestrian !== undefined && this.isIdle) {
+            this.targetPedestrian.updateValue(targetPedestrian);
         }
     }
 }
