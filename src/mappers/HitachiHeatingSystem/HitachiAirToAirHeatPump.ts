@@ -3,17 +3,17 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class HitachiAirToAirHeatPump extends HeatingSystem {
+    protected MIN_TEMP = 16;
+    protected MAX_TEMP = 30;
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.COOL,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
 
     protected registerServices() {
         this.registerThermostatService();
-        this.targetTemperature?.setProps({
-            minValue: 16,
-            maxValue: 30,
-            minStep: 0.5,
-        });
-        if(this.targetTemperature && this.targetTemperature.value! < 16) {
-            this.targetTemperature.value = 16;
-        }
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
@@ -25,14 +25,14 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'ovp:ModeChangeState':
             case 'ovp:MainOperationState':
-                if(this.device.get('ovp:MainOperationState') === 'Off' || this.device.get('ovp:MainOperationState') === 'off') {
+                if (this.device.get('ovp:MainOperationState') === 'Off' || this.device.get('ovp:MainOperationState') === 'off') {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                     this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.OFF);
                 } else {
-                    switch(this.device.get('ovp:ModeChangeState')?.toLowerCase()) {
+                    switch (this.device.get('ovp:ModeChangeState')?.toLowerCase()) {
                         case 'auto cooling':
                             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                             this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
@@ -53,7 +53,7 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
                 }
                 break;
             case 'ovp:RoomTemperatureState': this.onTemperatureUpdate(value); break;
-            case 'core:TargetTemperatureState': 
+            case 'core:TargetTemperatureState':
                 this.targetTemperature?.updateValue(value);
                 break;
             /*
@@ -77,10 +77,10 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
         let heatMode = 'auto';
         const autoTemp = Math.trunc(Math.max(Math.min(temperature - parseInt(currentTemperature.toString()), 5), -5));
 
-        switch(state) {
+        switch (state) {
             case Characteristics.TargetHeatingCoolingState.OFF:
                 onOff = 'off';
-                switch(currentState) {
+                switch (currentState) {
                     case Characteristics.CurrentHeatingCoolingState.HEAT:
                         heatMode = 'heating';
                         break;

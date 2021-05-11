@@ -2,14 +2,20 @@ import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class ValveHeatingTemperatureInterface extends HeatingSystem {   
-    
+export default class ValveHeatingTemperatureInterface extends HeatingSystem {
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.COOL,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
+
     protected registerServices() {
         this.registerThermostatService();
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 return new Command('exitDerogation');
 
@@ -30,12 +36,12 @@ export default class ValveHeatingTemperatureInterface extends HeatingSystem {
 
     protected onStateChanged(name, value) {
         super.onStateChanged(name, value);
-        switch(name) {
+        switch (name) {
             case 'core:OperatingModeState':
             case 'io:CurrentHeatingModeState':
                 this.postpone(this.computeStates);
                 break;
-            case 'core:TargetRoomTemperatureState': 
+            case 'core:TargetRoomTemperatureState':
                 this.targetTemperature?.updateValue(value);
                 break;
         }
@@ -46,7 +52,7 @@ export default class ValveHeatingTemperatureInterface extends HeatingSystem {
 
         const auto = ['auto', 'prog', 'program'].includes(this.device.get('core:OperatingModeState') || '');
 
-        switch(this.device.get('io:CurrentHeatingModeState')) {
+        switch (this.device.get('io:CurrentHeatingModeState')) {
             case 'manual':
             case 'comfort':
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
@@ -63,7 +69,7 @@ export default class ValveHeatingTemperatureInterface extends HeatingSystem {
                 targetState = Characteristics.TargetHeatingCoolingState.OFF;
                 break;
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }

@@ -2,26 +2,23 @@ import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class ThermostatSetPoint extends HeatingSystem {   
-    
+export default class ThermostatSetPoint extends HeatingSystem {
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.HEAT,
+    ];
+
     protected registerServices() {
         this.registerThermostatService();
-
-        this.targetState?.setProps({
-            validValues: [
-                Characteristics.TargetHeatingCoolingState.HEAT,
-            ],
-        });
         this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
     }
-    
+
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
         return new Command('setHeatingTargetTemperature', value);
     }
 
     protected onStateChanged(name, value) {
-        switch(name) {
+        switch (name) {
             case 'zwave:SetPointHeatingValueState':
             case 'core:RoomTemperatureState':
                 this.onTemperatureUpdate(value);

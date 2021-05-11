@@ -4,6 +4,14 @@ import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 
 export default class HeatingSystem extends Mapper {
+    protected MIN_TEMP = 7;
+    protected MAX_TEMP = 26;
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
+
     protected currentTemperature: Characteristic | undefined;
     protected targetTemperature: Characteristic | undefined;
     protected currentState: Characteristic | undefined;
@@ -15,7 +23,7 @@ export default class HeatingSystem extends Mapper {
     protected comfortTemperature;
     protected ecoTemperature;
     protected enableProg;
-    
+
     protected applyConfig(config) {
         this.enableProg = config['enableProg'] || false;
         this.derogationDuration = config['derogationDuration'] || 1;
@@ -30,23 +38,31 @@ export default class HeatingSystem extends Mapper {
         this.targetTemperature = service.getCharacteristic(Characteristics.TargetTemperature);
         this.currentState = service.getCharacteristic(Characteristics.CurrentHeatingCoolingState);
         this.targetState = service.getCharacteristic(Characteristics.TargetHeatingCoolingState);
-        
+
+        this.targetState?.setProps({ validValues: this.TARGET_MODES });
+        this.targetTemperature?.setProps({ minValue: this.MIN_TEMP, maxValue: this.MAX_TEMP, minStep: 0.5 });
+        if (this.targetTemperature && this.targetTemperature.value! < this.targetTemperature.props.minValue!) {
+            this.targetTemperature.value = this.targetTemperature.props.minValue!;
+        }
+        if (this.targetTemperature && this.targetTemperature.value! > this.targetTemperature.props.maxValue!) {
+            this.targetTemperature.value = this.targetTemperature.props.maxValue!;
+        }
+
         this.targetState?.onSet(this.setTargetState.bind(this));
         this.targetTemperature?.onSet(this.debounce(this.setTargetTemperature));
-        this.targetTemperature?.setProps({ minValue: 7, maxValue: 26, minStep: 0.5 });
         return service;
     }
 
     protected registerSwitchService(subtype?: string): Service {
         const service = this.registerService(Services.Switch, subtype);
         this.on = service.getCharacteristic(Characteristics.On);
-        
+
         this.on?.onSet(this.setOn.bind(this));
         return service;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 return new Command('auto');
             case Characteristics.TargetHeatingCoolingState.HEAT:
@@ -61,19 +77,19 @@ export default class HeatingSystem extends Mapper {
     }
 
     protected async setTargetState(value) {
-        if(value === this.targetState?.value) {
+        if (value === this.targetState?.value) {
             return;
         }
         const action = await this.executeCommands(this.getTargetStateCommands(value));
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    if(this.stateless) {
+                    if (this.stateless) {
                         this.currentState?.updateValue(value);
                     }
                     break;
                 case ExecutionState.FAILED:
-                    if(this.currentState) {
+                    if (this.currentState) {
                         this.targetState?.updateValue(this.currentState.value);
                     }
                     break;
@@ -109,9 +125,9 @@ export default class HeatingSystem extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
-            case 'core:TargetTemperatureState': 
+            case 'core:TargetTemperatureState':
                 this.targetTemperature?.updateValue(value);
                 break;
         }

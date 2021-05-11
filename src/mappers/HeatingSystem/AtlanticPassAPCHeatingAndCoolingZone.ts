@@ -3,6 +3,13 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem {
+    protected MIN_TEMP = 16;
+    protected MAX_TEMP = 30;
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
+
     private refreshStatesTimeout;
 
     protected applyConfig(config) {
@@ -11,26 +18,12 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
 
     protected registerServices() {
         this.registerThermostatService();
-        this.targetState?.setProps({
-            validValues: [
-                Characteristics.TargetHeatingCoolingState.AUTO,
-                Characteristics.TargetHeatingCoolingState.OFF,
-            ],
-        });
-        this.targetTemperature?.setProps({
-            minValue: 16,
-            maxValue: 30,
-            minStep: 0.5,
-        });
-        if(this.targetTemperature && this.targetTemperature.value! < 16) {
-            this.targetTemperature.value = 16;
-        }
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
         const heatingCooling = this.getHeatingCooling();
         const commands: Array<Command> = [];
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('set' + heatingCooling + 'OnOffState', 'on'));
                 commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', this.enableProg ? 'internalScheduling' : 'manu'));
@@ -46,8 +39,8 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
         const heatingCooling = this.getHeatingCooling();
-        if(this.enableProg) {
-            if(this.device.hasCommand('setDerogatedTargetTemperature')) {
+        if (this.enableProg) {
+            if (this.device.hasCommand('setDerogatedTargetTemperature')) {
                 // AtlanticPassAPCHeatPump
                 return [
                     new Command('setDerogatedTargetTemperature', value),
@@ -59,7 +52,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
                 return new Command(`set${profile}${heatingCooling}TargetTemperature`, value);
             }
         } else {
-            if(this.device.hasCommand(`set${heatingCooling}TargetTemperature`)) {
+            if (this.device.hasCommand(`set${heatingCooling}TargetTemperature`)) {
                 // AtlanticPassAPCZoneControl
                 return new Command(`set${heatingCooling}TargetTemperature`, value);
             } else {
@@ -70,12 +63,12 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
     }
 
     protected onStateChanged(name, value) {
-        switch(name) {
+        switch (name) {
             case 'core:TemperatureState':
                 this.onTemperatureUpdate(value);
                 break;
             case 'core:TargetTemperatureState':
-                if(value >= 16) {
+                if (value >= 16) {
                     this.targetTemperature?.updateValue(value);
                 }
                 break;
@@ -94,34 +87,34 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         let targetTemperature;
         const heatingCooling = this.getHeatingCooling();
 
-        if(this.device.get(`core:${heatingCooling}OnOffState`) === 'off') {
+        if (this.device.get(`core:${heatingCooling}OnOffState`) === 'off') {
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         } else {
             targetTemperature = targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`) ||
                 this.device.get('core:TargetTemperatureState');
             const currentTemperature = this.currentTemperature?.value || targetTemperature;
-            if(heatingCooling === 'Heating') {
+            if (heatingCooling === 'Heating') {
                 if (currentTemperature >= (targetTemperature + 0.5)) {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
-                }else {
+                } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
             } else {
                 if (currentTemperature <= (targetTemperature - 0.5)) {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
-                }else {
+                } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                 }
             }
             targetState = Characteristics.TargetHeatingCoolingState.AUTO;
         }
 
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
 
-        if(this.targetTemperature !== undefined && targetTemperature >= 16 && this.isIdle) {
+        if (this.targetTemperature !== undefined && targetTemperature >= 16 && this.isIdle) {
             this.targetTemperature.updateValue(targetTemperature);
         }
     }
@@ -131,7 +124,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
      */
     private getHeatingCooling() {
         const operatingMode = this.device.parent?.get('io:PassAPCOperatingModeState');
-        if(operatingMode === 'cooling') {
+        if (operatingMode === 'cooling') {
             return 'Cooling';
         } else {
             return 'Heating';
@@ -140,7 +133,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
 
     private getProfile() {
         const heatingCooling = this.getHeatingCooling();
-        if(this.device.get(`core:Eco${heatingCooling}TargetTemperatureState`) === this.device.get('core:TargetTemperatureState')) {
+        if (this.device.get(`core:Eco${heatingCooling}TargetTemperatureState`) === this.device.get('core:TargetTemperatureState')) {
             return 'Eco';
         } else {
             return 'Comfort';

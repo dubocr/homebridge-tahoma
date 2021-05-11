@@ -1,8 +1,7 @@
-import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class AtlanticPassAPCBoiler extends HeatingSystem {  
+export default class AtlanticPassAPCBoiler extends HeatingSystem {
     protected registerServices() {
         this.registerSwitchService();
     }
@@ -12,9 +11,9 @@ export default class AtlanticPassAPCBoiler extends HeatingSystem {
     }
 
     protected onStateChanged(name, value) {
-        switch(name) {
+        switch (name) {
             case 'io:PassAPCOperatingModeState':
-                switch(value) {
+                switch (value) {
                     case 'stop':
                         this.on?.updateValue(0);
                         break;

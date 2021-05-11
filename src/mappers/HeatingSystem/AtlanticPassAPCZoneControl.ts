@@ -3,16 +3,21 @@ import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class AtlanticPassAPCZoneControl extends HeatingSystem { 
+export default class AtlanticPassAPCZoneControl extends HeatingSystem {
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.COOL,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
+
     protected registerServices() {
         this.registerThermostatService();
         this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] });
-        this.targetTemperature?.updateValue(19);
-        this.currentTemperature?.updateValue(19);
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 return [
                     new Command('setPassAPCOperatingMode', 'heating'),
@@ -45,7 +50,7 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
     }
 
     protected onStateChanged(name, value) {
-        switch(name) {
+        switch (name) {
             case 'io:PassAPCOperatingModeState':
             case 'core:HeatingCoolingAutoSwitchState':
                 this.postpone(this.computeStates);
@@ -54,9 +59,9 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
 
     protected computeStates() {
         let targetState;
-        switch(this.device.get('io:PassAPCOperatingModeState')) {
+        switch (this.device.get('io:PassAPCOperatingModeState')) {
             case 'heating':
-                if(this.device.get('core:HeatingCoolingAutoSwitchState') === 'on') {
+                if (this.device.get('core:HeatingCoolingAutoSwitchState') === 'on') {
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                 } else {
                     targetState = Characteristics.TargetHeatingCoolingState.HEAT;
@@ -64,7 +69,7 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 break;
             case 'cooling':
-                if(this.device.get('core:HeatingCoolingAutoSwitchState') === 'on') {
+                if (this.device.get('core:HeatingCoolingAutoSwitchState') === 'on') {
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                 } else {
                     targetState = Characteristics.TargetHeatingCoolingState.COOL;
@@ -76,9 +81,9 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                 break;
         }
-        
+
         // eslint-disable-next-line eqeqeq
-        if(this.targetState !== undefined && targetState != null && this.isIdle) {
+        if (this.targetState !== undefined && targetState != null && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }

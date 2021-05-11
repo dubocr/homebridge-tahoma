@@ -2,15 +2,22 @@ import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
-export default class SomfyThermostat extends HeatingSystem {   
-    
+export default class SomfyThermostat extends HeatingSystem {
+    protected MIN_TEMP = 0;
+    protected MAX_TEMP = 26;
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.COOL,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
+
     protected registerServices() {
         this.registerThermostatService();
-        this.targetTemperature?.setProps({ minValue: 0, maxValue: 26, minStep: 0.5 });
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 return new Command('exitDerogation');
 
@@ -31,7 +38,7 @@ export default class SomfyThermostat extends HeatingSystem {
 
     protected onStateChanged(name, value) {
         super.onStateChanged(name, value);
-        switch(name) {
+        switch (name) {
             case 'core:DerogationActivationState':
             case 'somfythermostat:DerogationHeatingModeState':
                 this.postpone(this.computeStates);
@@ -43,7 +50,7 @@ export default class SomfyThermostat extends HeatingSystem {
         let targetState;
 
         const auto = this.device.states['core:DerogationActivationState'] === 'inactive';
-        switch(this.device.states['somfythermostat:DerogationHeatingModeState']) {
+        switch (this.device.states['somfythermostat:DerogationHeatingModeState']) {
             case 'atHomeMode':
             case 'geofencingMode':
             case 'manualMode':
@@ -62,7 +69,7 @@ export default class SomfyThermostat extends HeatingSystem {
                 break;
         }
 
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }
