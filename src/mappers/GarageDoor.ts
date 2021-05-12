@@ -93,6 +93,11 @@ export default class GarageDoor extends Mapper {
                             'core:OpenClosedPedestrianState',
                             value === Characteristics.LockTargetState.SECURED ? 'closed' : 'pedestrian',
                         );
+                        if (this.cyclic) {
+                            setTimeout(() => {
+                                this.onStateChanged('core:OpenClosedPedestrianState', 'closed');
+                            }, this.cycleDuration);
+                        }
                     }
                     break;
             }
@@ -121,17 +126,15 @@ export default class GarageDoor extends Mapper {
                     break;
                 case ExecutionState.COMPLETED:
                     if (this.stateless) {
-                        this.currentState?.updateValue(value);
-                        if (this.cyclic) {
-                            setTimeout(() => {
-                                this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSED);
-                                this.targetState?.updateValue(Characteristics.TargetDoorState.CLOSED);
-                            }, this.cycleDuration);
-                        }
                         this.onStateChanged(
                             'core:OpenClosedPedestrianState',
                             value === Characteristics.TargetDoorState.CLOSED ? 'closed' : 'open',
                         );
+                        if (this.cyclic) {
+                            setTimeout(() => {
+                                this.onStateChanged('core:OpenClosedPedestrianState', 'closed');
+                            }, this.cycleDuration);
+                        }
                     }
                     break;
                 case ExecutionState.FAILED:
