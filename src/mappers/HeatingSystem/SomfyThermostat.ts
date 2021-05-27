@@ -49,8 +49,8 @@ export default class SomfyThermostat extends HeatingSystem {
     protected computeStates() {
         let targetState;
 
-        const auto = this.device.states['core:DerogationActivationState'] === 'inactive';
-        switch (this.device.states['somfythermostat:DerogationHeatingModeState']) {
+        const auto = this.device.get('core:DerogationActivationState') === 'inactive';
+        switch (this.device.get('somfythermostat:DerogationHeatingModeState')) {
             case 'atHomeMode':
             case 'geofencingMode':
             case 'manualMode':
