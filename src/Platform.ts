@@ -6,10 +6,12 @@ import Mapper from './Mapper';
 import SceneMapper from './SceneMapper';
 import { CustomCharacteristics } from './CustomCharacteristics';
 import { BLUE, GREY, RESET } from './colors';
+import fakegato from 'fakegato-history';
 
 
 export let Services: typeof Service;
 export let Characteristics: typeof Characteristic;
+export let HistoryService;
 
 /**
  * HomebridgePlatform
@@ -32,6 +34,7 @@ export class Platform implements DynamicPlatformPlugin {
         Services = this.api.hap.Service;
         Characteristics = this.api.hap.Characteristic;
         new CustomCharacteristics(this.api.hap);
+        HistoryService = fakegato(this.api);
         this.log.debug('Finished initializing platform:', this.config.name);
 
         this.exclude = config.exclude || [];
@@ -45,7 +48,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         try {
             this.client = new Client(log, config);
-        } catch(error) {
+        } catch (error) {
             this.log.error(error.message);
             throw error;
         }
@@ -66,7 +69,7 @@ export class Platform implements DynamicPlatformPlugin {
      * It should be used to setup event handlers for characteristics and update respective values.
      */
     async configureAccessory(accessory: PlatformAccessory) {
-        if(!this.accessories.map((a) => a.UUID).includes(accessory.UUID)) {
+        if (!this.accessories.map((a) => a.UUID).includes(accessory.UUID)) {
             this.accessories.push(accessory);
         }
     }
@@ -83,7 +86,7 @@ export class Platform implements DynamicPlatformPlugin {
 
             // loop over the discovered devices and register each one if it has not already been registered
             for (const device of devices) {
-                if(
+                if (
                     this.exclude.includes(device.uiClass) ||
                     this.exclude.includes(device.widget) ||
                     this.exclude.includes(device.controllableName) ||
@@ -133,11 +136,11 @@ export class Platform implements DynamicPlatformPlugin {
             }
 
 
-            if(this.exposeScenarios) {
+            if (this.exposeScenarios) {
                 const actionGroups = await this.client.getActionGroups();
 
                 for (const actionGroup of actionGroups) {
-                    if(this.exclude.includes(actionGroup.label)) {
+                    if (this.exclude.includes(actionGroup.label)) {
                         continue;
                     }
 
@@ -161,7 +164,7 @@ export class Platform implements DynamicPlatformPlugin {
 
             const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
             this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
-        } catch(error) {
+        } catch (error) {
             this.log.error(error);
             this.log.error('Retry in ' + this.retryDelay + ' sec...');
             this.retryDelay = this.retryDelay * 2;
@@ -170,16 +173,16 @@ export class Platform implements DynamicPlatformPlugin {
     }
 
     /*
-    	action: The action to execute
+        action: The action to execute
     */
     public executeAction(label: string, action: Action, highPriority = false, standalone = false) {
-        if(standalone) {
+        if (standalone) {
             // Run action in standalone execution
             return this.client.execute(highPriority ? 'apply/highPriority' : 'apply', new Execution(label + ' - HomeKit', action));
         } else {
-            if(this.executionPromise) {
+            if (this.executionPromise) {
                 this.executionPromise.execution.addAction(action);
-                this.executionPromise.execution.label = 'Execute scene (' + 
+                this.executionPromise.execution.label = 'Execute scene (' +
                     this.executionPromise.execution.actions.length + ' devices) - HomeKit';
             } else {
                 this.executionPromise = new Promise((resolve, reject) => {

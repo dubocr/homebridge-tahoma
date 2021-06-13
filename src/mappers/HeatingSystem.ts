@@ -1,7 +1,8 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, HistoryService, Services } from '../Platform';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
+import { ProgramCommandCharacteristic, ProgramDataCharacteristic, ValvePositionCharacteristic } from '../CustomCharacteristics';
 
 export default class HeatingSystem extends Mapper {
     protected MIN_TEMP = 7;
@@ -16,6 +17,7 @@ export default class HeatingSystem extends Mapper {
     protected targetTemperature: Characteristic | undefined;
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
+    protected history;
 
     protected on: Characteristic | undefined;
 
@@ -50,6 +52,26 @@ export default class HeatingSystem extends Mapper {
 
         this.targetState?.onSet(this.setTargetState.bind(this));
         this.targetTemperature?.onSet(this.debounce(this.setTargetTemperature));
+
+        service.getCharacteristic(ValvePositionCharacteristic);
+        service.getCharacteristic(ProgramCommandCharacteristic);
+        service.getCharacteristic(ProgramDataCharacteristic);
+        this.history = new HistoryService('thermo', { displayName: this.device.label }, {
+            log: this.log,
+            disableTimer: true,
+            storage: 'fs',
+            path: this.platform.api.user.storagePath() + '/accessories',
+            filename: 'history_' + this.device.uuid + '.json',
+        });
+        this.services.push(this.history);
+        setInterval(() => {
+            this.history.addEntry({
+                time: Math.round(new Date().valueOf() / 1000),
+                currentTemp: this.currentTemperature?.value,
+                setTemp: this.targetTemperature?.value,
+                valvePosition: 100,
+            });
+        }, 600000);
         return service;
     }
 
