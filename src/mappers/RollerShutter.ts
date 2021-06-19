@@ -77,10 +77,6 @@ export default class RollerShutter extends Mapper {
     * HomeKit '100' (Open) => 0% Closure
     **/
     async setTargetPosition(value) {
-        if (this.stateless && !this.isIdle) {
-            this.warn('Try to set new position while already executing commands');
-            //return await this.cancelExecution();
-        }
         if (this.cancelTimeout !== null) {
             clearTimeout(this.cancelTimeout);
         }

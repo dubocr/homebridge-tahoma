@@ -11,10 +11,12 @@ export default class GarageDoor extends Mapper {
     protected targetPedestrian: Characteristic | undefined;
 
     protected cyclic;
+    protected reverse;
     protected cycleDuration;
     protected pedestrianCommand;
 
     protected applyConfig(config) {
+        this.reverse = config['reverse'] || false;
         this.cyclic = config['cyclic'] || false;
         this.cycleDuration = (config['cycleDuration'] || 5) * 1000;
         this.pedestrianCommand = ['setPedestrianPosition', 'partialPosition', 'my']
