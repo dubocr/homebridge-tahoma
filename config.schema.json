@@ -16,11 +16,42 @@
         "type": "string",
         "default": "tahoma",
         "oneOf": [
-          { "title": "TaHoma", "enum": ["tahoma"] },
-          { "title": "Cozytouch", "enum": ["cozytouch"] },
-          { "title": "Connexoon", "enum": ["connexoon"] },
-          { "title": "Connexoon RTS", "enum": ["connexoon_rts"] },
-          { "title": "Rexel", "enum": ["rexel"] }
+          {
+            "title": "TaHoma",
+            "enum": [
+              "tahoma"
+            ]
+          },
+          {
+            "title": "TaHoma Switch",
+            "enum": [
+              "tahoma_switch"
+            ]
+          },
+          {
+            "title": "Cozytouch",
+            "enum": [
+              "cozytouch"
+            ]
+          },
+          {
+            "title": "Connexoon",
+            "enum": [
+              "connexoon"
+            ]
+          },
+          {
+            "title": "Connexoon RTS",
+            "enum": [
+              "connexoon_rts"
+            ]
+          },
+          {
+            "title": "Rexel",
+            "enum": [
+              "rexel"
+            ]
+          }
         ],
         "required": true
       },
@@ -180,7 +211,7 @@
                   "type": "section",
                   "expandable": true,
                   "expanded": false,
-                  "items" : [
+                  "items": [
                     "devicesConfig[].reverse",
                     "devicesConfig[].defaultPosition",
                     "devicesConfig[].blindMode",
@@ -194,7 +225,7 @@
                   "type": "section",
                   "expandable": true,
                   "expanded": false,
-                  "items" : [
+                  "items": [
                     "devicesConfig[].reverse",
                     "devicesConfig[].cyclic",
                     "devicesConfig[].cycleDuration"
@@ -205,7 +236,7 @@
                   "type": "section",
                   "expandable": true,
                   "expanded": false,
-                  "items" : [
+                  "items": [
                     "devicesConfig[].occupancySensor",
                     "devicesConfig[].stayZones",
                     "devicesConfig[].nightZones"
