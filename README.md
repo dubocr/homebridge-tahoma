@@ -46,7 +46,7 @@ Configuration parameters:
 
 | Parameter					| Type			| Default		| Note							|
 |---------------------------|--------------|---------------|-------------------------------|
-| `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon', 'connexoon_rts', 'cozytouch' or 'rexel')	|
+| `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'tahoma_switch', 'connexoon', 'connexoon_rts', 'cozytouch' or 'rexel')	|
 | `user`					| String		| null			| mandatory, your service account username	|
 | `password`				| String		| null			| mandatory, your service account password	|
 | `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|

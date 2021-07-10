@@ -1,60 +1,91 @@
 {
   "plugin_alias": "Tahoma",
   "schema": {
-      "type": "object",
-      "properties": {
-          "platform": {
-              "title": "Platform",
-              "type": "string",
-              "const": "Tahoma",
-              "readOnly": true
+    "type": "object",
+    "properties": {
+      "platform": {
+        "title": "Platform",
+        "type": "string",
+        "const": "Tahoma",
+        "readOnly": true
+      },
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "TaHoma",
+        "description": "The name of this platform in HomeKit"
+      },
+      "service": {
+        "title": "Service",
+        "type": "string",
+        "default": "tahoma",
+        "oneOf": [
+          {
+            "title": "TaHoma",
+            "enum": [
+              "tahoma"
+            ]
           },
-          "name": {
-            "title": "Name",
-            "type": "string",
-            "required": true,
-            "default": "TaHoma",
-            "description": "The name of this platform in HomeKit"
+          {
+            "title": "TaHoma Switch",
+            "enum": [
+              "tahoma_switch"
+            ]
           },
-          "service": {
-            "title": "Service",
-            "type": "string",
-            "default": "tahoma",
-            "oneOf": [
-              { "title": "TaHoma", "enum": ["tahoma"] },
-              { "title": "Cozytouch", "enum": ["cozytouch"] },
-              { "title": "Connexoon", "enum": ["connexoon"] },
-              { "title": "Connexoon RTS", "enum": ["connexoon_rts"] },
-              { "title": "Rexel", "enum": ["rexel"] }
-            ],
-            "required": true,
-            "description": "Service name (tahoma, connexoon, connexoon_rts, cozytouch or rexel)"
+          {
+            "title": "Cozytouch",
+            "enum": [
+              "cozytouch"
+            ]
           },
-          "user": {
-              "title": "Username",
-              "type": "string",
-              "description": "Your username for selected service"
+          {
+            "title": "Connexoon",
+            "enum": [
+              "connexoon"
+            ]
           },
-          "password": {
-              "title": "Password",
-              "type": "string",
-              "options": {
-                  "hidden": true
-              },
-              "description": "Your password for selected service"
+          {
+            "title": "Connexoon RTS",
+            "enum": [
+              "connexoon_rts"
+            ]
           },
-          "exposeScenarios": {
-            "title": "Expose scenarios",
-            "type": "boolean",
-            "description": "Expose scenarios as HomeKit switch to trigger them"
-          },
-          "exclude": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "List of device or scenario to exclude (should be a name, widget, uiClass or protocol)"
+          {
+            "title": "Rexel",
+            "enum": [
+              "rexel"
+            ]
           }
+        ],
+        "required": true,
+        "description": "Service name (tahoma, tahoma_switch, connexoon, connexoon_rts, cozytouch or rexel)"
+      },
+      "user": {
+        "title": "Username",
+        "type": "string",
+        "description": "Your username for selected service"
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "options": {
+          "hidden": true
+        },
+        "description": "Your password for selected service"
+      },
+      "exposeScenarios": {
+        "title": "Expose scenarios",
+        "type": "boolean",
+        "description": "Expose scenarios as HomeKit switch to trigger them"
+      },
+      "exclude": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of device or scenario to exclude (should be a name, widget, uiClass or protocol)"
       }
+    }
   }
 }
