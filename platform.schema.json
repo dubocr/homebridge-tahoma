@@ -22,15 +22,9 @@
         "default": "tahoma",
         "oneOf": [
           {
-            "title": "TaHoma",
+            "title": "TaHoma / Connexoon",
             "enum": [
               "tahoma"
-            ]
-          },
-          {
-            "title": "TaHoma Switch",
-            "enum": [
-              "tahoma_switch"
             ]
           },
           {
@@ -40,19 +34,13 @@
             ]
           },
           {
-            "title": "Connexoon",
-            "enum": [
-              "connexoon"
-            ]
-          },
-          {
             "title": "Connexoon RTS",
             "enum": [
               "connexoon_rts"
             ]
           },
           {
-            "title": "Rexel",
+            "title": "Energeasy connect (Rexel)",
             "enum": [
               "rexel"
             ]
