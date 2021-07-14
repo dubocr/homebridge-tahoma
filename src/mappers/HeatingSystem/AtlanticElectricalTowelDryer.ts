@@ -30,7 +30,7 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected getTargetStateCommands(value): Command | Array<Command> {
         switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
-                return new Command('setTowelDryerOperatingMode', this.prog?.value ? 'internal' : 'manual');
+                return new Command('setTowelDryerOperatingMode', this.prog?.value ? 'internal' : 'external');
             case Characteristics.TargetHeatingCoolingState.OFF:
                 return new Command('setTowelDryerOperatingMode', 'standby');
         }
