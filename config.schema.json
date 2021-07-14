@@ -17,19 +17,19 @@
         "default": "tahoma",
         "oneOf": [
           {
-            "title": "TaHoma / Connexoon",
+            "title": "TaHoma / Connexoon (Somfy)",
             "enum": [
               "tahoma"
             ]
           },
           {
-            "title": "Cozytouch",
+            "title": "Cozytouch (Atlantic / Thermor / Sauter)",
             "enum": [
               "cozytouch"
             ]
           },
           {
-            "title": "Connexoon RTS",
+            "title": "Connexoon RTS (Somfy outside France)",
             "enum": [
               "connexoon_rts"
             ]

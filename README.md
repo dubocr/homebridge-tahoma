@@ -1,14 +1,15 @@
 # homebridge-tahoma
 
-Supports TaHoma (Somfy), Connexoon (Somfy), Cozytouch (Atlantic,Thermor,Sauter) and E.Connect 2 (Rexel) platforms on HomeBridge
+Homebridge plugin supporting Overkiz based platforms :
 
-# Main plugin upgrade
-
-New plugin release 2.x.x will have many breaking changes. It will offer better stability for future development but this imply breaking devices identifiers from previous releases.
-After installing, this version, your devices will be removed from Homekit automation and you will have to configure them again.
-We appologize for that.
-
-Be careful to update your config file based on following documentation or using Hoobs/Homebridge-UI plugin config management.
+| Nom commercial			| Fournisseur					| Service			|
+|---------------------------|-------------------------------|-------------------|
+| TaHoma / TaHoma Switch 	| Somfy							| `tahoma`	    	|
+| Connexoon 				| Somfy							| `tahoma`	    	|
+| Connexoon RTS 			| Somfy							| `connexoon_rts`	|
+| Cozytouch				 	| Atlantic / Thermor / Sauter	| `cozytouch`		|
+| Energeasy Connect			| Rexel							| `rexel`			|
+| Kit de connectivité Somfy | Orange						| `tahoma`	    	|
 
 # Installation
 
@@ -46,7 +47,7 @@ Configuration parameters:
 
 | Parameter					| Type			| Default		| Note							|
 |---------------------------|--------------|---------------|-------------------------------|
-| `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon', 'connexoon_rts', 'cozytouch' or 'rexel')	|
+| `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon_rts', 'cozytouch' or 'rexel')	|
 | `user`					| String		| null			| mandatory, your service account username	|
 | `password`				| String		| null			| mandatory, your service account password	|
 | `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|
