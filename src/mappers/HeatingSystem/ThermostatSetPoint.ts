@@ -4,12 +4,12 @@ import HeatingSystem from '../HeatingSystem';
 
 export default class ThermostatSetPoint extends HeatingSystem {
     protected TARGET_MODES = [
-        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.AUTO,
     ];
 
     protected registerServices() {
         this.registerThermostatService();
-        this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
+        this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
     }
 

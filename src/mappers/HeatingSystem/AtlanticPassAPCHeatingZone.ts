@@ -3,11 +3,11 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['eco', 'prog'];
     protected MIN_TEMP = 10;
     protected MAX_TEMP = 35;
     protected TARGET_MODES = [
         Characteristics.TargetHeatingCoolingState.AUTO,
-        Characteristics.TargetHeatingCoolingState.HEAT,
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
@@ -20,19 +20,16 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
         switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('setHeatingOnOffState', 'on'));
-                commands.push(new Command('setPassAPCHeatingMode', 'internalScheduling'));
-                break;
-
-            case Characteristics.TargetHeatingCoolingState.HEAT:
-                commands.push(new Command('setDerogationOnOffState', 'off'));
-                commands.push(new Command('setHeatingOnOffState', 'on'));
-                commands.push(new Command('setPassAPCHeatingMode', 'comfort'));
-                break;
-
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                commands.push(new Command('setDerogationOnOffState', 'off'));
-                commands.push(new Command('setHeatingOnOffState', 'on'));
-                commands.push(new Command('setPassAPCHeatingMode', 'eco'));
+                if (this.prog?.value) {
+                    commands.push(new Command('setPassAPCHeatingMode', 'internalScheduling'));
+                } else {
+                    commands.push(new Command('setDerogationOnOffState', 'off'));
+                    if (this.eco?.value) {
+                        commands.push(new Command('setPassAPCHeatingMode', 'eco'));
+                    } else {
+                        commands.push(new Command('setPassAPCHeatingMode', 'comfort'));
+                    }
+                }
                 break;
 
             case Characteristics.TargetHeatingCoolingState.OFF:
@@ -47,15 +44,15 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
         const duration = this.derogationDuration;
         const commands: Array<Command> = [];
-        if (this.targetState?.value === Characteristics.TargetHeatingCoolingState.AUTO) {
+        if (this.prog?.value) {
             commands.push(new Command('setDerogatedTargetTemperature', value));
             commands.push(new Command('setDerogationTime', duration));
             commands.push(new Command('setDerogationOnOffState', 'on'));
         } else {
-            if (this.targetState?.value === Characteristics.TargetHeatingCoolingState.HEAT) {
-                commands.push(new Command('setComfortHeatingTargetTemperature', value));
-            } else if (this.targetState?.value === Characteristics.TargetHeatingCoolingState.COOL) {
+            if (this.eco?.value) {
                 commands.push(new Command('setEcoHeatingTargetTemperature', value));
+            } else {
+                commands.push(new Command('setComfortHeatingTargetTemperature', value));
             }
         }
         return commands;
@@ -77,6 +74,7 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
     protected computeStates() {
         let targetState;
         if (this.device.get('core:HeatingOnOffState') === 'on') {
+            targetState = Characteristics.TargetHeatingCoolingState.AUTO;
             switch (this.device.get('io:PassAPCHeatingModeState')) {
                 case 'off':
                 case 'absence':
@@ -87,7 +85,7 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
                 case 'auto':
                 case 'internalScheduling':
                 case 'externalScheduling':
-                    targetState = Characteristics.TargetHeatingCoolingState.AUTO;
+                    this.prog?.updateValue(true);
                     if (this.device.get('io:PassAPCHeatingProfileState') === 'comfort') {
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     } else {
@@ -104,12 +102,14 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
                     }
                     break;
                 case 'comfort':
-                    targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+                    this.prog?.updateValue(false);
+                    this.eco?.updateValue(false);
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     this.targetTemperature?.updateValue(this.device.get('core:ComfortHeatingTargetTemperatureState'));
                     break;
                 case 'eco':
-                    targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+                    this.prog?.updateValue(false);
+                    this.eco?.updateValue(true);
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                     this.targetTemperature?.updateValue(this.device.get('core:EcoHeatingTargetTemperatureState'));
                     break;

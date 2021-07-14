@@ -19,17 +19,20 @@ export default class Mapper {
         protected readonly accessory: PlatformAccessory,
         protected readonly device: Device,
     ) {
-        this.log = platform.log;
-        const config = Object.assign({}, 
-            platform.devicesConfig[device.uiClass],
-            platform.devicesConfig[device.widget],
-            platform.devicesConfig[device.label],
-            platform.devicesConfig[device.oid],
+        this.log = this.platform.log;
+    }
+
+    public build() {
+        const config = Object.assign({},
+            this.platform.devicesConfig[this.device.uiClass],
+            this.platform.devicesConfig[this.device.widget],
+            this.platform.devicesConfig[this.device.label],
+            this.platform.devicesConfig[this.device.oid],
         );
         this.applyConfig(config);
-        if(Object.keys(config).length > 0) {
+        if (Object.keys(config).length > 0) {
             delete config.key;
-            if(this.platform.config.debug) {
+            if (this.platform.config.debug) {
                 this.log.info(`${GREY}  Config: `, JSON.stringify(config));
             } else {
                 this.log.debug('  Config: ', JSON.stringify(config));
@@ -37,25 +40,25 @@ export default class Mapper {
         }
 
         const info = this.accessory.getService(Services.AccessoryInformation);
-        if(info) {
-            info.setCharacteristic(Characteristics.Manufacturer, device.manufacturer);
-            info.setCharacteristic(Characteristics.Model, device.model);
-            info.setCharacteristic(Characteristics.SerialNumber, device.address.substring(0, 64));
+        if (info) {
+            info.setCharacteristic(Characteristics.Manufacturer, this.device.manufacturer);
+            info.setCharacteristic(Characteristics.Model, this.device.model);
+            info.setCharacteristic(Characteristics.SerialNumber, this.device.address.substring(0, 64));
             this.services.push(info);
         }
-        this.stateless = (device.states.length === 0);
+        this.stateless = (this.device.states.length === 0);
 
         this.registerServices();
         this.accessory.services.forEach((service) => {
-            if(!this.services.find((s) => s.UUID === service.UUID && s.subtype === service.subtype)) {
+            if (!this.services.find((s) => s.UUID === service.UUID && s.subtype === service.subtype)) {
                 this.accessory.removeService(service);
             }
         });
 
-        if(!this.stateless) {
+        if (!this.stateless) {
             // Init and register states changes
             this.onStatesChanged(this.device.states, true);
-            device.on('states', states => this.onStatesChanged(states));
+            this.device.on('states', states => this.onStatesChanged(states));
 
             // Init and register sensors states changes
             this.device.sensors.forEach((sensor) => {
@@ -80,7 +83,7 @@ export default class Mapper {
     protected registerService(type: WithUUID<typeof Service>, subtype?: string): Service {
         let service: Service;
         const name = subtype ? this.translate(subtype) : this.device.label;
-        if(subtype) {
+        if (subtype) {
             service = this.accessory.getServiceById(type, subtype) || this.accessory.addService(type, name, subtype);
         } else {
             service = this.accessory.getService(type) || this.accessory.addService(type);
@@ -103,7 +106,7 @@ export default class Mapper {
     }
 
     private translate(value: string) {
-        switch(value) {
+        switch (value) {
             case 'boost': return 'Boost';
             case 'drying': return 'Séchage';
             default: return value.charAt(0).toUpperCase() + value.slice(1);
@@ -112,7 +115,7 @@ export default class Mapper {
 
     protected debounce(task) {
         return (value: CharacteristicValue) => {
-            if(this.debounceTimer !== null) {
+            if (this.debounceTimer !== null) {
                 clearTimeout(this.debounceTimer);
             }
             this.debounceTimer = setTimeout(() => {
@@ -123,24 +126,24 @@ export default class Mapper {
     }
 
     protected postpone(task, ...args) {
-        if(this.postponeTimer !== null) {
+        if (this.postponeTimer !== null) {
             clearTimeout(this.postponeTimer);
         }
         this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
     }
 
-    protected async executeCommands(commands: Command|Array<Command>|undefined, standalone = false): Promise<Action> {
+    protected async executeCommands(commands: Command | Array<Command> | undefined, standalone = false): Promise<Action> {
         let commandName = '';
-        if(commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
+        if (commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             this.error('No target command for', this.device.label);
             throw new Error('No target command for ' + this.device.label);
-        } else if(Array.isArray(commands)) {
-            if(commands.length > 1) {
-                commandName = commands[0].name + ' +' + (commands.length-1) + ' others';
+        } else if (Array.isArray(commands)) {
+            if (commands.length > 1) {
+                commandName = commands[0].name + ' +' + (commands.length - 1) + ' others';
             } else {
                 commandName = commands[0].name;
             }
-            for(const c of commands) {
+            for (const c of commands) {
                 this.info(c.name + JSON.stringify(c.parameters));
             }
         } else {
@@ -158,7 +161,7 @@ export default class Mapper {
         const highPriority = this.device.hasState('io:PriorityLockLevelState') ? true : false;
         const label = this.device.label + ' - ' + commandName;
 
-        if(this.actionPromise) {
+        if (this.actionPromise) {
             this.actionPromise.action.addCommands(commands);
         } else {
             this.actionPromise = new Promise((resolve, reject) => {
@@ -166,19 +169,19 @@ export default class Mapper {
                     try {
                         this.executionId = await this.platform.executeAction(label, this.actionPromise.action, highPriority, standalone);
                         resolve(this.actionPromise.action);
-                    } catch(error) {
+                    } catch (error) {
                         this.error(commandName + ' ' + error.message);
                         reject(error);
                     }
                     this.actionPromise = null;
                 }, 100);
-                
+
             });
             this.actionPromise.action = new Action(this.device.deviceURL, commands);
             this.actionPromise.action.on('update', (state, event) => {
-                if(state === ExecutionState.FAILED) {
+                if (state === ExecutionState.FAILED) {
                     this.error(commandName, event.failureType);
-                } else if(state === ExecutionState.COMPLETED) {
+                } else if (state === ExecutionState.COMPLETED) {
                     this.info(commandName, state);
                 } else {
                     this.debug(commandName, state);
@@ -191,13 +194,13 @@ export default class Mapper {
     private async delay(duration) {
         return new Promise(resolve => setTimeout(resolve, duration));
     }
-    
+
     /**
      * Logging methods
      */
 
     protected debug(...args) {
-        if(this.platform.config.debug) {
+        if (this.platform.config.debug) {
             this.platform.log.info(`${GREY}[${this.device.label}]`, ...args);
         } else {
             this.platform.log.debug(`[${this.device.label}]`, ...args);
@@ -226,7 +229,7 @@ export default class Mapper {
 
     protected onStatesChanged(states: Array<State>, init = false) {
         states.forEach((state: State) => {
-            if(!init) {
+            if (!init) {
                 this.debug(state.name + ' => ' + state.value);
             }
             this.onStateChanged(state.name, state.value);

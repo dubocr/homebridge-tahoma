@@ -3,15 +3,18 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint extends HeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['prog'];
     protected MIN_TEMP = 16;
     protected MAX_TEMP = 28;
     protected TARGET_MODES = [
         Characteristics.TargetHeatingCoolingState.AUTO,
-        Characteristics.TargetHeatingCoolingState.HEAT,
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
     protected registerServices() {
+        if (this.device.get('io:NativeFunctionalLevelState') === 'Top') {
+            this.TARGET_MODES.push(Characteristics.TargetHeatingCoolingState.HEAT);
+        }
         this.registerThermostatService();
     }
 
@@ -21,10 +24,13 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 if (this.device.get('io:NativeFunctionalLevelState') === 'Top') {
                     return new Command('setOperatingMode', 'auto');
                 } else {
-                    return new Command('setOperatingMode', 'internal');
+                    return new Command('setOperatingMode', this.prog?.value ? 'internal' : 'basic');
                 }
             case Characteristics.TargetHeatingCoolingState.HEAT:
-                return new Command('setOperatingMode', 'basic');
+                if (this.device.get('io:NativeFunctionalLevelState') === 'Top') {
+                    return new Command('setOperatingMode', this.prog?.value ? 'internal' : 'basic');
+                }
+                break;
             case Characteristics.TargetHeatingCoolingState.OFF:
                 return new Command('setOperatingMode', 'standby');
         }
@@ -32,7 +38,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> | undefined {
-        if (this.device.get('core:OperatingModeState') === 'internal') {
+        if (this.prog?.value) {
             return new Command('setDerogatedTargetTemperature', value);
         } else {
             return new Command('setTargetTemperature', value);
@@ -57,6 +63,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
 
     protected computeStates() {
         let targetState;
+        targetState = Characteristics.TargetHeatingCoolingState.AUTO;
         switch (this.device.get('core:OperatingModeState')) {
             case 'off':
             case 'away':
@@ -65,22 +72,29 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                 break;
             case 'auto':
-            case 'prog':
-            case 'program':
-            case 'internal':
-                targetState = Characteristics.TargetHeatingCoolingState.AUTO;
+                this.prog?.updateValue(false);
                 if (this.device.get('io:TargetHeatingLevelState') === 'eco') {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                 } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
                 break;
+            case 'prog':
+            case 'program':
+            case 'internal':
             case 'comfort':
             case 'eco':
             case 'manual':
             case 'basic':
-                targetState = Characteristics.TargetHeatingCoolingState.HEAT;
-                this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                if (this.device.get('io:NativeFunctionalLevelState') === 'Top') {
+                    targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+                }
+                this.prog?.updateValue(['prog', 'program', 'internal'].includes(this.device.get('core:OperatingModeState')));
+                if (this.device.get('io:TargetHeatingLevelState') === 'eco') {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
+                } else {
+                    this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+                }
                 break;
         }
 

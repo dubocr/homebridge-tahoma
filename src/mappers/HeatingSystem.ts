@@ -2,13 +2,14 @@ import { Characteristics, Services } from '../Platform';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
+import { EcoCharacteristic, ProgCharacteristic } from '../CustomCharacteristics';
 
 export default class HeatingSystem extends Mapper {
+    protected THERMOSTAT_CHARACTERISTICS: string[] = [];
     protected MIN_TEMP = 7;
     protected MAX_TEMP = 26;
     protected TARGET_MODES = [
         Characteristics.TargetHeatingCoolingState.AUTO,
-        Characteristics.TargetHeatingCoolingState.HEAT,
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
@@ -19,13 +20,14 @@ export default class HeatingSystem extends Mapper {
 
     protected on: Characteristic | undefined;
 
+    protected prog: Characteristic | undefined;
+    protected eco: Characteristic | undefined;
+
     protected derogationDuration;
     protected comfortTemperature;
     protected ecoTemperature;
-    protected enableProg;
 
     protected applyConfig(config) {
-        this.enableProg = config['enableProg'] || false;
         this.derogationDuration = config['derogationDuration'] || 1;
         this.comfortTemperature = config['comfort'] || 19;
         this.ecoTemperature = config['eco'] || 17;
@@ -34,6 +36,8 @@ export default class HeatingSystem extends Mapper {
     protected registerThermostatService(subtype?: string): Service {
         const service = this.registerService(Services.Thermostat, subtype);
         service.setPrimaryService(true);
+        service.addOptionalCharacteristic(ProgCharacteristic);
+        service.addOptionalCharacteristic(EcoCharacteristic);
         this.currentTemperature = service.getCharacteristic(Characteristics.CurrentTemperature);
         this.targetTemperature = service.getCharacteristic(Characteristics.TargetTemperature);
         this.currentState = service.getCharacteristic(Characteristics.CurrentHeatingCoolingState);
@@ -46,6 +50,22 @@ export default class HeatingSystem extends Mapper {
         }
         if (this.targetTemperature && this.targetTemperature.value! > this.targetTemperature.props.maxValue!) {
             this.targetTemperature.value = this.targetTemperature.props.maxValue!;
+        }
+
+        if (this.THERMOSTAT_CHARACTERISTICS.includes('prog')) {
+            this.prog = service.getCharacteristic(ProgCharacteristic);
+            this.prog.onSet((value) => {
+                this.prog?.updateValue(value);
+                this.sendCommands();
+            });
+        }
+
+        if (this.THERMOSTAT_CHARACTERISTICS.includes('eco')) {
+            this.eco = service.getCharacteristic(EcoCharacteristic);
+            this.eco.onSet((value) => {
+                this.eco?.updateValue(value);
+                this.sendCommands();
+            });
         }
 
         this.targetState?.onSet(this.setTargetState.bind(this));
@@ -118,6 +138,12 @@ export default class HeatingSystem extends Mapper {
                     break;
             }
         });
+    }
+
+    protected sendCommands() {
+        if (this.targetState?.value !== Characteristics.TargetHeatingCoolingState.OFF) {
+            this.executeCommands(this.getTargetStateCommands(this.targetState?.value));
+        }
     }
 
     protected onTemperatureUpdate(value) {

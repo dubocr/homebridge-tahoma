@@ -4,11 +4,11 @@ import { Command, ExecutionState } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticElectricalTowelDryer extends HeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['prog'];
     protected MIN_TEMP = 7;
     protected MAX_TEMP = 28;
     protected TARGET_MODES = [
         Characteristics.TargetHeatingCoolingState.AUTO,
-        Characteristics.TargetHeatingCoolingState.HEAT,
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
@@ -30,17 +30,7 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected getTargetStateCommands(value): Command | Array<Command> {
         switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
-                return new Command('setTowelDryerOperatingMode', 'internal');
-            case Characteristics.TargetHeatingCoolingState.HEAT:
-                return [
-                    new Command('setTowelDryerOperatingMode', 'external'),
-                    new Command('setHeatingLevel', 'comfort'),
-                ];
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                return [
-                    new Command('setTowelDryerOperatingMode', 'external'),
-                    new Command('setHeatingLevel', 'eco'),
-                ];
+                return new Command('setTowelDryerOperatingMode', this.prog?.value ? 'internal' : 'manual');
             case Characteristics.TargetHeatingCoolingState.OFF:
                 return new Command('setTowelDryerOperatingMode', 'standby');
         }
@@ -48,7 +38,7 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> | undefined {
-        if (this.targetState!.value === Characteristics.TargetHeatingCoolingState.AUTO) {
+        if (this.prog?.value) {
             return new Command('setDerogatedTargetTemperature', value);
         } else {
             return new Command('setTargetTemperature', value);
@@ -119,6 +109,7 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
                 this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.OFF);
                 break;
             case 'internal':
+                this.prog?.updateValue(true);
                 this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
                 if (Number(this.device.get('core:DerogatedTargetTemperatureState')) > 0) {
                     this.targetTemperature?.updateValue(this.device.get('core:DerogatedTargetTemperatureState'));
@@ -127,7 +118,8 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
                 }
                 break;
             case 'external':
-                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.HEAT);
+                this.prog?.updateValue(false);
+                this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
                 break;
         }
     }

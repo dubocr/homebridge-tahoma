@@ -2,30 +2,30 @@ import { Characteristics } from '../../Platform';
 import { Command, State } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
 
-export default class AtlanticPassAPCDHW extends WaterHeatingSystem {  
+export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['eco', 'prog'];
+
     protected registerServices() {
         this.registerThermostatService();
-        if(this.device.hasCommand('setBoostOnOffState')) {
+        if (this.device.hasCommand('setBoostOnOffState')) {
             this.registerSwitchService('boost');
         }
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
         const commands: Array<Command> = [];
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('setDHWOnOffState', 'on'));
-                commands.push(new Command('setPassAPCDHWMode', 'internalScheduling'));
-                break;
-
-            case Characteristics.TargetHeatingCoolingState.HEAT:
-                commands.push(new Command('setDHWOnOffState', 'on'));
-                commands.push(new Command('setPassAPCDHWMode', 'comfort'));
-                break;
-
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                commands.push(new Command('setDHWOnOffState', 'on'));
-                commands.push(new Command('setPassAPCDHWMode', 'eco'));
+                if (this.prog?.value) {
+                    commands.push(new Command('setPassAPCDHWMode', 'internalScheduling'));
+                } else {
+                    if (this.eco?.value) {
+                        commands.push(new Command('setPassAPCDHWMode', 'eco'));
+                    } else {
+                        commands.push(new Command('setPassAPCDHWMode', 'comfort'));
+                    }
+                }
                 break;
 
             case Characteristics.TargetHeatingCoolingState.OFF:
@@ -36,7 +36,7 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
-        if(this.targetState?.value === Characteristics.TargetHeatingCoolingState.COOL) {
+        if (this.targetState?.value === Characteristics.TargetHeatingCoolingState.COOL) {
             return new Command('setEcoTargetDHWTemperature', value);
         } else {
             return new Command('setComfortTargetDHWTemperature', value);
@@ -48,7 +48,7 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:TargetDHWTemperatureState':
                 this.onTemperatureUpdate(value);
                 //this.postpone(this.computeStates);
@@ -68,8 +68,9 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
 
     protected computeStates() {
         let targetState;
-        if(this.device.get('core:DHWOnOffState') === 'on') {
-            switch(this.device.get('io:PassAPCDHWModeState')) {
+        if (this.device.get('core:DHWOnOffState') === 'on') {
+            targetState = Characteristics.TargetHeatingCoolingState.AUTO;
+            switch (this.device.get('io:PassAPCDHWModeState')) {
                 case 'off':
                 case 'stop':
                     targetState = Characteristics.TargetHeatingCoolingState.OFF;
@@ -78,8 +79,8 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
                     break;
                 case 'internalScheduling':
                 case 'externalScheduling':
-                    targetState = Characteristics.TargetHeatingCoolingState.AUTO;
-                    if(this.device.get('io:PassAPCDHWProfileState') === 'comfort') {
+                    this.prog?.updateValue(true);
+                    if (this.device.get('io:PassAPCDHWProfileState') === 'comfort') {
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                         this.targetTemperature?.updateValue(this.device.get('core:ComfortTargetDHWTemperatureState'));
                     } else {
@@ -88,12 +89,14 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
                     }
                     break;
                 case 'comfort':
-                    targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+                    this.prog?.updateValue(false);
+                    this.eco?.updateValue(false);
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     this.targetTemperature?.updateValue(this.device.get('core:ComfortTargetDHWTemperatureState'));
                     break;
                 case 'eco':
-                    targetState = Characteristics.TargetHeatingCoolingState.COOL;
+                    this.prog?.updateValue(false);
+                    this.eco?.updateValue(true);
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                     this.targetTemperature?.updateValue(this.device.get('core:EcoTargetDHWTemperatureState'));
                     break;
@@ -103,7 +106,7 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
             this.targetTemperature?.updateValue(this.device.get('core:TargetDHWTemperatureState'));
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }

@@ -15,12 +15,12 @@ export default class AtlanticPassAPCBoiler extends HeatingSystem {
             case 'io:PassAPCOperatingModeState':
                 switch (value) {
                     case 'stop':
-                        this.on?.updateValue(0);
+                        this.on?.updateValue(false);
                         break;
                     case 'heating':
                     case 'drying':
                     case 'cooling':
-                        this.on?.updateValue(1);
+                        this.on?.updateValue(true);
                         break;
                 }
         }

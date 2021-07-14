@@ -31,6 +31,7 @@ export default class RollerShutter extends Mapper {
 
     protected registerServices() {
         const service = this.registerService(Services.WindowCovering);
+        service.addOptionalCharacteristic(MyPositionCharacteristic);
         this.currentPosition = service.getCharacteristic(Characteristics.CurrentPosition);
         this.targetPosition = service.getCharacteristic(Characteristics.TargetPosition);
         this.positionState = service.getCharacteristic(Characteristics.PositionState);

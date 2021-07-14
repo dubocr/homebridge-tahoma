@@ -5,13 +5,21 @@ import WaterHeatingSystem from '../WaterHeatingSystem';
 import { CurrentShowerCharacteristic, TargetShowerCharacteristic } from '../../CustomCharacteristics';
 
 export default class DomesticHotWaterProduction extends WaterHeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['eco'];
     protected currentShower: Characteristic | undefined;
     protected targetShower: Characteristic | undefined;
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
 
     protected registerServices() {
         const service = this.registerThermostatService();
+        service.addOptionalCharacteristic(TargetShowerCharacteristic);
+        service.addOptionalCharacteristic(CurrentShowerCharacteristic);
         this.registerSwitchService('boost');
-        if(this.device.hasState('core:NumberOfShowerRemainingState')) {
+        if (this.device.hasState('core:NumberOfShowerRemainingState')) {
             this.currentShower = this.registerCharacteristic(service, CurrentShowerCharacteristic);
             this.targetShower = this.registerCharacteristic(service, TargetShowerCharacteristic);
             this.targetShower.setProps({
@@ -24,27 +32,28 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         const commands = Array<Command>();
-        if(this.device.hasCommand('setDHWMode')) {
-            if(this.targetState?.value === Characteristics.TargetHeatingCoolingState.OFF) {
+        if (this.device.hasCommand('setDHWMode')) {
+            if (this.targetState?.value === Characteristics.TargetHeatingCoolingState.OFF) {
                 commands.push(new Command('setAbsenceMode', 'off'));
             }
-            switch(value) {
+            switch (value) {
                 case Characteristics.TargetHeatingCoolingState.AUTO:
                     commands.push(new Command('setDHWMode', 'autoMode'));
                     break;
                 case Characteristics.TargetHeatingCoolingState.HEAT:
-                    commands.push(new Command('setDHWMode', 'manualEcoInactive'));
-                    break;
-                case Characteristics.TargetHeatingCoolingState.COOL:
-                    commands.push(new Command('setDHWMode', 'manualEcoActive'));
+                    if (this.eco?.value) {
+                        commands.push(new Command('setDHWMode', 'manualEcoActive'));
+                    } else {
+                        commands.push(new Command('setDHWMode', 'manualEcoInactive'));
+                    }
                     break;
                 case Characteristics.TargetHeatingCoolingState.OFF:
                     commands.push(new Command('setAbsenceMode', 'on'));
                     break;
             }
             return commands;
-        } else if(this.device.hasCommand('setCurrentOperatingMode')) {
-            switch(value) {
+        } else if (this.device.hasCommand('setCurrentOperatingMode')) {
+            switch (value) {
                 case Characteristics.TargetHeatingCoolingState.AUTO:
                     return new Command('setCurrentOperatingMode', { 'relaunch': 'off', 'absence': 'off' });
                 case Characteristics.TargetHeatingCoolingState.HEAT:
@@ -52,8 +61,8 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                 case Characteristics.TargetHeatingCoolingState.OFF:
                     return new Command('setCurrentOperatingMode', { 'relaunch': 'off', 'absence': 'on' });
             }
-        } else if(this.device.hasCommand('setBoostModeDuration')) {
-            switch(value) {
+        } else if (this.device.hasCommand('setBoostModeDuration')) {
+            switch (value) {
                 case Characteristics.TargetHeatingCoolingState.AUTO:
                     return [
                         new Command('setBoostModeDuration', 0),
@@ -64,8 +73,8 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                 case Characteristics.TargetHeatingCoolingState.OFF:
                     return new Command('setAwayModeDuration', 30);
             }
-        } else if(this.device.hasCommand('setBoostMode')) {
-            switch(value) {
+        } else if (this.device.hasCommand('setBoostMode')) {
+            switch (value) {
                 case Characteristics.TargetHeatingCoolingState.AUTO:
                     return [
                         new Command('setBoostMode', 'off'),
@@ -93,7 +102,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.FAILED:
-                    if(previous) {
+                    if (previous) {
                         this.targetShower?.updateValue(previous);
                     }
                     break;
@@ -102,12 +111,12 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'io:DHWBoostModeState':
                 this.on?.updateValue(value !== 'off');
                 break;
             case 'core:WaterTemperatureState':
-                if(!this.device.hasState('io:MiddleWaterTemperatureState')) {
+                if (!this.device.hasState('io:MiddleWaterTemperatureState')) {
                     this.currentTemperature?.updateValue(value);
                 }
                 break;
@@ -133,18 +142,20 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
 
     protected computeStates() {
         let targetState;
-        if(this.device.get('io:DHWAbsenceModeState') === 'off') {
-            switch(this.device.get('io:DHWModeState')) {
+        if (this.device.get('io:DHWAbsenceModeState') === 'off') {
+            switch (this.device.get('io:DHWModeState')) {
                 case 'autoMode':
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     break;
                 case 'manualEcoInactive':
+                    this.eco?.updateValue(false);
                     targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                     break;
                 case 'manualEcoActive':
-                    targetState = Characteristics.TargetHeatingCoolingState.COOL;
+                    this.eco?.updateValue(true);
+                    targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                     break;
             }
@@ -152,7 +163,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }

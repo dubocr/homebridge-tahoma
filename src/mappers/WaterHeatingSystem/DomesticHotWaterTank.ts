@@ -1,5 +1,3 @@
-import { Characteristics } from '../../Platform';
-import { Characteristic, Perms } from 'homebridge';
 import { Command } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
 
@@ -13,7 +11,7 @@ export default class DomesticHotWaterTank extends WaterHeatingSystem {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'io:ForceHeatingState':
                 this.on?.updateValue(value === 'on');
                 break;

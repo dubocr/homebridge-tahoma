@@ -1,8 +1,14 @@
-import {Command} from 'overkiz-client';
-import {Characteristics} from '../../../Platform';
+import { Command } from 'overkiz-client';
+import { Characteristics } from '../../../Platform';
 import DomesticHotWaterProduction from '../DomesticHotWaterProduction';
 
 export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent extends DomesticHotWaterProduction {
+    protected THERMOSTAT_CHARACTERISTICS = ['eco'];
+    protected TARGET_MODES = [
+        Characteristics.TargetHeatingCoolingState.AUTO,
+        Characteristics.TargetHeatingCoolingState.HEAT,
+        Characteristics.TargetHeatingCoolingState.OFF,
+    ];
 
     protected registerThermostatService() {
         const service = super.registerThermostatService();
@@ -22,18 +28,19 @@ export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent exte
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         const commands = Array<Command>();
-        if(this.targetState?.value === Characteristics.TargetHeatingCoolingState.OFF) {
+        if (this.targetState?.value === Characteristics.TargetHeatingCoolingState.OFF) {
             commands.push(new Command('setCurrentOperatingMode', { 'relaunch': 'off', 'absence': 'off' }));
         }
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('setDHWMode', 'autoMode'));
                 break;
             case Characteristics.TargetHeatingCoolingState.HEAT:
-                commands.push(new Command('setDHWMode', 'manualEcoInactive'));
-                break;
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                commands.push(new Command('setDHWMode', 'manualEcoActive'));
+                if (this.eco?.value) {
+                    commands.push(new Command('setDHWMode', 'manualEcoActive'));
+                } else {
+                    commands.push(new Command('setDHWMode', 'manualEcoInactive'));
+                }
                 break;
             case Characteristics.TargetHeatingCoolingState.OFF:
                 commands.push(new Command('setCurrentOperatingMode', { 'relaunch': 'off', 'absence': 'on' }));
@@ -47,7 +54,7 @@ export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent exte
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'io:MiddleWaterTemperatureState':
                 this.currentTemperature?.updateValue(value);
                 break;
@@ -65,16 +72,18 @@ export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent exte
         let targetState;
         const operatingMode = this.device.get('core:OperatingModeState');
         this.on?.updateValue(operatingMode.relaunch !== 'off');
-        if(operatingMode.absence === 'off') {
-            switch(this.device.get('io:DHWModeState')) {
+        if (operatingMode.absence === 'off') {
+            switch (this.device.get('io:DHWModeState')) {
                 case 'autoMode':
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                     break;
                 case 'manualEcoInactive':
+                    this.eco?.updateValue(false);
                     targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                     break;
                 case 'manualEcoActive':
-                    targetState = Characteristics.TargetHeatingCoolingState.COOL;
+                    this.eco?.updateValue(true);
+                    targetState = Characteristics.TargetHeatingCoolingState.HEAT;
                     break;
             }
 
@@ -90,7 +99,7 @@ export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent exte
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         }
-        if(this.targetState !== undefined && targetState !== undefined && this.isIdle) {
+        if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }

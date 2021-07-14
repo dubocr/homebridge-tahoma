@@ -3,6 +3,7 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['prog'];
     protected MIN_TEMP = 16;
     protected MAX_TEMP = 30;
     protected TARGET_MODES = [
@@ -26,7 +27,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 commands.push(new Command('set' + heatingCooling + 'OnOffState', 'on'));
-                commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', this.enableProg ? 'internalScheduling' : 'manu'));
+                commands.push(new Command('setPassAPC' + heatingCooling + 'Mode', this.prog?.value ? 'internalScheduling' : 'manu'));
                 break;
 
             case Characteristics.TargetHeatingCoolingState.OFF:
@@ -39,7 +40,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {
         const heatingCooling = this.getHeatingCooling();
-        if (this.enableProg) {
+        if (this.prog?.value) {
             if (this.device.hasCommand('setDerogatedTargetTemperature')) {
                 // AtlanticPassAPCHeatPump
                 return [
@@ -109,6 +110,14 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             }
             targetState = Characteristics.TargetHeatingCoolingState.AUTO;
         }
+
+        if (this.device.get(`io:PassAPC${heatingCooling}ModeState`) === 'internalScheduling') {
+            this.prog?.updateValue(true);
+        } else {
+            this.prog?.updateValue(false);
+        }
+
+
 
         if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
             this.targetState.updateValue(targetState);

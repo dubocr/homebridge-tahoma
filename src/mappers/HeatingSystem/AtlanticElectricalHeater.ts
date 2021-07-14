@@ -4,11 +4,7 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticElectricalHeater extends HeatingSystem {
-    protected TARGET_MODES = [
-        Characteristics.TargetHeatingCoolingState.HEAT,
-        Characteristics.TargetHeatingCoolingState.COOL,
-        Characteristics.TargetHeatingCoolingState.OFF,
-    ];
+    protected THERMOSTAT_CHARACTERISTICS = ['eco'];
 
     protected registerServices() {
         this.registerThermostatService();
@@ -17,25 +13,20 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
-        let mode;
         switch (value) {
-            case Characteristics.TargetHeatingCoolingState.HEAT:
-                mode = 'comfort';
-                break;
-            case Characteristics.TargetHeatingCoolingState.COOL:
-                mode = 'eco';
-                break;
+            case Characteristics.TargetHeatingCoolingState.AUTO:
+                return new Command('setHeatingLevel', [this?.eco?.value ? 'eco' : 'comfort']);
             case Characteristics.TargetHeatingCoolingState.OFF:
-                mode = 'frostprotection';
-                break;
+                return new Command('setHeatingLevel', ['frostprotection']);
         }
-        return new Command('setHeatingLevel', [mode]);
+        return [];
     }
 
     protected onStateChanged(name, value) {
         let targetState;
         switch (name) {
             case 'io:TargetHeatingLevelState':
+                targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                 switch (value) {
                     case 'off':
                     case 'frostprotection':
@@ -45,13 +36,13 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
                     case 'comfort':
                     case 'comfort-1':
                     case 'comfort-2':
-                        targetState = Characteristics.TargetHeatingCoolingState.HEAT;
+                        this.eco?.updateValue(false);
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                         this.currentTemperature?.updateValue(this.comfortTemperature);
                         this.targetTemperature?.updateValue(this.comfortTemperature);
                         break;
                     case 'eco':
-                        targetState = Characteristics.TargetHeatingCoolingState.COOL;
+                        this.eco?.updateValue(true);
                         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.COOL);
                         this.currentTemperature?.updateValue(this.ecoTemperature);
                         this.targetTemperature?.updateValue(this.ecoTemperature);
