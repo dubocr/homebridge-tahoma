@@ -56,7 +56,7 @@ export default class HeatingSystem extends Mapper {
             this.prog = service.getCharacteristic(ProgCharacteristic);
             this.prog.onSet((value) => {
                 this.prog?.updateValue(value);
-                this.sendCommands();
+                this.sendProgCommands();
             });
         }
 
@@ -64,7 +64,7 @@ export default class HeatingSystem extends Mapper {
             this.eco = service.getCharacteristic(EcoCharacteristic);
             this.eco.onSet((value) => {
                 this.eco?.updateValue(value);
-                this.sendCommands();
+                this.sendProgCommands();
             });
         }
 
@@ -125,7 +125,7 @@ export default class HeatingSystem extends Mapper {
         await this.executeCommands(this.getTargetTemperatureCommands(value));
     }
 
-    protected getOnCommands(value): Command | Array<Command> {
+    protected getOnCommands(value): Command | Array<Command> | undefined {
         return new Command('setOn', value);
     }
 
@@ -140,9 +140,13 @@ export default class HeatingSystem extends Mapper {
         });
     }
 
-    protected sendCommands() {
+    protected getProgCommands(): Command | Array<Command> | undefined {
+        return this.getTargetStateCommands(this.targetState?.value);
+    }
+
+    protected sendProgCommands() {
         if (this.targetState?.value !== Characteristics.TargetHeatingCoolingState.OFF) {
-            this.executeCommands(this.getTargetStateCommands(this.targetState?.value));
+            this.executeCommands(this.getProgCommands());
         }
     }
 

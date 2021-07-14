@@ -3,6 +3,7 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class SomfyHeatingTemperatureInterface extends HeatingSystem {
+    protected THERMOSTAT_CHARACTERISTICS = ['prog', 'eco'];
     protected MIN_TEMP = 0;
     protected MAX_TEMP = 26;
     protected TARGET_MODES = [
@@ -38,6 +39,18 @@ export default class SomfyHeatingTemperatureInterface extends HeatingSystem {
 
             case Characteristics.TargetHeatingCoolingState.OFF:
                 return new Command('setOnOff', 'off');
+        }
+    }
+
+    protected getProgCommands(): Command | Array<Command> | undefined {
+        if (this.prog?.value) {
+            return new Command('setActiveMode', 'auto');
+        } else {
+            if (this.eco?.value) {
+                return new Command('setManuAndSetPointModes', 'eco');
+            } else {
+                return new Command('setManuAndSetPointModes', 'comfort');
+            }
         }
     }
 
