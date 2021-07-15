@@ -11,6 +11,8 @@ import { BLUE, GREY, RESET } from './colors';
 export let Services: typeof Service;
 export let Characteristics: typeof Characteristic;
 
+const DEFAULT_RETRY_DELAY = 60;
+
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
@@ -26,7 +28,7 @@ export class Platform implements DynamicPlatformPlugin {
     public readonly devicesConfig: Array<unknown> = [];
 
     private executionPromise;
-    private retryDelay = 60;
+    private retryDelay = DEFAULT_RETRY_DELAY;
 
     constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
         Services = this.api.hap.Service;
@@ -161,11 +163,12 @@ export class Platform implements DynamicPlatformPlugin {
 
             const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
             this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
+            this.retryDelay = DEFAULT_RETRY_DELAY;
         } catch (error) {
             this.log.error(error);
             this.log.error('Retry in ' + this.retryDelay + ' sec...');
-            this.retryDelay = this.retryDelay * 2;
             setTimeout(this.discoverDevices.bind(this), this.retryDelay * 1000);
+            this.retryDelay *= 2;
         }
     }
 

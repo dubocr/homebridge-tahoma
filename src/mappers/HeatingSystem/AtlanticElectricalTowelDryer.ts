@@ -120,6 +120,7 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
             case 'external':
                 this.prog?.updateValue(false);
                 this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
+                this.targetTemperature?.updateValue(targetTemperature);
                 break;
         }
     }
