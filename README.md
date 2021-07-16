@@ -2,7 +2,7 @@
 
 Homebridge plugin supporting Overkiz based platforms :
 
-| Nom commercial			| Fournisseur					| Service			|
+| Product			| Vendor					| Service			|
 |---------------------------|-------------------------------|-------------------|
 | TaHoma / TaHoma Switch 	| Somfy							| `tahoma`	    	|
 | Connexoon 				| Somfy							| `tahoma`	    	|
