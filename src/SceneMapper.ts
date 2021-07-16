@@ -24,11 +24,11 @@ export default class Mapper {
     }
 
     private get isInProgress() {
-        return (this.lastExecId in this.platform.client.executionPool);
+        return this.platform.client.hasExecution(this.lastExecId);
     }
 
     protected async setOn(value) {
-        if(value) {
+        if (value) {
             const execution = new Execution('');
             this.lastExecId = await this.platform.client.execute(this.action.oid, execution);
             execution.on('update', (state, event) => {
@@ -40,7 +40,7 @@ export default class Mapper {
                         break;
                 }
             });
-        } else if(this.isInProgress) {
+        } else if (this.isInProgress) {
             await this.platform.client.cancelExecution(this.lastExecId);
         }
     }

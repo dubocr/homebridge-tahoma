@@ -248,7 +248,7 @@ export default class Mapper {
 
     // OLD
     get isIdle() {
-        return !(this.executionId in this.platform.client.executionPool);
+        return !this.platform.client.hasExecution(this.executionId);
     }
 
     async cancelExecution() {
