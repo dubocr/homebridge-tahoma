@@ -11,7 +11,7 @@ export default class LightSensor extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:LuminanceState':
                 this.lightLevel?.updateValue(value);
                 break;

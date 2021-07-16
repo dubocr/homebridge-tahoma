@@ -30,7 +30,7 @@ export default class OnOff extends Mapper {
     }
 
     protected onStateChanged(name: string, value): boolean {
-        switch(name) {
+        switch (name) {
             case 'core:OnOffState':
                 this.on?.updateValue(value === 'on');
                 break;

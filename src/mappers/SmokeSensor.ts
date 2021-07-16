@@ -7,26 +7,26 @@ export default class SmokeSensor extends Mapper {
     protected active: Characteristic | undefined;
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
-    
+
     protected registerServices() {
         const service = this.registerService(Services.SmokeSensor);
         this.smoke = service.getCharacteristic(Characteristics.SmokeDetected);
-        if(
+        if (
             this.device.hasState('core:SensorDefectState') ||
             this.device.hasState('io:SensorDefMaintenanceSensorPartBatteryStateectState') ||
             this.device.hasState('io:MaintenanceRadioPartBatteryState') ||
             this.device.hasState('io:SensorRoomState')
         ) {
-            this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
-            this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
+            this.fault = service.getCharacteristic(Characteristics.StatusFault);
+            this.battery = service.getCharacteristic(Characteristics.StatusLowBattery);
         }
-        if(this.device.hasState('core:StatusState')) {
-            this.active = this.registerCharacteristic(service, Characteristics.StatusActive);
+        if (this.device.hasState('core:StatusState')) {
+            this.active = service.getCharacteristic(Characteristics.StatusActive);
         }
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:StatusState':
                 this.active?.updateValue(value === 'available');
                 break;
@@ -34,7 +34,7 @@ export default class SmokeSensor extends Mapper {
                 this.smoke?.updateValue(value === 'detected');
                 break;
             case 'core:SensorDefectState':
-                switch(value) {
+                switch (value) {
                     case 'lowBattery':
                         this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_LOW);
                         break;
@@ -50,7 +50,7 @@ export default class SmokeSensor extends Mapper {
                 break;
             case 'io:MaintenanceRadioPartBatteryState':
             case 'io:MaintenanceSensorPartBatteryState':
-                switch(value) {
+                switch (value) {
                     case 'absence':
                     case 'normal':
                         this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_NORMAL);
@@ -61,7 +61,7 @@ export default class SmokeSensor extends Mapper {
                 }
                 break;
             case 'io:SensorRoomState':
-                switch(value) {
+                switch (value) {
                     case 'clean':
                         this.fault?.updateValue(Characteristics.StatusFault.NO_FAULT);
                         break;

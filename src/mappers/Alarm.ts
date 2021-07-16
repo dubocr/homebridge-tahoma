@@ -27,7 +27,7 @@ export default class Alarm extends Mapper {
     }
 
     protected getTargetCommands(value): Command | Array<Command> {
-        switch(value) {
+        switch (value) {
             default:
             case Characteristics.SecuritySystemTargetState.STAY_ARM:
                 return new Command('alarmZoneOn', [this.stayZones]);
@@ -45,12 +45,12 @@ export default class Alarm extends Mapper {
         action.on('update', (state, data) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    if(this.stateless) {
+                    if (this.stateless) {
                         this.currentState?.updateValue(value);
                     }
                     break;
                 case ExecutionState.FAILED:
-                    if(this.currentState &&
+                    if (this.currentState &&
                         this.currentState.value !== Characteristics.SecuritySystemCurrentState.ALARM_TRIGGERED) {
                         this.targetState?.updateValue(this.currentState.value);
                     }
@@ -60,27 +60,27 @@ export default class Alarm extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:ActiveZonesState':
-                switch(value) {
+                switch (value) {
                     default:
-                    case '': 
+                    case '':
                         this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.DISARMED);
                         this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.DISARM);
                         break;
-                    case this.stayZones: 
+                    case this.stayZones:
                         this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.STAY_ARM);
-                            this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.STAY_ARM);
+                        this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.STAY_ARM);
                         break;
-                    case 'A,B,C': 
+                    case 'A,B,C':
                         this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.AWAY_ARM);
                         this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.AWAY_ARM);
                         break;
-                    case this.nightZones: 
+                    case this.nightZones:
                         this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.NIGHT_ARM);
                         this.targetState?.updateValue(Characteristics.SecuritySystemTargetState.NIGHT_ARM);
                         break;
-                    case 'triggered': 
+                    case 'triggered':
                         this.currentState?.updateValue(Characteristics.SecuritySystemCurrentState.ALARM_TRIGGERED);
                         break;
                 }

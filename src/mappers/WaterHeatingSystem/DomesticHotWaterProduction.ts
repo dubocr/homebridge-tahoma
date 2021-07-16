@@ -20,8 +20,8 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
         service.addOptionalCharacteristic(CurrentShowerCharacteristic);
         this.registerSwitchService('boost');
         if (this.device.hasState('core:NumberOfShowerRemainingState')) {
-            this.currentShower = this.registerCharacteristic(service, CurrentShowerCharacteristic);
-            this.targetShower = this.registerCharacteristic(service, TargetShowerCharacteristic);
+            this.currentShower = service.getCharacteristic(CurrentShowerCharacteristic);
+            this.targetShower = service.getCharacteristic(TargetShowerCharacteristic);
             this.targetShower.setProps({
                 minValue: this.device.getNumber('core:MinimalShowerManualModeState'),
                 maxValue: this.device.getNumber('core:MaximalShowerManualModeState'),

@@ -15,11 +15,11 @@ export default class Light extends Mapper {
 
         this.on.onSet(this.setOn.bind(this));
 
-        if(this.device.hasCommand('setIntensity')) {
+        if (this.device.hasCommand('setIntensity')) {
             this.brightness = service.getCharacteristic(Characteristics.Brightness);
             this.brightness.onSet(this.setBrightness.bind(this));
 
-            if(this.device.hasCommand('setHueAndSaturation')) {
+            if (this.device.hasCommand('setHueAndSaturation')) {
                 this.hue = service.getCharacteristic(Characteristics.Hue);
                 this.saturation = service.getCharacteristic(Characteristics.Saturation);
                 this.saturation.onSet(this.setSaturation.bind(this));
@@ -60,7 +60,7 @@ export default class Light extends Mapper {
     }
 
     protected getSaturationCommands(value): Command | Array<Command> {
-        return new Command('setHueAndSaturation', [ this.hue?.value, value]);
+        return new Command('setHueAndSaturation', [this.hue?.value, value]);
     }
 
     protected async setSaturation(value) {
@@ -76,7 +76,7 @@ export default class Light extends Mapper {
     }
 
     protected onStateChanged(name: string, value): boolean {
-        switch(name) {
+        switch (name) {
             case 'core:OnOffState':
                 this.on?.updateValue(value === 'on');
                 break;

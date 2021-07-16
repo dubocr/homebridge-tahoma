@@ -51,7 +51,7 @@ export default class Siren extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:OnOffState':
                 this.mute?.updateValue(value === 'off');
                 break;

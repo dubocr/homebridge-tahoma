@@ -18,7 +18,7 @@ export default class VentilationSystem extends Mapper {
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
-        switch(value) {
+        switch (value) {
             case Characteristics.TargetAirPurifierState.AUTO:
                 return new Command('setAirDemandMode', 'auto');
             case Characteristics.TargetAirPurifierState.MANUAL:
@@ -32,12 +32,12 @@ export default class VentilationSystem extends Mapper {
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    if(this.stateless) {
+                    if (this.stateless) {
                         this.currentState?.updateValue(value);
                     }
                     break;
                 case ExecutionState.FAILED:
-                    if(this.currentState) {
+                    if (this.currentState) {
                         this.targetState?.updateValue(this.currentState.value);
                     }
                     break;
@@ -46,9 +46,9 @@ export default class VentilationSystem extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'io:AirDemandModeState':
-                switch(value) {
+                switch (value) {
                     case 'auto':
                         this.targetState?.updateValue(Characteristics.TargetAirPurifierState.AUTO);
                         break;

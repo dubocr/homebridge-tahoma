@@ -1,5 +1,5 @@
 import { Characteristics, Services } from './Platform';
-import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { Characteristic, CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
 import { GREY } from './colors';
@@ -99,10 +99,6 @@ export default class Mapper {
         */
         this.services.push(service);
         return service;
-    }
-
-    protected registerCharacteristic(service: Service, characteristic) {
-        return service.getCharacteristic(characteristic) || service.addCharacteristic(characteristic);
     }
 
     private translate(value: string) {

@@ -6,24 +6,24 @@ export default class OccupancySensor extends Mapper {
     protected occupancy: Characteristic | undefined;
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
-    
+
     protected registerServices() {
         const motion = this.device.widget.startsWith('Motion');
         const service = this.registerService(motion ? Services.MotionSensor : Services.OccupancySensor);
         this.occupancy = service.getCharacteristic(motion ? Characteristics.MotionDetected : Characteristics.OccupancyDetected);
-        if(this.device.hasState('core:SensorDefectState')) {
-            this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
-            this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
+        if (this.device.hasState('core:SensorDefectState')) {
+            this.fault = service.getCharacteristic(Characteristics.StatusFault);
+            this.battery = service.getCharacteristic(Characteristics.StatusLowBattery);
         }
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:OccupancyState':
                 this.occupancy?.updateValue(value === 'personInside');
                 break;
             case 'core:SensorDefectState':
-                switch(value) {
+                switch (value) {
                     case 'lowBattery':
                         this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_LOW);
                         break;

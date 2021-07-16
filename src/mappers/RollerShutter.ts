@@ -39,7 +39,7 @@ export default class RollerShutter extends Mapper {
             //this.currentPosition.updateValue(this.initPosition);
             //this.targetPosition.updateValue(this.initPosition);
             if (this.device.hasCommand('my')) {
-                this.my = this.registerCharacteristic(service, MyPositionCharacteristic);
+                this.my = service.getCharacteristic(MyPositionCharacteristic);
                 this.my.onSet(this.setMyPosition.bind(this));
             }
         } else {

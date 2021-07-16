@@ -7,7 +7,7 @@ export default class Window extends RollerShutter {
         this.currentPosition = service.getCharacteristic(Characteristics.CurrentPosition);
         this.targetPosition = service.getCharacteristic(Characteristics.TargetPosition);
         this.positionState = service.getCharacteristic(Characteristics.PositionState);
-        if(this.stateless) {
+        if (this.stateless) {
             this.currentPosition.updateValue(this.initPosition);
             this.targetPosition.updateValue(this.initPosition);
         } else {

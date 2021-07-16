@@ -6,23 +6,23 @@ export default class RainSensor extends Mapper {
     protected rain: Characteristic | undefined;
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
-    
+
     protected registerServices() {
         const service = this.registerService(Services.ContactSensor);
         this.rain = service.getCharacteristic(Characteristics.ContactSensorState);
-        if(this.device.hasState('core:SensorDefectState')) {
-            this.fault = this.registerCharacteristic(service, Characteristics.StatusFault);
-            this.battery = this.registerCharacteristic(service, Characteristics.StatusLowBattery);
+        if (this.device.hasState('core:SensorDefectState')) {
+            this.fault = service.getCharacteristic(Characteristics.StatusFault);
+            this.battery = service.getCharacteristic(Characteristics.StatusLowBattery);
         }
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:RainState':
                 this.rain?.updateValue(value === 'detected');
                 break;
             case 'core:SensorDefectState':
-                switch(value) {
+                switch (value) {
                     case 'lowBattery':
                         this.battery?.updateValue(Characteristics.StatusLowBattery.BATTERY_LEVEL_LOW);
                         break;

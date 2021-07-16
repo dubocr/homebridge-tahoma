@@ -4,14 +4,14 @@ import Mapper from '../Mapper';
 
 export default class HumiditySensor extends Mapper {
     protected humidity: Characteristic | undefined;
-    
+
     protected registerServices() {
         const service = this.registerService(Services.HumiditySensor);
         this.humidity = service.getCharacteristic(Characteristics.CurrentRelativeHumidity);
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:RelativeHumidityState':
                 this.humidity?.updateValue(value);
                 break;

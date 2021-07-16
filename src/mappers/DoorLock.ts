@@ -17,7 +17,7 @@ export default class VentilationSystem extends Mapper {
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {
-        switch(value) {
+        switch (value) {
             case Characteristics.LockTargetState.SECURED:
                 return new Command('setLockedUnlocked', 'locked');
             case Characteristics.LockTargetState.UNSECURED:
@@ -31,12 +31,12 @@ export default class VentilationSystem extends Mapper {
         action.on('update', (state) => {
             switch (state) {
                 case ExecutionState.COMPLETED:
-                    if(this.stateless) {
+                    if (this.stateless) {
                         this.currentState?.updateValue(value);
                     }
                     break;
                 case ExecutionState.FAILED:
-                    if(this.currentState) {
+                    if (this.currentState) {
                         this.targetState?.updateValue(this.currentState.value);
                     }
                     break;
@@ -45,9 +45,9 @@ export default class VentilationSystem extends Mapper {
     }
 
     protected onStateChanged(name: string, value) {
-        switch(name) {
+        switch (name) {
             case 'core:LockedUnlockedState':
-                switch(value) {
+                switch (value) {
                     case 'locked':
                         this.currentState?.updateValue(Characteristics.LockCurrentState.SECURED);
                         break;
@@ -55,7 +55,7 @@ export default class VentilationSystem extends Mapper {
                         this.currentState?.updateValue(Characteristics.LockCurrentState.UNSECURED);
                         break;
                 }
-                if(this.isIdle && this.currentState) {
+                if (this.isIdle && this.currentState) {
                     this.targetState?.updateValue(this.currentState.value);
                 }
                 break;
