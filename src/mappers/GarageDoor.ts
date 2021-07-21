@@ -14,11 +14,15 @@ export default class GarageDoor extends Mapper {
     protected reverse;
     protected cycleDuration;
     protected pedestrianCommand;
+    protected pedestrianDuration;
+
+    protected cancelTimeout;
 
     protected applyConfig(config) {
         this.reverse = config['reverse'] || false;
         this.cyclic = config['cyclic'] || false;
         this.cycleDuration = (config['cycleDuration'] || 5) * 1000;
+        this.pedestrianDuration = (config['pedestrianDuration'] || 0) * 1000;
         this.pedestrianCommand = ['setPedestrianPosition', 'partialPosition', 'my']
             .find((command: string) => this.device.hasCommand(command));
     }
@@ -30,7 +34,7 @@ export default class GarageDoor extends Mapper {
         this.targetState.onSet(this.setTargetState.bind(this));
 
         this.cyclic = this.cyclic || this.device.hasCommand('cycle');
-        if (this.pedestrianCommand && this.device.uiClass === 'Gate') {
+        if ((this.pedestrianCommand || this.pedestrianDuration) && this.device.uiClass === 'Gate') {
             this.registerLockService('pedestrian');
         }
         if (this.stateless) {
@@ -79,16 +83,36 @@ export default class GarageDoor extends Mapper {
 
     protected getOnCommands(value): Command | Array<Command> {
         if (value) {
-            return this.pedestrianCommand ? new Command(this.pedestrianCommand) : [];
+            if (this.pedestrianCommand) {
+                return new Command(this.pedestrianCommand);
+            } else {
+                return new Command(value ? 'open' : 'close');
+            }
         } else {
             return new Command('close');
         }
     }
 
     protected async setLock(value) {
+        if (this.cancelTimeout !== null) {
+            clearTimeout(this.cancelTimeout);
+        }
         const action = await this.executeCommands(this.getLockCommands(value));
         action.on('update', (state) => {
             switch (state) {
+                case ExecutionState.TRANSMITTED:
+                    if (this.stateless && !this.pedestrianCommand && this.pedestrianDuration) {
+                        this.info('Will stop movement in ' + this.pedestrianDuration + ' millisec');
+                        this.cancelTimeout = setTimeout(() => {
+                            this.cancelTimeout = null;
+                            if (this.isIdle) {
+                                this.executeCommands(new Command('stop'), true);
+                            } else {
+                                this.cancelExecution().catch(this.error.bind(this));
+                            }
+                        }, this.pedestrianDuration);
+                    }
+                    break;
                 case ExecutionState.COMPLETED:
                     if (this.stateless) {
                         this.onStateChanged(
@@ -108,7 +132,11 @@ export default class GarageDoor extends Mapper {
 
     protected getLockCommands(value): Command | Array<Command> {
         if (value === Characteristics.LockTargetState.UNSECURED) {
-            return this.pedestrianCommand ? new Command(this.pedestrianCommand) : [];
+            if (this.pedestrianCommand) {
+                return new Command(this.pedestrianCommand);
+            } else {
+                return new Command(value === Characteristics.LockTargetState.UNSECURED ? 'open' : 'close');
+            }
         } else {
             return new Command('close');
         }
@@ -137,6 +165,8 @@ export default class GarageDoor extends Mapper {
                                 this.onStateChanged('core:OpenClosedPedestrianState', 'closed');
                             }, this.cycleDuration);
                         }
+                    } else {
+                        this.requestStateUpdate('core:OpenClosedPedestrianState', 60);
                     }
                     break;
                 case ExecutionState.FAILED:

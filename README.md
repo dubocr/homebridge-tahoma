@@ -89,6 +89,7 @@ One configuration is composed of a `key` attribute containing device name, widge
 | `cyclic`						| Boolean		| false			| optional, restore closed state after `cycleDuration` seconds for stateless devices with cyclic behaviour	|
 | `cycleDuration`				| Integer		| false			| optional, cycle duration (in seconds) for cyclic mode (default: 5 sec)				|
 | `reverse`						| Boolean		| false			| optional, reverse up/down in case of bad mounting	|
+| `pedestrianDuration`			| Integer		| 0				| optional, duration for pedestrian position for RTS gates	|
 
 | HeatingSystem parameters		| Type			| Default		| Note				|
 |-------------------------------|---------------|---------------|-------------------|
