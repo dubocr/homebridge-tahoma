@@ -15,10 +15,12 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "resolveJsonModule": true
   },
   "include": [
-    "src/"
+    "src/",
+    "src/lang/*.json"
   ],
   "exclude": [
     "**/*.spec.ts"

@@ -1,0 +1,14 @@
+{
+    "others": ":param autre(s)",
+    "setClosure": "Fermeture :param%",
+    "setHeatingLevel": {
+        "comfort": "Mode confort",
+        "eco": "Mode eco",
+        "frostprotection": "Mode hors gel",
+        "off": "Arrêt"
+    },
+    "open": "Ouverture",
+    "close": "Fermeture",
+    "setPedestrianPosition": "Ouverture piéton",
+    "partialPosition": "Ouverture partielle"
+}

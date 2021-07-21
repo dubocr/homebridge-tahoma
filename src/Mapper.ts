@@ -129,25 +129,23 @@ export default class Mapper {
     }
 
     protected async executeCommands(commands: Command | Array<Command> | undefined, standalone = false): Promise<Action> {
-        let commandName = '';
         if (commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             this.error('No target command for', this.device.label);
             throw new Error('No target command for ' + this.device.label);
         } else if (Array.isArray(commands)) {
-            if (commands.length > 1) {
-                commandName = commands[0].name + ' +' + (commands.length - 1) + ' others';
-            } else {
-                commandName = commands[0].name;
-            }
             for (const c of commands) {
                 this.info(c.name + JSON.stringify(c.parameters));
             }
         } else {
             this.info(commands.name + JSON.stringify(commands.parameters));
-            commandName = commands.name;
             commands = [commands];
         }
 
+        const commandName = commands[0].name;
+        const localizedName = this.platform.translate(
+            commands[0].name + (commands[0].parameters.length > 0 ? '.' + commands[0].parameters[0] : ''),
+        );
+        console.log(localizedName);
         /*
         if (!this.isIdle) {
             this.cancelExecution();
@@ -155,7 +153,7 @@ export default class Mapper {
         */
 
         const highPriority = this.device.hasState('io:PriorityLockLevelState') ? true : false;
-        const label = this.device.label + ' - ' + commandName;
+        const label = this.device.label + ' - ' + localizedName;
 
         if (this.actionPromise) {
             this.actionPromise.action.addCommands(commands);
@@ -189,6 +187,15 @@ export default class Mapper {
 
     private async delay(duration) {
         return new Promise(resolve => setTimeout(resolve, duration));
+    }
+
+    protected async requestStateUpdate(state, defer?: number) {
+        if (defer) {
+            setTimeout(this.requestStateUpdate.bind(this, state), defer * 1000);
+        } else {
+            const value = await this.platform.client.requestState(this.device.deviceURL, state);
+            this.onStateChanged(state, value);
+        }
     }
 
     /**

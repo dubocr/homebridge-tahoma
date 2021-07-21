@@ -27,6 +27,7 @@ export class Platform implements DynamicPlatformPlugin {
     private readonly exposeScenarios: boolean | Array<string>;
     public readonly devicesConfig: Array<unknown> = [];
 
+    private translations;
     private executionPromise;
     private retryDelay = DEFAULT_RETRY_DELAY;
 
@@ -60,7 +61,20 @@ export class Platform implements DynamicPlatformPlugin {
             log.debug('Executed didFinishLaunching callback');
             // run the method to discover / register your devices as accessories
             this.discoverDevices();
+            this.loadLocation();
         });
+    }
+
+    /**
+     * This function is invoked when homebridge restores cached accessories from disk at startup.
+     * It should be used to setup event handlers for characteristics and update respective values.
+     */
+    async loadLocation() {
+        const location = await this.client.getSetupLocation();
+        const countryCode = location.countryCode.toLowerCase().trim();
+        this.translations = await import(`./lang/${countryCode}.json`)
+            .catch(() => import('./lang/en.json'))
+            .then((c) => c.default);
     }
 
     /**
@@ -197,5 +211,26 @@ export class Platform implements DynamicPlatformPlugin {
             }
             return this.executionPromise;
         }
+    }
+
+    /**
+     * Translate
+     * @param path 
+     * @returns string
+     */
+    public translate(label: string): string | null {
+        const path = label.split('.');
+        let translation = this.translations;
+        for (const key of path) {
+            if (typeof translation === 'object' && key in translation) {
+                translation = translation[key];
+            } else if (typeof translation === 'string') {
+                if (translation.includes(':param')) {
+                    translation = translation.replace(':param', key);
+                }
+                return translation;
+            }
+        }
+        return label;
     }
 }
