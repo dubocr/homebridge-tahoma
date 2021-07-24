@@ -189,12 +189,11 @@ export default class Mapper {
         return new Promise(resolve => setTimeout(resolve, duration));
     }
 
-    protected async requestStateUpdate(state, defer?: number) {
+    protected async requestStatesUpdate(defer?: number) {
         if (defer) {
-            setTimeout(this.requestStateUpdate.bind(this, state), defer * 1000);
+            setTimeout(this.requestStatesUpdate.bind(this), defer * 1000);
         } else {
-            const value = await this.platform.client.requestState(this.device.deviceURL, state);
-            this.onStateChanged(state, value);
+            await this.platform.client.refreshDeviceStates(this.device.deviceURL);
         }
     }
 

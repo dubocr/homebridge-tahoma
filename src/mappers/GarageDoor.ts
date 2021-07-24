@@ -1,5 +1,5 @@
 import { Characteristics, Services } from '../Platform';
-import { Characteristic, Service } from 'homebridge';
+import { Characteristic, CharacteristicValue, Nullable, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 
@@ -30,6 +30,7 @@ export default class GarageDoor extends Mapper {
     protected registerServices() {
         const service = this.registerService(Services.GarageDoorOpener);
         this.currentState = service.getCharacteristic(Characteristics.CurrentDoorState);
+        this.currentState.onGet(this.getCurrentState.bind(this));
         this.targetState = service.getCharacteristic(Characteristics.TargetDoorState);
         this.targetState.onSet(this.setTargetState.bind(this));
 
@@ -68,6 +69,11 @@ export default class GarageDoor extends Mapper {
         } else {
             return new Command(value ? 'close' : 'open');
         }
+    }
+
+    protected async getCurrentState(): Promise<Nullable<CharacteristicValue>> {
+        this.requestStatesUpdate();
+        return this.currentState!.value;
     }
 
     protected async setOn(value) {
@@ -166,7 +172,7 @@ export default class GarageDoor extends Mapper {
                             }, this.cycleDuration);
                         }
                     } else {
-                        this.requestStateUpdate('core:OpenClosedPedestrianState', 60);
+                        this.requestStatesUpdate(60);
                     }
                     break;
                 case ExecutionState.FAILED:
