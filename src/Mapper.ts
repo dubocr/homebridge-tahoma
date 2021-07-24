@@ -1,5 +1,5 @@
 import { Characteristics, Services } from './Platform';
-import { Characteristic, CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
 import { GREY } from './colors';
@@ -145,7 +145,6 @@ export default class Mapper {
         const localizedName = this.platform.translate(
             commands[0].name + (commands[0].parameters.length > 0 ? '.' + commands[0].parameters[0] : ''),
         );
-        console.log(localizedName);
         /*
         if (!this.isIdle) {
             this.cancelExecution();
