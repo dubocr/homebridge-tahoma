@@ -26,7 +26,11 @@
     "postpublish": "npm run clean"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "tahoma",
+    "cozytouch",
+    "somfy",
+    "connexoon"
   ],
   "homepage": "https://github.com/dubocr/homebridge-tahoma#readme",
   "dependencies": {

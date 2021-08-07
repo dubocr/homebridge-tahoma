@@ -30,7 +30,6 @@ export default class GarageDoor extends Mapper {
     protected registerServices() {
         const service = this.registerService(Services.GarageDoorOpener);
         this.currentState = service.getCharacteristic(Characteristics.CurrentDoorState);
-        this.currentState.onGet(this.getCurrentState.bind(this));
         this.targetState = service.getCharacteristic(Characteristics.TargetDoorState);
         this.targetState.onSet(this.setTargetState.bind(this));
 
@@ -43,6 +42,8 @@ export default class GarageDoor extends Mapper {
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
             this.currentPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
             this.targetPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
+        } else {
+            this.currentState.onGet(this.getCurrentState.bind(this));
         }
     }
 
@@ -72,7 +73,7 @@ export default class GarageDoor extends Mapper {
     }
 
     protected async getCurrentState(): Promise<Nullable<CharacteristicValue>> {
-        this.requestStatesUpdate();
+        this.requestStatesUpdate().catch((e) => this.warn(e));
         return this.currentState!.value;
     }
 
