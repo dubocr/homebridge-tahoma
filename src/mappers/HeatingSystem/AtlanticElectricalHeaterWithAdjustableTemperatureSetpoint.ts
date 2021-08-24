@@ -68,6 +68,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
             case 'off':
             case 'away':
             case 'frostprotection':
+            case 'standby':
                 targetState = Characteristics.TargetHeatingCoolingState.OFF;
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
                 break;
