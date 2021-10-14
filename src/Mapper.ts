@@ -162,7 +162,7 @@ export default class Mapper {
                     try {
                         this.executionId = await this.platform.executeAction(label, this.actionPromise.action, highPriority, standalone);
                         resolve(this.actionPromise.action);
-                    } catch (error) {
+                    } catch (error: any) {
                         this.error(commandName + ' ' + error.message);
                         reject(error);
                     }

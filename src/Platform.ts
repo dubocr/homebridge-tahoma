@@ -48,7 +48,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         try {
             this.client = new Client(log, config);
-        } catch (error) {
+        } catch (error: any) {
             this.log.error(error.message);
             throw error;
         }
@@ -178,7 +178,7 @@ export class Platform implements DynamicPlatformPlugin {
             const deleted = this.accessories.filter((accessory) => !uuids.includes(accessory.UUID));
             this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, deleted);
             this.retryDelay = DEFAULT_RETRY_DELAY;
-        } catch (error) {
+        } catch (error: any) {
             this.log.error(error);
             this.log.error('Retry in ' + this.retryDelay + ' sec...');
             setTimeout(this.discoverDevices.bind(this), this.retryDelay * 1000);
