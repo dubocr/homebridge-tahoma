@@ -27,6 +27,7 @@ export default class RollerShutter extends Mapper {
         this.reverse = config['reverse'] || false;
         this.movementDuration = config['movementDuration'] || 0;
         this.blindsOnRollerShutter = config['blindsOnRollerShutter'] || false;
+        this.stateless = !this.device.hasState('core:ClosureState') && !this.device.hasState('core:TargetClosureState');
     }
 
     protected registerServices() {

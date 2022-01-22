@@ -29,6 +29,7 @@ export default class Mapper {
             this.platform.devicesConfig[this.device.label],
             this.platform.devicesConfig[this.device.oid],
         );
+        this.stateless = (this.device.states.length === 0);
         this.applyConfig(config);
         if (Object.keys(config).length > 0) {
             delete config.key;
@@ -46,7 +47,6 @@ export default class Mapper {
             info.setCharacteristic(Characteristics.SerialNumber, this.device.address.substring(0, 64));
             this.services.push(info);
         }
-        this.stateless = (this.device.states.length === 0);
 
         this.registerServices();
         this.accessory.services.forEach((service) => {
