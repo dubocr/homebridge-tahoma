@@ -42,18 +42,6 @@ export default class GarageDoor extends Mapper {
             this.targetState.updateValue(Characteristics.TargetDoorState.CLOSED);
             this.currentPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
             this.targetPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
-        } else if (
-            this.device.states.find(
-                (s) => [
-                    'core:OpenClosedPedestrianState',
-                    'core:OpenClosedUnknownState',
-                    'core:OpenClosedState',
-                    'core:OpenClosedPartialState',
-                ].includes(s.name),
-            )
-        ) {
-
-            this.currentState.onGet(this.getCurrentState.bind(this));
         }
     }
 
