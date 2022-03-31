@@ -35,7 +35,7 @@
   "homepage": "https://github.com/dubocr/homebridge-tahoma#readme",
   "dependencies": {
     "moment": "^2.29.1",
-    "overkiz-client": "^0.1.70"
+    "overkiz-client": "^0.1.71"
   },
   "devDependencies": {
     "@types/node": "^14.18.12",
@@ -45,8 +45,8 @@
     "homebridge": "^1.4.0",
     "nodemon": "^2.0.15",
     "rimraf": "^3.0.2",
-    "ts-node": "^10.6.0",
-    "typescript": "^4.6.2"
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.3"
   },
   "funding": {
     "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L4X489MG7FUCN"
