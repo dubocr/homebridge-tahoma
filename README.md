@@ -50,6 +50,7 @@ Configuration parameters:
 | `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon_rts', 'cozytouch' or 'rexel')	|
 | `user`					| String		| null			| mandatory, your service account username	|
 | `password`				| String		| null			| mandatory, your service account password	|
+| `gatewayPin`				| String		| null			| optional, your gateway PIN number for local API access	|
 | `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|
 | `refreshPeriod`			| Integer		| 30			| optional, device states refresh period in minutes	|
 | `exclude`					| String[]		| []			| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude	|

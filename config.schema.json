@@ -55,6 +55,12 @@
         "required": true,
         "description": "Your password for selected service"
       },
+      "gatewayPin": {
+        "title": "Gateway PIN",
+        "type": "string",
+        "required": false,
+        "description": "Your gateway PIN number to activate local API"
+      },
       "pollingPeriod": {
         "title": "Polling period",
         "type": "number",

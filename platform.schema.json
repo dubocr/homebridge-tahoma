@@ -62,6 +62,11 @@
         },
         "description": "Your password for selected service"
       },
+      "gatewayPin": {
+        "title": "Gateway PIN",
+        "type": "string",
+        "description": "Your gateway PIN number to activate local API"
+      },
       "exposeScenarios": {
         "title": "Expose scenarios",
         "type": "boolean",
