@@ -11,16 +11,13 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{github.event.issue.number}}
-          comment-author: 'dubocr'
+          comment-author: "dubocr"
           body: |
             Thank you for using Homebridge TaHoma plugin.
 
-            Please follow these step to obtain better support :
-            1. Execute available commands (on,off,T°,mode,etc...) from official app (TaHoma/Cozytouch/etc.)
-            2. Report your config by browsing [https://dev.duboc.pro/tahoma](https://dev.duboc.pro/tahoma)
-            3. Search issues with title corresponding to your device widget name (see picture below). If no opened issue, rename your issue with this widget name.
-            4. Provide your bridge last 4 digits (number visible as SETUP-XXXX-XXXX-XXXX at step 2.)
-            ![Widget](https://dev.duboc.pro/img/widgets.png)
+            If you think this could help resolve your issue, please:
+            2. Report your config by browsing [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
+            4. Provide your gateway PIN number (last 4 digits of the number visible as SETUP-XXXX-XXXX-XXXX in step 2.)
 
             Thank you.
           token: ${{ secrets.GITHUB_TOKEN }}
