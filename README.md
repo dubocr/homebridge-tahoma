@@ -47,15 +47,20 @@ Configuration parameters:
 
 | Parameter					| Type			| Default		| Note							|
 |---------------------------|--------------|---------------|-------------------------------|
-| `service`					| String		| 'tahoma'	    | optional, service name ('tahoma', 'connexoon_rts', 'cozytouch' or 'rexel')	|
-| `user`					| String		| null			| mandatory, your service account username	|
-| `password`				| String		| null			| mandatory, your service account password	|
-| `gatewayPin`				| String		| null			| optional, your gateway PIN number for local API access	|
+| `service`					| String		| 'tahoma'	    | optional, service name ('local', 'tahoma', 'connexoon_rts', 'cozytouch' or 'rexel')	|
+| `user`					| String		| null			| mandatory, your service account username (*)	|
+| `password`				| String		| null			| mandatory, your service account password (*)	|
 | `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|
 | `refreshPeriod`			| Integer		| 30			| optional, device states refresh period in minutes	|
 | `exclude`					| String[]		| []			| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude	|
 | `exposeScenarios`			| Boolean		| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
 | `devicesConfig`			| Object[]		| []			| optional list of device specific configuration (see below)	|
+
+## (*) Local API configuration
+Local API service is available on some gateways.
+To use Local API you will have to:
+1. activate `developper mode` : [https://developer.somfy.com/developer-mode](https://developer.somfy.com/developer-mode)
+2. Generate API credentials at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
 
 # Specific device configuration
 
@@ -149,7 +154,7 @@ You are welcome to contribute to this plugin development by opening an issue in 
 
 Any support request must follow this process :
 1. Execute failling operations from official app then from Homekit
-2. Report your config to [https://dev.duboc.pro/tahoma](https://dev.duboc.pro/tahoma)
+2. Report your config to [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
 3. Browse or open issue with title corresponding to your device widget name (see picture below)
 4. Provide your bridge last 4 digits (number visible as SETUP-XXXX-XXXX-XXXX at step 2.)
 ![Widget](https://dev.duboc.pro/img/widgets.png)

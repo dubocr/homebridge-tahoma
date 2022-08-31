@@ -17,6 +17,12 @@
         "default": "tahoma",
         "oneOf": [
           {
+            "title": "Local API",
+            "enum": [
+              "local"
+            ]
+          },
+          {
             "title": "TaHoma / Connexoon (Somfy)",
             "enum": [
               "tahoma"
@@ -47,19 +53,13 @@
         "title": "User",
         "type": "string",
         "required": true,
-        "description": "Your username for selected service"
+        "description": "Your username for selected service (email, gateway Pin or IP)"
       },
       "password": {
         "title": "Password",
         "type": "string",
         "required": true,
-        "description": "Your password for selected service"
-      },
-      "gatewayPin": {
-        "title": "Gateway PIN",
-        "type": "string",
-        "required": false,
-        "description": "Your gateway PIN number to activate local API"
+        "description": "Your password/token for selected service"
       },
       "pollingPeriod": {
         "title": "Polling period",
