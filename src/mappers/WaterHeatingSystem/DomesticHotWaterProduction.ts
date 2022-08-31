@@ -113,6 +113,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     protected onStateChanged(name: string, value) {
         switch (name) {
             case 'io:DHWBoostModeState':
+            case 'modbuslink:DHWBoostModeState':
                 this.on?.updateValue(value !== 'off');
                 break;
             case 'core:WaterTemperatureState':
@@ -121,6 +122,7 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                 }
                 break;
             case 'io:MiddleWaterTemperatureState':
+            case 'modbuslink:MiddleWaterTemperatureState':
                 this.currentTemperature?.updateValue(value);
                 break;
             case 'core:TargetTemperatureState':
@@ -129,7 +131,11 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
                 break;
             case 'io:DHWModeState':
             case 'io:DHWAbsenceModeState':
-                this.postpone(this.computeStates);
+                this.postpone(this.computeStates, 'io');
+                break;
+            case 'modbuslink:DHWModeState':
+            case 'modbuslink:DHWAbsenceModeState':
+                this.postpone(this.computeStates, 'modbuslink');
                 break;
             case 'core:NumberOfShowerRemainingState':
                 this.currentShower?.updateValue(value);
@@ -140,10 +146,10 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
         }
     }
 
-    protected computeStates() {
+    protected computeStates(protcol) {
         let targetState;
-        if (this.device.get('io:DHWAbsenceModeState') === 'off') {
-            switch (this.device.get('io:DHWModeState')) {
+        if (this.device.get(protcol+':DHWAbsenceModeState') === 'off') {
+            switch (this.device.get(protcol+':DHWModeState')) {
                 case 'autoMode':
                     targetState = Characteristics.TargetHeatingCoolingState.AUTO;
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
