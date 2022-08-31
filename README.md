@@ -56,10 +56,11 @@ Configuration parameters:
 | `exposeScenarios`			| Boolean		| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
 | `devicesConfig`			| Object[]		| []			| optional list of device specific configuration (see below)	|
 
-## (*) Local API configuration
+### (*) Local API configuration
 Local API service is available on TaHoma and TaHoma switch gateways.
+
 To use Local API you will have to:
-1. Activate `developer mode` ([somfy.com](https://somfy.com) > My Account > Activate developer mode) 
+1. Activate `developer mode` ([somfy.com](https://www.somfy.com) > My Account > Activate developer mode) 
 2. Generate API credentials at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
 
 For more information, browse [https://developer.somfy.com/developer-mode](https://developer.somfy.com/developer-mode)
