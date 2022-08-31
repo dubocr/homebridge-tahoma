@@ -57,10 +57,12 @@ Configuration parameters:
 | `devicesConfig`			| Object[]		| []			| optional list of device specific configuration (see below)	|
 
 ## (*) Local API configuration
-Local API service is available on some gateways.
+Local API service is available on TaHoma and TaHoma switch gateways.
 To use Local API you will have to:
-1. activate `developper mode` : [https://developer.somfy.com/developer-mode](https://developer.somfy.com/developer-mode)
+1. Activate `developer mode` ([somfy.com](https://somfy.com) > My Account > Activate developer mode) 
 2. Generate API credentials at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
+
+For more information, browse [https://developer.somfy.com/developer-mode](https://developer.somfy.com/developer-mode)
 
 # Specific device configuration
 

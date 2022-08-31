@@ -22,7 +22,7 @@
         "default": "tahoma",
         "oneOf": [
           {
-            "title": "Local API",
+            "title": "Local API (TaHoma and TaHoma switch)",
             "enum": [
               "local"
             ]
