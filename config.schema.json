@@ -45,6 +45,12 @@
             "enum": [
               "rexel"
             ]
+          },
+          {
+            "title": "Flexom (Bouygues)",
+            "enum": [
+              "flexom"
+            ]
           }
         ],
         "required": true
