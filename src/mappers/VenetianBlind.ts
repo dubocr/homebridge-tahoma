@@ -41,7 +41,7 @@ export default class VenetianBlind extends RollerShutter {
         return Math.round((value + 90) / 1.8);
     }
 
-    protected getTargetCommands(value) {
+    protected getTargetCommands(value): Command | Command[] {
         if(this.stateless) {
             if(value === 100) {
                 return new Command('open');
@@ -58,8 +58,13 @@ export default class VenetianBlind extends RollerShutter {
         } else if(this.blindMode) {
             if(value === 100) {
                 return new Command('open');
-            } else {
+            } else if(this.device.hasCommand('setClosureAndOrientation')) {
                 return new Command('setClosureAndOrientation', [100, this.reversedValue(value)]);
+            } else {
+                return [
+                    new Command('setClosure', 100),
+                    new Command('setOrientation', this.reversedValue(value)),
+                ];
             }
         } else if(this.device.hasCommand('setClosureAndOrientation')) {
             return new Command('setClosureAndOrientation', [
@@ -67,18 +72,32 @@ export default class VenetianBlind extends RollerShutter {
                 this.angleToOrientation(this.targetAngle?.value),
             ]);
         } else {
-            return new Command('setClosure', this.reversedValue(value));
+            const commands = [
+                new Command('setClosure', this.reversedValue(value)),
+            ];
+            if(this.device.hasCommand('setOrientation')) {
+                commands.push(new Command('setOrientation', this.angleToOrientation(this.targetAngle?.value)));
+            }
+            return commands;
         }
     }
 
     protected getTargetAngleCommands(value) {
         if(this.stateless) {
             return [];
-        } else {
+        } else if(this.device.hasCommand('setClosureAndOrientation')) {
             return new Command('setClosureAndOrientation', [
                 this.reversedValue(this.targetPosition?.value),
                 this.angleToOrientation(value),
             ]);
+        } else {
+            const commands = [
+                new Command('setClosure', this.reversedValue(this.targetPosition?.value)),
+            ];
+            if(this.device.hasCommand('setOrientation')) {
+                commands.push(new Command('setOrientation', this.angleToOrientation(value)));
+            }
+            return commands;
         }
     }
 

@@ -54,7 +54,7 @@ export default class RollerShutter extends Mapper {
         this.targetPosition.onSet(this.debounce(this.setTargetPosition));
     }
 
-    protected getTargetCommands(value) {
+    protected getTargetCommands(value): Command | Command[] {
         if (this.stateless) {
             if (value === 100) {
                 return new Command('open');
