@@ -46,8 +46,8 @@ Minimal configuration sample:
 Configuration parameters:
 
 | Parameter					| Type			| Default		| Note							|
-|---------------------------|--------------|---------------|-------------------------------|
-| `service`					| String		| 'tahoma'	    | optional, service name ('local', 'tahoma', 'connexoon_rts', 'cozytouch' or 'rexel')	|
+|---------------------------|---------------|---------------|-------------------------------|
+| `service`					| String		| 'somfy_europe'| optional, service name  (see below)	|
 | `user`					| String		| null			| mandatory, your service account username (*)	|
 | `password`				| String		| null			| mandatory, your service account password (*)	|
 | `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|
@@ -55,6 +55,19 @@ Configuration parameters:
 | `exclude`					| String[]		| []			| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude	|
 | `exposeScenarios`			| Boolean		| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
 | `devicesConfig`			| Object[]		| []			| optional list of device specific configuration (see below)	|
+
+### Service list
+| Service code				| Compatibility													|
+|---------------------------|---------------------------------------------------------------|
+| `local`					| Local API (TaHoma, Switch)									|
+| `somfy_europe`			| TaHoma, Switch, Connexoon IO									|
+| `somfy_australia`			| Services for Australian users (Connexoon RTS)					|
+| `somfy_north_america`		| Services for North American users								|
+| `cozytouch`				| Cozytouch (Atlantic, Thermor, Sauter)							|
+| `flexom`					| Flexom (Bouygues)												|
+| `hi_kumo`					| Hi Kumo (Hitachi)												|
+| `rexel`					| Energeasy Connect (Rexel)										|
+
 
 ### (*) Local API configuration
 Local API service is available on TaHoma and TaHoma switch gateways.

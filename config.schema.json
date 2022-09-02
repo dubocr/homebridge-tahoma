@@ -14,12 +14,30 @@
       "service": {
         "title": "Service",
         "type": "string",
-        "default": "tahoma",
+        "default": "somfy_europe",
         "oneOf": [
           {
-            "title": "TaHoma / Connexoon (Somfy)",
+            "title": "Local API (TaHoma / Switch)",
             "enum": [
-              "tahoma"
+              "local"
+            ]
+          },
+          {
+            "title": "Somfy Europe (TaHoma / Switch / Connexoon IO)",
+            "enum": [
+              "somfy_europe"
+            ]
+          },
+          {
+            "title": "Somfy Australia (Connexoon RTS)",
+            "enum": [
+              "somfy_australia"
+            ]
+          },
+          {
+            "title": "Somfy North America",
+            "enum": [
+              "somfy_north_america"
             ]
           },
           {
@@ -29,21 +47,21 @@
             ]
           },
           {
-            "title": "Connexoon RTS (Somfy outside France)",
-            "enum": [
-              "connexoon_rts"
-            ]
-          },
-          {
-            "title": "Energeasy connect (Rexel)",
+            "title": "Energeasy Connect (Rexel)",
             "enum": [
               "rexel"
             ]
           },
           {
-            "title": "Local API (TaHoma and TaHoma switch)",
+            "title": "Hi Kumo (Hitachi)",
             "enum": [
-              "local"
+              "hi_kumo"
+            ]
+          },
+          {
+            "title": "Flexom (Bouygues)",
+            "enum": [
+              "flexom"
             ]
           }
         ],
