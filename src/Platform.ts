@@ -107,8 +107,8 @@ export class Platform implements DynamicPlatformPlugin {
             // loop over the discovered devices and register each one if it has not already been registered
             for (const device of devices) {
                 if (
-                    this.exclude.includes(device.uiClass) ||
-                    this.exclude.includes(device.widget) ||
+                    this.exclude.includes(device.definition.uiClass) ||
+                    this.exclude.includes(device.definition.widgetName) ||
                     this.exclude.includes(device.controllableName) ||
                     this.exclude.includes(device.label) ||
                     this.exclude.includes(device.protocol)
@@ -143,11 +143,11 @@ export class Platform implements DynamicPlatformPlugin {
                 }
 
                 this.log.info(`Configure device ${BLUE}${accessory.displayName}${RESET}`);
-                this.log.info(`${GREY}  ${device.uiClass} > ${device.widget}`);
+                this.log.info(`${GREY}  ${device.definition.uiClass} > ${device.definition.widgetName}`);
 
-                const mapper = await import(`./mappers/${device.uiClass}/${device.widget}/${device.uniqueName}`)
-                    .catch(() => import(`./mappers/${device.uiClass}/${device.widget}`))
-                    .catch(() => import(`./mappers/${device.uiClass}`))
+                const mapper = await import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}/${device.uniqueName}`)
+                    .catch(() => import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}`))
+                    .catch(() => import(`./mappers/${device.definition.uiClass}`))
                     .then((c) => c.default)
                     .catch(() => Mapper);
                 new mapper(this, accessory, device).build();

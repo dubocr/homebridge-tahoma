@@ -35,7 +35,7 @@
   "homepage": "https://github.com/dubocr/homebridge-tahoma#readme",
   "dependencies": {
     "moment": "^2.29.4",
-    "overkiz-client": "^0.1.84"
+    "overkiz-client": "^0.1.85"
   },
   "devDependencies": {
     "@types/node": "^18.7.14",

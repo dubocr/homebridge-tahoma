@@ -24,10 +24,10 @@ export default class Mapper {
 
     public build() {
         const config = Object.assign({},
-            this.platform.devicesConfig[this.device.uiClass],
-            this.platform.devicesConfig[this.device.widget],
+            this.platform.devicesConfig[this.device.definition.uiClass],
+            this.platform.devicesConfig[this.device.definition.widgetName],
             this.platform.devicesConfig[this.device.label],
-            this.platform.devicesConfig[this.device.oid],
+            this.platform.devicesConfig[this.device.uuid],
         );
         this.stateless = (this.device.states.length === 0);
         this.applyConfig(config);

@@ -34,7 +34,7 @@ export default class GarageDoor extends Mapper {
         this.targetState.onSet(this.setTargetState.bind(this));
 
         this.cyclic = this.cyclic || this.device.hasCommand('cycle');
-        if ((this.pedestrianCommand || this.pedestrianDuration) && this.device.uiClass === 'Gate') {
+        if ((this.pedestrianCommand || this.pedestrianDuration) && this.device.definition.uiClass === 'Gate') {
             this.registerLockService('pedestrian');
         }
         if (this.stateless) {
