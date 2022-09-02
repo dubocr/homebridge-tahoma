@@ -37,6 +37,9 @@ export class Platform implements DynamicPlatformPlugin {
         new CustomCharacteristics(this.api.hap);
         this.log.debug('Finished initializing platform:', this.config.name);
 
+        process.on('unhandledRejection', this.log.error);
+        process.on('uncaughtException', this.log.error);
+
         this.exclude = config.exclude || [];
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
             'ElectricitySensor', 'OnOffHeatingSystem', 'Wifi', 'RemoteController',

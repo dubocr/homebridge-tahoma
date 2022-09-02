@@ -22,12 +22,6 @@
         "default": "tahoma",
         "oneOf": [
           {
-            "title": "Local API (TaHoma and TaHoma switch)",
-            "enum": [
-              "local"
-            ]
-          },
-          {
             "title": "TaHoma / Connexoon (Somfy)",
             "enum": [
               "tahoma"
@@ -49,6 +43,12 @@
             "title": "Energeasy connect (Rexel)",
             "enum": [
               "rexel"
+            ]
+          },
+          {
+            "title": "Local API (TaHoma and TaHoma switch)",
+            "enum": [
+              "local"
             ]
           }
         ],

@@ -171,7 +171,7 @@ export default class GarageDoor extends Mapper {
                             }, this.cycleDuration);
                         }
                     } else {
-                        this.requestStatesUpdate(60);
+                        this.requestStatesUpdate(60).catch((e) => this.warn(e));
                     }
                     break;
                 case ExecutionState.FAILED:

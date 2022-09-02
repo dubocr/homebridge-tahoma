@@ -190,10 +190,9 @@ export default class Mapper {
 
     protected async requestStatesUpdate(defer?: number) {
         if (defer) {
-            setTimeout(this.requestStatesUpdate.bind(this), defer * 1000);
-        } else {
-            await this.platform.client.refreshDeviceStates(this.device.deviceURL);
+            await this.delay(defer * 1000);
         }
+        await this.platform.client.refreshDeviceStates(this.device.deviceURL);
     }
 
     /**
