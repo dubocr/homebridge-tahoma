@@ -1,0 +1,44 @@
+name: Unsupported Device
+description: Request support for nex device type
+title: "Request support for new device"
+labels: [unsupported-device]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Send your config
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Did you report your configuration ?
+      description: Before requesting support, please execute operation to your device from official application then report your gateway configuration.
+      options:
+        - label: My configuration was successfully reported at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma).
+          required: true
+
+  - type: text
+    validations:
+      required: true
+    attributes:
+      label: Gateway PIN number
+      description: >-
+        Provide the last 4 digits of your gateway PIN number.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## My device
+
+  - type: text
+    validations:
+      required: true
+    attributes:
+      label: Device name
+      description: Provide the name of your device as it appear in official application.
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Additional information
+      description: If you have any additional information to provide.

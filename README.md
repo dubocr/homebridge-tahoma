@@ -1,15 +1,18 @@
-# homebridge-tahoma
+# Overkiz (Somfy) - Homebridge-TaHoma
 
 Homebridge plugin supporting Overkiz based platforms :
 
-| Product			| Vendor					| Service			|
-|---------------------------|-------------------------------|-------------------|
-| TaHoma / TaHoma Switch 	| Somfy							| `tahoma`	    	|
-| Connexoon 				| Somfy							| `tahoma`	    	|
-| Connexoon RTS 			| Somfy							| `connexoon_rts`	|
-| Cozytouch				 	| Atlantic / Thermor / Sauter	| `cozytouch`		|
-| Energeasy Connect			| Rexel							| `rexel`			|
-| Kit de connectivité Somfy | Orange						| `tahoma`	    	|
+| Service code				| Vendor					| Product compatibility												|
+|---------------------------|---------------------------|-------------------------------------------------------------------|
+| `local`					| Somfy local API			| TaHoma, TaHoma Switch												|
+| `somfy_europe`			| Somfy Europe			 	| TaHoma, TaHoma Switch, Connexoon IO, Kit de connectivité Orange	|
+| `somfy_australia`			| Somfy Australia	 		| Connexoon RTS and other products in Australia						|
+| `somfy_north_america`		| Somfy North America 		| TaHoma and other product in North America							|
+| `cozytouch`				| Atlantic, Thermor, Sauter | Cozytouch															|
+| `flexom`					| Bouygues 					| Flexom															|
+| `hi_kumo`					| Hitachi 					| Hi hi_kumo														|
+| `rexel`					| Rexel					 	| Energeasy connectivité											|
+
 
 # Installation
 
@@ -35,7 +38,7 @@ Minimal configuration sample:
 			"platform": "Tahoma",
 			"name": "My TaHoma Box",
 
-			"service": "tahoma",
+			"service": "somfy_europe",
 			"user": "user@me.com",
 			"password": "MyPassw0rd",
 		}
@@ -45,35 +48,23 @@ Minimal configuration sample:
 
 Configuration parameters:
 
-| Parameter					| Type			| Default		| Note							|
-|---------------------------|---------------|---------------|-------------------------------|
-| `service`					| String		| 'somfy_europe'| optional, service name  (see below)	|
-| `user`					| String		| null			| mandatory, your service account username (*)	|
-| `password`				| String		| null			| mandatory, your service account password (*)	|
-| `pollingPeriod`			| Integer		| 30			| optional, bridge polling period in seconds	|
-| `refreshPeriod`			| Integer		| 30			| optional, device states refresh period in minutes	|
-| `exclude`					| String[]		| []			| optional, list of protocols (hue,enocean,zwave,io,rts), ui name, widget name or device name to exclude	|
-| `exposeScenarios`			| Boolean		| false			| optional, expose TaHoma/Connexoon/Cozytouch scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
-| `devicesConfig`			| Object[]		| []			| optional list of device specific configuration (see below)	|
-
-### Service list
-| Service code				| Compatibility													|
-|---------------------------|---------------------------------------------------------------|
-| `local`					| Local API (TaHoma, Switch)									|
-| `somfy_europe`			| TaHoma, Switch, Connexoon IO									|
-| `somfy_australia`			| Services for Australian users (Connexoon RTS)					|
-| `somfy_north_america`		| Services for North American users								|
-| `cozytouch`				| Cozytouch (Atlantic, Thermor, Sauter)							|
-| `flexom`					| Flexom (Bouygues)												|
-| `hi_kumo`					| Hi Kumo (Hitachi)												|
-| `rexel`					| Energeasy Connect (Rexel)										|
+| Parameter					| Type			| Default			| Note											|
+|---------------------------|---------------|-------------------|-----------------------------------------------|
+| `service`					| String		| 'somfy_europe'	| optional, service name  (see above)			|
+| `user`					| String		| null				| mandatory, your service account username (*)	|
+| `password`				| String		| null				| mandatory, your service account password (*)	|
+| `pollingPeriod`			| Integer		| 30				| optional, bridge polling period in seconds	|
+| `refreshPeriod`			| Integer		| 30				| optional, device states refresh period in minutes	|
+| `exclude`					| String[]		| []				| optional, protocol, ui, widget or device name to exclude	|
+| `exposeScenarios`			| Boolean		| false				| optional, expose scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
+| `devicesConfig`			| Object[]		| []				| optional list of device specific configuration (see below)	|
 
 
 ### (*) Local API configuration
 Local API service is available on TaHoma and TaHoma switch gateways.
 
 To use Local API you will have to:
-1. Activate `developer mode` ([somfy.com](https://www.somfy.com) > My Account > Activate developer mode) 
+1. Activate `developer mode` ([www.somfy.com](https://www.somfy.com) > My Account > Activate developer mode) 
 2. Generate API credentials at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
 
 For more information, browse [https://developer.somfy.com/developer-mode](https://developer.somfy.com/developer-mode)
@@ -138,8 +129,8 @@ Full configuration example:
 
 			"user": "user@me.com",
 			"password": "MyPassw0rd",
-			"service": "tahoma",
-			"exclude": ["hue", "rts", "Main door"],
+			"service": "somfy_europe",
+			"exclude": ["hue", "rts", "Main door", "Main door", "PositionableHorizontalAwning"],
 
 			"devicesConfig": [
 				{
@@ -166,13 +157,6 @@ Full configuration example:
 
 # Contribute
 
-You are welcome to contribute to this plugin development by opening an issue in case of bad behaviour or not implemented device.
-
-Any support request must follow this process :
-1. Execute failling operations from official app then from Homekit
-2. Report your config to [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
-3. Browse or open issue with title corresponding to your device widget name (see picture below)
-4. Provide your bridge last 4 digits (number visible as SETUP-XXXX-XXXX-XXXX at step 2.)
-![Widget](https://dev.duboc.pro/img/widgets.png)
+You are welcome to contribute to this plugin development by opening an issue in case of unexpected behaviour or unsupported device.
 
 I do not expect any reward concerning this plugin, however, some users ask me for a [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L4X489MG7FUCN) button as sign of contribution. Feel free to use it.
