@@ -1,6 +1,6 @@
 name: Device Integration
 description: Request support for new device type or unexpected command behaviour
-title: ""
+title: "[Device]"
 labels: ["device-integration"]
 body:
   - type: markdown
