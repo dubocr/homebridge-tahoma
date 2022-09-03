@@ -1,7 +1,7 @@
-name: Unsupported Device
-description: Request support for nex device type
-title: "Request support for new device"
-labels: [unsupported-device]
+name: Device Integration
+description: Request support for new device type or unexpected command behaviour
+title: "[Device]"
+labels: ["device-integration"]
 body:
   - type: markdown
     attributes:
@@ -17,25 +17,27 @@ body:
         - label: My configuration was successfully reported at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma).
           required: true
 
-  - type: text
+  - type: input
     validations:
       required: true
     attributes:
       label: Gateway PIN number
-      description: >-
-        Provide the last 4 digits of your gateway PIN number.
+      description: Provide the last 4 digits of your gateway PIN number.
+      placeholder: ex. 3654
 
   - type: markdown
     attributes:
       value: |
         ## My device
 
-  - type: text
+  - type: input
+    id: type
     validations:
       required: true
     attributes:
-      label: Device name
-      description: Provide the name of your device as it appear in official application.
+      label: Device type
+      description: Provide the type of your device as it appear when reporting your config.
+      placeholder: ex. RollerShutter > PositionableRollerShutter
 
   - type: textarea
     id: details

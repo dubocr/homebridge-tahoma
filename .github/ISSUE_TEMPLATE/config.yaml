@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Gateway configuration report
+    url: https://dev.duboc.pro/homebridge-tahoma
+    about: Please report your configuration here.
