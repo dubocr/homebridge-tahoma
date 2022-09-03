@@ -1,6 +1,6 @@
 name: Device Integration
 description: Request support for new device type or unexpected command behaviour
-title: "[Device]"
+title: ""
 labels: ["device-integration"]
 body:
   - type: markdown
@@ -18,6 +18,7 @@ body:
           required: true
 
   - type: input
+    id: gateway-pin
     validations:
       required: true
     attributes:
@@ -31,7 +32,7 @@ body:
         ## My device
 
   - type: input
-    id: type
+    id: device-type
     validations:
       required: true
     attributes:
