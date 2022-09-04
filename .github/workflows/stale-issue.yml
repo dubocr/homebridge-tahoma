@@ -13,13 +13,13 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           stale-issue-message: >
-            'There hasn't been any activity on this issue recently.
+            There hasn't been any activity on this issue recently.
 
             Please make sure to update to the latest Homebridge TaHoma version to see
             if that solves the issue.
 
-            This issue will be closed in case of inactivity.'
+            This issue will be closed in case of inactivity.
           days-before-stale: 30
           days-before-close: 30
-          stale-issue-label: "no-issue-activity"
+          stale-issue-label: "inactive"
           exempt-issue-labels: "blocked,waiting"
