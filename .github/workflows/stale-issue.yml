@@ -22,4 +22,4 @@ jobs:
           days-before-stale: 30
           days-before-close: 30
           stale-issue-label: "no-issue-activity"
-          exempt-issue-labels: "blocked"
+          exempt-issue-labels: "blocked,waiting"
