@@ -1,5 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: Gateway configuration report
+  - name: Device integration and issues
     url: https://dev.duboc.pro/homebridge-tahoma
-    about: Please report your configuration here.
+    about: Start here for unsupported device or any command/state unexpected behaviour
