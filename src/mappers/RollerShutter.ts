@@ -18,6 +18,7 @@ export default class RollerShutter extends Mapper {
     protected defaultPosition;
     protected blindsOnRollerShutter;
     protected movementDuration;
+    protected offsetMovementDuration;
 
     protected cancelTimeout;
 
@@ -26,6 +27,7 @@ export default class RollerShutter extends Mapper {
         this.initPosition = config['initPosition'] !== undefined ? config['initPosition'] : (config['defaultPosition'] || 50);
         this.reverse = config['reverse'] || false;
         this.movementDuration = config['movementDuration'] || 0;
+        this.offsetMovementDuration = config['offsetMovementDuration'] || 0;
         this.blindsOnRollerShutter = config['blindsOnRollerShutter'] || false;
         this.stateless = !this.device.hasState('core:ClosureState') && !this.device.hasState('core:TargetClosureState');
     }
@@ -92,7 +94,7 @@ export default class RollerShutter extends Mapper {
                 case ExecutionState.TRANSMITTED:
                     if (standalone) {
                         const delta = value - Number(this.currentPosition!.value);
-                        const duration = Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
+                        const duration = this.offsetMovementDuration * 1000 + Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
                         this.info('Will stop movement in ' + duration + ' millisec');
                         this.cancelTimeout = setTimeout(() => {
                             this.cancelTimeout = null;
