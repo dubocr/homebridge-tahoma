@@ -1,4 +1,4 @@
-name: Device Integration
+name: Device integration
 description: Request support for new device type or unexpected command behaviour
 title: "[Device]"
 labels: ["device-integration"]
