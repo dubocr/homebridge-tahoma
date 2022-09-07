@@ -11,11 +11,11 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
+    protected registerMainService() {
         if (this.device.get('io:NativeFunctionalLevelState') === 'Top') {
             this.TARGET_MODES.push(Characteristics.TargetHeatingCoolingState.HEAT);
         }
-        this.registerThermostatService();
+        return super.registerMainService();
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {

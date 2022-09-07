@@ -7,10 +7,11 @@ export default class ThermostatSetPoint extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.AUTO,
     ];
 
-    protected registerServices() {
-        this.registerThermostatService();
+    protected registerMainService() {
+        const service = super.registerMainService();
         this.targetState?.updateValue(Characteristics.TargetHeatingCoolingState.AUTO);
         this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
+        return service;
     }
 
     protected getTargetTemperatureCommands(value): Command | Array<Command> {

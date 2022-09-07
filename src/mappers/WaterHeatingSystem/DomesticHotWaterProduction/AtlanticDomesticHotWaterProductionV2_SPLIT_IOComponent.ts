@@ -1,3 +1,4 @@
+import { Service } from 'homebridge';
 import { Command } from 'overkiz-client';
 import { Characteristics } from '../../../Platform';
 import DomesticHotWaterProduction from '../DomesticHotWaterProduction';
@@ -10,8 +11,8 @@ export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent exte
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerThermostatService() {
-        const service = super.registerThermostatService();
+    protected registerMainService(): Service {
+        const service = super.registerMainService();
         this.targetTemperature?.setProps({
             minValue: 50.0,
             maxValue: 54.5,

@@ -6,11 +6,12 @@ import Mapper from '../Mapper';
 export default class OnOff extends Mapper {
     protected on: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.Switch);
         this.on = service.getCharacteristic(Characteristics.On);
 
         this.on.onSet(this.setOn.bind(this));
+        return service;
     }
 
     protected getOnOffCommands(value): Command | Array<Command> {

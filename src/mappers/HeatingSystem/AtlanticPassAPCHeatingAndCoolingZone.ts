@@ -17,10 +17,6 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
         super.applyConfig(config);
     }
 
-    protected registerServices() {
-        this.registerThermostatService();
-    }
-
     protected getTargetStateCommands(value): Command | Array<Command> {
         const heatingCooling = this.getHeatingCooling();
         const commands: Array<Command> = [];

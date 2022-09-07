@@ -32,7 +32,7 @@ export default class RollerShutter extends Mapper {
         this.stateless = !this.device.hasState('core:ClosureState') && !this.device.hasState('core:TargetClosureState');
     }
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.WindowCovering);
         service.addOptionalCharacteristic(MyPositionCharacteristic);
         this.currentPosition = service.getCharacteristic(Characteristics.CurrentPosition);
@@ -54,6 +54,7 @@ export default class RollerShutter extends Mapper {
         }
         this.positionState.updateValue(Characteristics.PositionState.STOPPED);
         this.targetPosition.onSet(this.debounce(this.setTargetPosition));
+        return service;
     }
 
     protected getTargetCommands(value): Command | Command[] {

@@ -4,9 +4,8 @@ import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
 import { GREY } from './colors';
 
-export default class Mapper {
+export default abstract class Mapper {
     protected log: Logger;
-    protected services: Array<Service> = [];
     private postponeTimer;
     private debounceTimer;
     protected stateless = false;
@@ -40,17 +39,18 @@ export default class Mapper {
             }
         }
 
+        const services = this.registerServices();
+
         const info = this.accessory.getService(Services.AccessoryInformation);
         if (info) {
             info.setCharacteristic(Characteristics.Manufacturer, this.device.manufacturer);
             info.setCharacteristic(Characteristics.Model, this.device.model);
             info.setCharacteristic(Characteristics.SerialNumber, this.device.address.substring(0, 64));
-            this.services.push(info);
+            services.push(info);
         }
 
-        this.registerServices();
         this.accessory.services.forEach((service) => {
-            if (!this.services.find((s) => s.UUID === service.UUID && s.subtype === service.subtype)) {
+            if (!services.find((s) => s.UUID === service.UUID && s.subtype === service.subtype)) {
                 this.accessory.removeService(service);
             }
         });
@@ -97,7 +97,6 @@ export default class Mapper {
                 this.platform.client.setDeviceName(this.device.deviceURL, value);
             });
         */
-        this.services.push(service);
         return service;
     }
 
@@ -219,12 +218,17 @@ export default class Mapper {
         this.platform.log.error(`[${this.device.label}]`, ...args);
     }
 
-    /**
-     * Children methods
-     */
-
-    protected registerServices() {
-        // 
+    protected registerServices(): Array<Service> {
+        if(typeof this.registerMainService === 'function') {
+            try {
+                return [this.registerMainService()];
+            } catch(error: any) {
+                this.log.warn(error.message);
+            }
+        } else {
+            this.log.warn(this.device.definition.widgetName + ' not supported.');
+        }
+        return [];
     }
 
     protected onStatesChanged(states: Array<State>, init = false) {
@@ -232,18 +236,10 @@ export default class Mapper {
             if (!init) {
                 this.debug(state.name + ' => ' + state.value);
             }
-            this.onStateChanged(state.name, state.value);
+            if(typeof this.onStateChanged === 'function') {
+                this.onStateChanged(state.name, state.value);
+            }
         });
-    }
-
-    /**
-     * Triggered when device state change
-     * @param name State name
-     * @param value State value
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected onStateChanged(name: string, value) {
-        //
     }
 
     // OLD
@@ -254,4 +250,21 @@ export default class Mapper {
     async cancelExecution() {
         await this.platform.client.cancelExecution(this.executionId);
     }
+
+    /**
+     * Abstract methods to be implemented
+     */
+
+    /**
+     * Build the main device service
+     * @return the main service
+     */
+    protected abstract registerMainService(): Service;
+
+    /**
+     * Triggered when device state change
+     * @param name State name
+     * @param value State value
+     */
+    protected abstract onStateChanged(name: string, value);
 }

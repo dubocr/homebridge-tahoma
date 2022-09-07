@@ -5,9 +5,10 @@ import Mapper from '../Mapper';
 export default class TemperatureSensor extends Mapper {
     protected temperature: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.TemperatureSensor);
         this.temperature = service.getCharacteristic(Characteristics.CurrentTemperature);
+        return service;
     }
 
     protected onStateChanged(name: string, value) {

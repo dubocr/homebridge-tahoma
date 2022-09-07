@@ -14,11 +14,10 @@ export default class VenetianBlind extends RollerShutter {
         this.blindMode = config['blindMode'] || false;
     }
 
-    protected registerServices() {
-        super.registerServices();
+    protected registerMainService() {
+        const service = super.registerMainService();
 
         if(!this.stateless) {
-            const service = this.accessory.getService(Services.WindowCovering);
             this.currentAngle = service?.getCharacteristic(Characteristics.CurrentHorizontalTiltAngle);
             this.targetAngle = service?.getCharacteristic(Characteristics.TargetHorizontalTiltAngle);
             this.targetAngle?.setProps({ minStep: 10 });
@@ -31,6 +30,7 @@ export default class VenetianBlind extends RollerShutter {
                 service?.removeCharacteristic(this.targetAngle);
             }
         }
+        return service;
     }
 
     protected orientationToAngle(value) {

@@ -14,11 +14,10 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
-        const service = this.registerThermostatService();
+    protected registerMainService() {
+        const service = super.registerMainService();
         service.addOptionalCharacteristic(TargetShowerCharacteristic);
         service.addOptionalCharacteristic(CurrentShowerCharacteristic);
-        this.registerSwitchService('boost');
         if (this.device.hasState('core:NumberOfShowerRemainingState')) {
             this.currentShower = service.getCharacteristic(CurrentShowerCharacteristic);
             this.targetShower = service.getCharacteristic(TargetShowerCharacteristic);
@@ -28,6 +27,14 @@ export default class DomesticHotWaterProduction extends WaterHeatingSystem {
             });
             this.targetShower.onSet(this.setTargetShower.bind(this));
         }
+        return service;
+    }
+
+    protected registerServices() {
+        const services = super.registerServices();
+        const boost = this.registerSwitchService('boost');
+        services.push(boost);
+        return services;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {

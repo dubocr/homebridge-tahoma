@@ -15,16 +15,19 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected drying: Characteristic | undefined;
 
     protected registerServices() {
-        this.registerThermostatService();
+        const services = super.registerServices();
         if (this.device.hasCommand('setTowelDryerBoostModeDuration')) {
-            this.registerSwitchService('boost');
+            const boost = this.registerSwitchService('boost');
+            services.push(boost);
         }
         if (this.device.hasCommand('setDryingDuration')) {
-            const service = this.registerService(Services.Switch, 'drying');
-            this.drying = service.getCharacteristic(Characteristics.On);
+            const drying = this.registerService(Services.Switch, 'drying');
+            this.drying = drying.getCharacteristic(Characteristics.On);
 
             this.drying?.onSet(this.setDrying.bind(this));
+            services.push(drying);
         }
+        return services;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {

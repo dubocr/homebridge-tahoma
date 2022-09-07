@@ -7,7 +7,7 @@ export default class Siren extends Mapper {
     protected mute: Characteristic | undefined;
     protected volume: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.Speaker);
         this.mute = service.getCharacteristic(Characteristics.Mute);
         this.volume = service.getCharacteristic(Characteristics.Volume);
@@ -16,6 +16,7 @@ export default class Siren extends Mapper {
         this.volume.onSet(this.setVolume.bind(this));
 
         this.mute.updateValue(true);
+        return service;
     }
 
     protected getMuteCommands(value): Command | Array<Command> {

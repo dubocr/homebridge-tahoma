@@ -11,10 +11,6 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
-        this.registerThermostatService();
-    }
-
     protected getTargetStateCommands(value): Command | Array<Command> {
         const commands: Array<Command> = [];
         switch (value) {

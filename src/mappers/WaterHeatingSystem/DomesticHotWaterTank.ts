@@ -1,9 +1,10 @@
+import { Service } from 'homebridge';
 import { Command } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
 
 export default class DomesticHotWaterTank extends WaterHeatingSystem {
-    protected registerServices() {
-        this.registerSwitchService('boost');
+    protected registerMainService(): Service {
+        return this.registerSwitchService('boost');
     }
 
     protected getOnCommands(value): Command | Array<Command> {

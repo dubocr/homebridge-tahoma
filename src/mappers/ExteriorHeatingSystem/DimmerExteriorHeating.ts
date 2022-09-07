@@ -6,7 +6,7 @@ import ExteriorHeatingSystem from '../ExteriorHeatingSystem';
 export default class DimmerExteriorHeating extends ExteriorHeatingSystem {
     protected level: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.Lightbulb);
         this.on = service.getCharacteristic(Characteristics.On);
 
@@ -14,6 +14,7 @@ export default class DimmerExteriorHeating extends ExteriorHeatingSystem {
 
         this.level = service.getCharacteristic(Characteristics.Brightness);
         this.level.onSet(this.debounce(this.setBrightness));
+        return service;
     }
 
     protected async setBrightness(value) {

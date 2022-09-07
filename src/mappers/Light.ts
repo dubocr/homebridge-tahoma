@@ -9,7 +9,7 @@ export default class Light extends Mapper {
     protected brightness: Characteristic | undefined;
     protected saturation: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(this.device.hasCommand('setIntensity') ? Services.Lightbulb : Services.Switch);
         this.on = service.getCharacteristic(Characteristics.On);
 
@@ -25,6 +25,7 @@ export default class Light extends Mapper {
                 this.saturation.onSet(this.setSaturation.bind(this));
             }
         }
+        return service;
     }
 
     protected getOnOffCommands(value): Command | Array<Command> {

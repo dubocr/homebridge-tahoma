@@ -7,13 +7,14 @@ export default class ContactSensor extends Mapper {
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.ContactSensor);
         this.state = service.getCharacteristic(Characteristics.ContactSensorState);
         if (this.device.hasState('core:SensorDefectState')) {
             this.fault = service.getCharacteristic(Characteristics.StatusFault);
             this.battery = service.getCharacteristic(Characteristics.StatusLowBattery);
         }
+        return service;
     }
 
     protected onStateChanged(name: string, value) {

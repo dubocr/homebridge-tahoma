@@ -1,15 +1,17 @@
 import { Characteristics } from '../../Platform';
-import { Command, State } from 'overkiz-client';
+import { Command } from 'overkiz-client';
 import WaterHeatingSystem from '../WaterHeatingSystem';
 
 export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
     protected THERMOSTAT_CHARACTERISTICS = ['eco', 'prog'];
 
     protected registerServices() {
-        this.registerThermostatService();
+        const services = super.registerServices();
         if (this.device.hasCommand('setBoostOnOffState')) {
-            this.registerSwitchService('boost');
+            const boost = this.registerSwitchService('boost');
+            services.push(boost);
         }
+        return services;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {

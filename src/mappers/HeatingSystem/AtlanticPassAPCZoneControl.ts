@@ -11,9 +11,10 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
-        this.registerThermostatService();
+    protected registerMainService() {
+        const service = super.registerMainService();
         this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] });
+        return service;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {

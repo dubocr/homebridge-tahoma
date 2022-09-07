@@ -13,10 +13,6 @@ export default class SomfyHeatingTemperatureInterface extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
-        this.registerThermostatService();
-    }
-
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:

@@ -2,8 +2,8 @@ import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticPassAPCBoiler extends HeatingSystem {
-    protected registerServices() {
-        this.registerSwitchService();
+    protected registerMainService() {
+        return this.registerSwitchService();
     }
 
     protected getOnCommands(value): Command | Array<Command> {

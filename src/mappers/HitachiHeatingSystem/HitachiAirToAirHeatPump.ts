@@ -12,10 +12,6 @@ export default class HitachiAirToAirHeatPump extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
-        this.registerThermostatService();
-    }
-
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         return this.getCommands(value, this.targetTemperature?.value);
     }

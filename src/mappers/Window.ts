@@ -2,7 +2,7 @@ import RollerShutter from './RollerShutter';
 import { Characteristics, Services } from '../Platform';
 
 export default class Window extends RollerShutter {
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.Window);
         this.currentPosition = service.getCharacteristic(Characteristics.CurrentPosition);
         this.targetPosition = service.getCharacteristic(Characteristics.TargetPosition);
@@ -15,5 +15,6 @@ export default class Window extends RollerShutter {
         }
         this.positionState.updateValue(Characteristics.PositionState.STOPPED);
         this.targetPosition.onSet(this.debounce(this.setTargetPosition));
+        return service;
     }
 }

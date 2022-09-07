@@ -7,7 +7,7 @@ import { EcoCharacteristic, ProgCharacteristic } from '../CustomCharacteristics'
 export default class HeatingSystem extends Mapper {
     protected THERMOSTAT_CHARACTERISTICS: string[] = [];
     protected MIN_TEMP = 7;
-    protected MAX_TEMP = 26;
+    protected MAX_TEMP = 30;
     protected TARGET_MODES = [
         Characteristics.TargetHeatingCoolingState.AUTO,
         Characteristics.TargetHeatingCoolingState.OFF,
@@ -33,8 +33,8 @@ export default class HeatingSystem extends Mapper {
         this.ecoTemperature = config['eco'] || 17;
     }
 
-    protected registerThermostatService(subtype?: string): Service {
-        const service = this.registerService(Services.Thermostat, subtype);
+    protected registerMainService(): Service {
+        const service = this.registerService(Services.Thermostat);
         service.setPrimaryService(true);
         service.addOptionalCharacteristic(ProgCharacteristic);
         service.addOptionalCharacteristic(EcoCharacteristic);

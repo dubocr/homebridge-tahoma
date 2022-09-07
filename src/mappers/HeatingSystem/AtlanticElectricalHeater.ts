@@ -13,14 +13,15 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerServices() {
-        this.registerThermostatService();
+    protected registerMainService() {
+        const service = super.registerMainService();
         this.targetTemperature?.setProps({
             minValue: FROSTPROTECTION_TEMP,
             maxValue: this.comfortTemperature,
             minStep: 1,
             perms: [Perms.PAIRED_READ, Perms.EVENTS, Perms.PAIRED_WRITE],
         });
+        return service;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {

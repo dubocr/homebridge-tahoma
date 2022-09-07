@@ -10,8 +10,8 @@ export default class WaterHeatingSystem extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
-    protected registerThermostatService(subtype?: string): Service {
-        const service = super.registerThermostatService(subtype);
+    protected registerMainService(): Service {
+        const service = super.registerMainService();
         service.setPrimaryService(true);
         this.targetTemperature?.setProps({ minStep: 1 });
         return service;

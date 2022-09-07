@@ -5,9 +5,10 @@ import Mapper from '../Mapper';
 export default class LightSensor extends Mapper {
     protected lightLevel: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.LightSensor);
         this.lightLevel = service.getCharacteristic(Characteristics.CurrentAmbientLightLevel);
+        return service;
     }
 
     protected onStateChanged(name: string, value) {

@@ -8,13 +8,14 @@ export default class VentilationSystem extends Mapper {
     protected currentState: Characteristic | undefined;
     protected targetState: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.AirPurifier);
         this.active = service.getCharacteristic(Characteristics.Active);
         this.currentState = service.getCharacteristic(Characteristics.CurrentAirPurifierState);
         this.targetState = service.getCharacteristic(Characteristics.TargetAirPurifierState);
 
         this.targetState?.onSet(this.setTargetState.bind(this));
+        return service;
     }
 
     protected getTargetStateCommands(value): Command | Array<Command> {

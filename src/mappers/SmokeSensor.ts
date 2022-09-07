@@ -8,7 +8,7 @@ export default class SmokeSensor extends Mapper {
     protected fault: Characteristic | undefined;
     protected battery: Characteristic | undefined;
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.SmokeSensor);
         this.smoke = service.getCharacteristic(Characteristics.SmokeDetected);
         if (
@@ -23,6 +23,7 @@ export default class SmokeSensor extends Mapper {
         if (this.device.hasState('core:StatusState')) {
             this.active = service.getCharacteristic(Characteristics.StatusActive);
         }
+        return service;
     }
 
     protected onStateChanged(name: string, value) {

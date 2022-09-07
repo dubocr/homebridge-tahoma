@@ -18,12 +18,13 @@ export default class Alarm extends Mapper {
     }
 
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.SecuritySystem);
         this.currentState = service.getCharacteristic(Characteristics.SecuritySystemCurrentState);
         this.targetState = service.getCharacteristic(Characteristics.SecuritySystemTargetState);
 
         this.targetState.onSet(this.setTargetState.bind(this));
+        return service;
     }
 
     protected getTargetCommands(value): Command | Array<Command> {

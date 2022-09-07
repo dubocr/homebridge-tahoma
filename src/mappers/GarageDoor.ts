@@ -28,7 +28,7 @@ export default class GarageDoor extends Mapper {
             .find((command: string) => this.device.hasCommand(command));
     }
 
-    protected registerServices() {
+    protected registerMainService() {
         const service = this.registerService(Services.GarageDoorOpener);
         this.currentState = service.getCharacteristic(Characteristics.CurrentDoorState);
         this.targetState = service.getCharacteristic(Characteristics.TargetDoorState);
@@ -44,6 +44,7 @@ export default class GarageDoor extends Mapper {
             this.currentPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
             this.targetPedestrian?.updateValue(Characteristics.LockCurrentState.SECURED);
         }
+        return service;
     }
 
     protected registerSwitchService(subtype?: string): Service {
