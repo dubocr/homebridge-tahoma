@@ -50,7 +50,12 @@ export class Platform implements DynamicPlatformPlugin {
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 
         try {
-            this.client = new Client(log, config);
+            const logger = Object.assign({
+                debug: (...args) => {
+                    config['debug'] ? log.info('\x1b[90m', ...args) : log.debug(args.shift(), ...args);
+                },
+            }, log);
+            this.client = new Client(logger, config);
         } catch (error: any) {
             this.log.error(error.message);
             throw error;

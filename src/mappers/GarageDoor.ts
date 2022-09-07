@@ -19,6 +19,7 @@ export default class GarageDoor extends Mapper {
     protected cancelTimeout;
 
     protected applyConfig(config) {
+        this.stateless = !this.device.definition.widgetName.includes('Positionable');
         this.reverse = config['reverse'] || false;
         this.cyclic = config['cyclic'] || false;
         this.cycleDuration = (config['cycleDuration'] || 5) * 1000;
