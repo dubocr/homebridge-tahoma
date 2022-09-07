@@ -108,6 +108,7 @@ export class Platform implements DynamicPlatformPlugin {
         try {
             const uuids = Array<string>();
             const devices = await this.client.getDevices();
+            this.log.debug(devices.length + ' devices discovered');
 
             // loop over the discovered devices and register each one if it has not already been registered
             for (const device of devices) {
