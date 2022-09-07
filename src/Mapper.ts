@@ -12,6 +12,7 @@ export default abstract class Mapper {
     //protected config: Record<string, string | boolean | number> = {};
     private executionId;
     private actionPromise;
+    protected expectedStates: Array<string> = [];
 
     constructor(
         protected readonly platform: Platform,
@@ -28,7 +29,7 @@ export default abstract class Mapper {
             this.platform.devicesConfig[this.device.label],
             this.platform.devicesConfig[this.device.uuid],
         );
-        this.stateless = (this.device.states.length === 0);
+        this.stateless = this.device.states.length === 0 || !this.expectedStates.some((state) => this.device.hasState(state));
         this.applyConfig(config);
         if (Object.keys(config).length > 0) {
             delete config.key;

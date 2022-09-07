@@ -1,10 +1,11 @@
 import { Characteristics, Services } from '../Platform';
-import { Characteristic, CharacteristicSetCallback, Service } from 'homebridge';
+import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
 import { MyPositionCharacteristic } from '../CustomCharacteristics';
 
 export default class RollerShutter extends Mapper {
+    protected expectedStates = ['core:ClosureState', 'core:TargetClosureState'];
     protected windowService: Service | undefined;
 
     protected currentPosition: Characteristic | undefined;
@@ -29,7 +30,6 @@ export default class RollerShutter extends Mapper {
         this.movementDuration = config['movementDuration'] || 0;
         this.offsetMovementDuration = config['offsetMovementDuration'] || 0;
         this.blindsOnRollerShutter = config['blindsOnRollerShutter'] || false;
-        this.stateless = !this.device.hasState('core:ClosureState') && !this.device.hasState('core:TargetClosureState');
     }
 
     protected registerMainService() {
