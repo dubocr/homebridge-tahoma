@@ -49,17 +49,12 @@ export class Platform implements DynamicPlatformPlugin {
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 
-        try {
-            const logger = Object.assign({
-                debug: (...args) => {
-                    config['debug'] ? log.info('\x1b[90m', ...args) : log.debug(args.shift(), ...args);
-                },
-            }, log);
-            this.client = new Client(logger, config);
-        } catch (error: any) {
-            this.log.error(error.message);
-            throw error;
-        }
+        const logger = Object.assign({
+            debug: (...args) => {
+                config['debug'] ? log.info('\x1b[90m', ...args) : log.debug(args.shift(), ...args);
+            },
+        }, log);
+        this.client = new Client(logger, config);
 
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
         // Dynamic Platform plugins should only register new accessories after this event was fired,
