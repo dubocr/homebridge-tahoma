@@ -4,7 +4,7 @@ Homebridge plugin supporting Overkiz based platforms :
 
 | Service code				| Vendor					| Product compatibility												|
 |---------------------------|---------------------------|-------------------------------------------------------------------|
-| `local`					| Somfy local API			| TaHoma, TaHoma Switch												|
+| `local`					| Somfy local API			| TaHoma, TaHoma Switch ([configure local API](#configure-local-api))												|
 | `somfy_europe`			| Somfy Europe			 	| TaHoma, TaHoma Switch, Connexoon IO, Kit de connectivité Orange	|
 | `somfy_australia`			| Somfy Australia	 		| Connexoon RTS and other products in Australia						|
 | `somfy_north_america`		| Somfy North America 		| TaHoma and other product in North America							|
@@ -51,21 +51,22 @@ Configuration parameters:
 | Parameter					| Type			| Default			| Note											|
 |---------------------------|---------------|-------------------|-----------------------------------------------|
 | `service`					| String		| 'somfy_europe'	| optional, service name  (see above)			|
-| `user`					| String		| null				| mandatory, your service account username (*)	|
-| `password`				| String		| null				| mandatory, your service account password (*)	|
+| `user`					| String		| null				| mandatory, your service account username (or [gateway PIN / IP address](#configure-local-api))	|
+| `password`				| String		| null				| mandatory, your service account password (or [API token](#configure-local-api))	|
 | `pollingPeriod`			| Integer		| 30				| optional, bridge polling period in seconds	|
 | `refreshPeriod`			| Integer		| 30				| optional, device states refresh period in minutes	|
 | `exclude`					| String[]		| []				| optional, protocol, ui, widget or device name to exclude	|
 | `exposeScenarios`			| Boolean		| false				| optional, expose scenarios as HomeKit switches. Could also specify a list of string corresponding to scenarios names to expose	|
 | `devicesConfig`			| Object[]		| []				| optional list of device specific configuration (see below)	|
 
-
-### (*) Local API configuration
+### Configure Local API
 Local API service is available on TaHoma and TaHoma switch gateways.
 
 To use Local API you will have to:
 1. Activate `developer mode` ([www.somfy.com](https://www.somfy.com) > My Account > Activate developer mode) 
 2. Generate API credentials at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
+
+When using Local API service, please fill `user` with your gateway PIN number or IPv4 address and `password` with the token generated at [step 2](https://dev.duboc.pro/homebridge-tahoma)
 
 For more information, browse [https://developer.somfy.com/developer-mode](https://developer.somfy.com/developer-mode)
 
