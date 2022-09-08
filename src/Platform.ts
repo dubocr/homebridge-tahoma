@@ -69,7 +69,9 @@ export class Platform implements DynamicPlatformPlugin {
             log.debug('Executed didFinishLaunching callback');
             // run the method to discover / register your devices as accessories
             this.discoverDevices();
-            this.loadLocation();
+            if(this.config['service'] !== 'local') {
+                this.loadLocation();
+            }
         });
     }
 
@@ -85,7 +87,7 @@ export class Platform implements DynamicPlatformPlugin {
                 .catch(() => import('./lang/en.json'))
                 .then((c) => c.default);
         } catch(error: any) {
-            this.log.error('Fail to load lang file:', error);
+            this.log.warn('Fail to load lang file:', error);
         }
     }
 
