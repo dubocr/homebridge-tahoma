@@ -75,15 +75,15 @@ export class Platform implements DynamicPlatformPlugin {
      * It should be used to setup event handlers for characteristics and update respective values.
      */
     async loadLocation() {
-        try {
-            const location = await this.client.getSetupLocation();
-            const countryCode = location.countryCode.toLowerCase().trim();
-            this.translations = await import(`./lang/${countryCode}.json`)
-                .catch(() => import('./lang/en.json'))
-                .then((c) => c.default);
-        } catch(error: any) {
-            this.log.warn('Fail to load lang file:', error);
+        let countryCode = 'en';
+        const location = await this.client.getSetupLocation().catch((error) => this.log.warn('Fail to load lang file:', error));
+        if(location?.countryCode) {
+            countryCode = location.countryCode.toLowerCase().trim();
         }
+        this.translations = await import(`./lang/${countryCode}.json`)
+            .catch(() => import('./lang/en.json'))
+            .then((c) => c.default);
+        
     }
 
     /**
