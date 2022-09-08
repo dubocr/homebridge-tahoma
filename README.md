@@ -62,7 +62,7 @@ Configuration parameters:
 ### Configure Local API
 Local API service is available on TaHoma and TaHoma switch gateways.
 
-*** WARNING: Switching to local API will break your HomeKit configuration (automations) as local API device identifiers actually differs. ***
+**WARNING: Switching to local API will break your HomeKit configuration (automations) as local API device identifiers actually differs.**
 
 To use Local API you will have to:
 1. Activate `developer mode` ([www.somfy.com](https://www.somfy.com) > My Account > Activate developer mode) 
