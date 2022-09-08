@@ -163,7 +163,7 @@ export class Platform implements DynamicPlatformPlugin {
                 const actionGroups = await this.client.getActionGroups();
 
                 for (const actionGroup of actionGroups) {
-                    if (this.exclude.includes(actionGroup.label)) {
+                    if (this.exclude.includes(actionGroup.label) || actionGroup.label.startsWith('internal:')) {
                         continue;
                     }
 
@@ -176,7 +176,6 @@ export class Platform implements DynamicPlatformPlugin {
                         await this.configureAccessory(accessory);
                         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
                     }
-
 
                     this.log.info('Map scene', accessory.displayName);
 
