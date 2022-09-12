@@ -56,17 +56,26 @@ export default class RollerShutter extends Mapper {
         this.targetPosition.onSet(this.debounce(this.setTargetPosition));
         return service;
     }
-
+    
+    /**
+	* Triggered when Homekit try to modify the Characteristic.TargetPosition
+	* HomeKit '0' (Close) => 0% Deployment
+	* HomeKit '100' (Open) => 100% Deployment
+	**/
     protected getTargetCommands(value): Command | Command[] {
         if (this.stateless) {
             if (value === 100) {
-                return new Command('open');
+                return new Command(this.reverse ? 'close' : 'open');
             } else if (value === 0) {
-                return new Command('close');
+                return new Command(this.reverse ? 'open' : 'close');
             } else {
                 if (this.movementDuration > 0) {
                     const delta = value - Number(this.currentPosition!.value);
-                    return new Command(delta > 0 ? 'open' : 'close');
+                    if(this.reverse) {
+                        return new Command(delta > 0 ? 'close' : 'open');
+                    } else {
+                        return new Command(delta > 0 ? 'open' : 'close');
+                    }
                 } else {
                     return new Command('my');
                 }
