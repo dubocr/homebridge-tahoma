@@ -43,6 +43,8 @@ export default class HeatingSystem extends Mapper {
         this.currentState = service.getCharacteristic(Characteristics.CurrentHeatingCoolingState);
         this.targetState = service.getCharacteristic(Characteristics.TargetHeatingCoolingState);
 
+        this.currentTemperature.setProps({ minStep: 0.1 });
+        
         this.targetState?.setProps({ validValues: this.TARGET_MODES });
         this.targetTemperature?.setProps({ minValue: this.MIN_TEMP, maxValue: this.MAX_TEMP, minStep: 0.5 });
         if (this.targetTemperature && this.targetTemperature.value! < this.targetTemperature.props.minValue!) {

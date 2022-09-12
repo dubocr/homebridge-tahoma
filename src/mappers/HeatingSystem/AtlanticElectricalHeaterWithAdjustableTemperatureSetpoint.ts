@@ -51,9 +51,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 this.onTemperatureUpdate(value);
                 break;
             case 'io:EffectiveTemperatureSetpointState':
-                //case 'core:TargetTemperatureState': 
-                this.targetTemperature?.updateValue(value);
-                break;
+            case 'core:TargetTemperatureState':
             case 'io:TargetHeatingLevelState':
             case 'core:OperatingModeState':
                 this.postpone(this.computeStates);
@@ -71,6 +69,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
             case 'standby':
                 targetState = Characteristics.TargetHeatingCoolingState.OFF;
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
+                this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
                 break;
             case 'auto':
                 this.prog?.updateValue(false);
@@ -79,6 +78,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
+                this.targetTemperature?.updateValue(this.device.get('io:EffectiveTemperatureSetpointState'));
                 break;
             case 'prog':
             case 'program':
@@ -96,6 +96,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
+                this.targetTemperature?.updateValue(this.device.get('io:EffectiveTemperatureSetpointState'));
                 break;
         }
 
