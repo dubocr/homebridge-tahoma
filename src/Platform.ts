@@ -49,11 +49,11 @@ export class Platform implements DynamicPlatformPlugin {
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 
-        const logger = Object.assign({
+        const logger = Object.assign(log, {
             debug: (...args) => {
                 config['debug'] ? log.info('\x1b[90m', ...args) : log.debug(args.shift(), ...args);
             },
-        }, log);
+        });
         this.client = new Client(logger, config);
 
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
