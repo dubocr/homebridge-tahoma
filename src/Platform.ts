@@ -49,7 +49,7 @@ export class Platform implements DynamicPlatformPlugin {
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
 
-        const logger = Object.assign(log, {
+        const logger = Object.assign({}, log, {
             debug: (...args) => {
                 config['debug'] ? log.info('\x1b[90m', ...args) : log.debug(args.shift(), ...args);
             },
