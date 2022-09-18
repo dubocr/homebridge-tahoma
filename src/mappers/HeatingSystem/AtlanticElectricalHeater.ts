@@ -39,6 +39,9 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
     }
 
     protected async setTargetTemperature(value) {
+        if (this.targetState?.value === Characteristics.CurrentHeatingCoolingState.OFF) {
+            return;
+        }
         const frostEcoLimit = FROSTPROTECTION_TEMP + (this.ecoTemperature - FROSTPROTECTION_TEMP) / 2;
         const ecoComfortLimit = this.ecoTemperature + (this.comfortTemperature - this.ecoTemperature) / 2;
         let newValue = value;
