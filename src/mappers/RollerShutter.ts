@@ -53,15 +53,15 @@ export default class RollerShutter extends Mapper {
             service.removeCharacteristic(this.my);
         }
         this.positionState.updateValue(Characteristics.PositionState.STOPPED);
-        this.targetPosition.onSet(this.debounce(this.setTargetPosition));
+        this.targetPosition.onSet(this.debounce(this.setTargetPosition, [0, 100]));
         return service;
     }
-    
+
     /**
-	* Triggered when Homekit try to modify the Characteristic.TargetPosition
-	* HomeKit '0' (Close) => 0% Deployment
-	* HomeKit '100' (Open) => 100% Deployment
-	**/
+    * Triggered when Homekit try to modify the Characteristic.TargetPosition
+    * HomeKit '0' (Close) => 0% Deployment
+    * HomeKit '100' (Open) => 100% Deployment
+    **/
     protected getTargetCommands(value): Command | Command[] {
         if (this.stateless) {
             if (value === 100) {
@@ -71,7 +71,7 @@ export default class RollerShutter extends Mapper {
             } else {
                 if (this.movementDuration > 0) {
                     const delta = value - Number(this.currentPosition!.value);
-                    if(this.reverse) {
+                    if (this.reverse) {
                         return new Command(delta > 0 ? 'close' : 'open');
                     } else {
                         return new Command(delta > 0 ? 'open' : 'close');

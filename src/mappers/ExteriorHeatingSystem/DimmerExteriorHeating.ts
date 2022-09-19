@@ -13,7 +13,7 @@ export default class DimmerExteriorHeating extends ExteriorHeatingSystem {
         this.on.onSet(this.setOn.bind(this));
 
         this.level = service.getCharacteristic(Characteristics.Brightness);
-        this.level.onSet(this.debounce(this.setBrightness));
+        this.level.onSet(this.debounce(this.setBrightness, [0, 100]));
         return service;
     }
 

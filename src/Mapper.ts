@@ -110,23 +110,30 @@ export default abstract class Mapper {
         }
     }
 
-    protected debounce(task) {
+    protected debounce(task, immediate: Array<CharacteristicValue> = []) {
         return (value: CharacteristicValue) => {
             if (this.debounceTimer !== null) {
                 clearTimeout(this.debounceTimer);
             }
-            this.debounceTimer = setTimeout(() => {
-                this.debounceTimer = null;
-                task.bind(this)(value).catch(() => null);
-            }, 2000);
-        };
+            if (immediate.includes(value)) {
+                task.bind(this, value)();
+            } else {
+                this.debounceTimer = setTimeout(async () => {
+                    this.debounceTimer = null;
+                    task.bind(this, value)().catch(() => null);
+                }, 1000);
+            }
+        }
     }
 
     protected postpone(task, ...args) {
         if (this.postponeTimer !== null) {
             clearTimeout(this.postponeTimer);
         }
-        this.postponeTimer = setTimeout(task.bind(this), 500, ...args);
+        this.postponeTimer = setTimeout(async () => {
+            this.postponeTimer = null;
+            task.bind(this, ...args)().catch(() => null);
+        }, 500);
     }
 
     protected async executeCommands(commands: Command | Array<Command> | undefined, standalone = false): Promise<Action> {
@@ -221,10 +228,10 @@ export default abstract class Mapper {
     }
 
     protected registerServices(): Array<Service> {
-        if(typeof this.registerMainService === 'function') {
+        if (typeof this.registerMainService === 'function') {
             try {
                 return [this.registerMainService()];
-            } catch(error: any) {
+            } catch (error: any) {
                 this.log.warn(error.message);
             }
         } else {
@@ -238,7 +245,7 @@ export default abstract class Mapper {
             if (!init) {
                 this.debug(state.name + ' => ' + state.value);
             }
-            if(typeof this.onStateChanged === 'function') {
+            if (typeof this.onStateChanged === 'function') {
                 this.onStateChanged(state.name, state.value);
             }
         });
