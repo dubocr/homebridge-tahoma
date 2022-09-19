@@ -121,7 +121,7 @@ export default abstract class Mapper {
                 this.debounceTimer = setTimeout(async () => {
                     this.debounceTimer = null;
                     task.bind(this, value)().catch(() => null);
-                }, 1000);
+                }, 500);
             }
         }
     }
