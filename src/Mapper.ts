@@ -130,9 +130,9 @@ export default abstract class Mapper {
         if (this.postponeTimer !== null) {
             clearTimeout(this.postponeTimer);
         }
-        this.postponeTimer = setTimeout(async () => {
+        this.postponeTimer = setTimeout(() => {
             this.postponeTimer = null;
-            task.bind(this, ...args)().catch(() => null);
+            task.bind(this, ...args)();
         }, 500);
     }
 
