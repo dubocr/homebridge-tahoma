@@ -67,6 +67,7 @@ Local API service is available on TaHoma and TaHoma switch gateways.
 To use Local API you will have to:
 1. Activate `developer mode` ([www.somfy.com](https://www.somfy.com) > My Account > Activate developer mode) 
 2. Generate API credentials at [https://dev.duboc.pro/homebridge-tahoma](https://dev.duboc.pro/homebridge-tahoma)
+3. Configure the plugin service to Local API: `"service":"local"`
 
 When using Local API service, please fill `user` with your gateway PIN number or IPv4 address and `password` with the token generated at [step 2](https://dev.duboc.pro/homebridge-tahoma)
 
