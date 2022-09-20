@@ -1,5 +1,5 @@
 import { Characteristics } from '../../Platform';
-import { Command } from 'overkiz-client';
+import { Command, ExecutionState } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
 
 export default class SomfyThermostat extends HeatingSystem {
@@ -11,6 +11,21 @@ export default class SomfyThermostat extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.COOL,
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
+    private lastRefresh = Date.now();
+
+    protected registerMainService() {
+        const service = super.registerMainService();
+        this.targetState?.onGet(this.refreshStates.bind(this));
+        return service;
+    }
+
+    protected async refreshStates() {
+        if (this.lastRefresh < Date.now() - (60 * 1000)) {
+            this.lastRefresh = Date.now();
+            await this.executeCommands(new Command('refreshState'));
+        }
+        return this.targetState?.value ?? Characteristics.TargetHeatingCoolingState.OFF;
+    }
 
     protected getTargetStateCommands(value): Command | Array<Command> | undefined {
         switch (value) {
@@ -41,7 +56,6 @@ export default class SomfyThermostat extends HeatingSystem {
                 this.postpone(this.computeStates);
                 break;
             default:
-                this.debug(name + value);
                 super.onStateChanged(name, value);
                 break;
         }

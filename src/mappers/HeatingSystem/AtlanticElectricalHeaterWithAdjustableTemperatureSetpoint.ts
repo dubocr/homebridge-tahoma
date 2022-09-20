@@ -61,6 +61,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
 
     protected computeStates() {
         let targetState;
+        let targetTemperature;
         targetState = Characteristics.TargetHeatingCoolingState.AUTO;
         switch (this.device.get('core:OperatingModeState')) {
             case 'off':
@@ -69,7 +70,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
             case 'standby':
                 targetState = Characteristics.TargetHeatingCoolingState.OFF;
                 this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
-                this.targetTemperature?.updateValue(this.device.get('core:TargetTemperatureState'));
+                targetTemperature = this.device.get('core:TargetTemperatureState');
                 break;
             case 'auto':
                 this.prog?.updateValue(false);
@@ -78,7 +79,7 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
-                this.targetTemperature?.updateValue(this.device.get('io:EffectiveTemperatureSetpointState'));
+                targetTemperature = this.device.get('io:EffectiveTemperatureSetpointState');
                 break;
             case 'prog':
             case 'program':
@@ -96,8 +97,12 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
                 } else {
                     this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.HEAT);
                 }
-                this.targetTemperature?.updateValue(this.device.get('io:EffectiveTemperatureSetpointState'));
+                targetTemperature = this.device.get('io:EffectiveTemperatureSetpointState');
                 break;
+        }
+
+        if (this.targetTemperature !== undefined && targetTemperature !== undefined && targetTemperature !== null) {
+            this.targetTemperature.updateValue(targetTemperature);
         }
 
         if (this.targetState !== undefined && targetState !== undefined && this.isIdle) {
