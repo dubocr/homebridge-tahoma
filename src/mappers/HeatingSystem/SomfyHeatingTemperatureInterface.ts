@@ -59,11 +59,13 @@ export default class SomfyHeatingTemperatureInterface extends HeatingSystem {
     }
 
     protected onStateChanged(name, value) {
-        super.onStateChanged(name, value);
         switch (name) {
             case 'core:OnOffState':
             case 'ovp:HeatingTemperatureInterfaceOperatingModeState':
                 this.postpone(this.computeStates);
+                break;
+            default:
+                super.onStateChanged(name, value);
                 break;
         }
     }

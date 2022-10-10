@@ -65,6 +65,9 @@ export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
             case 'core:BoostOnOffState':
                 this.on?.updateValue(value === 'on');
                 break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 

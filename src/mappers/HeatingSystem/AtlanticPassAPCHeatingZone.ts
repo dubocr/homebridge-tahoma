@@ -64,6 +64,10 @@ export default class AtlanticPassAPCHeatingZone extends HeatingSystem {
             case 'core:ComfortHeatingTargetTemperatureState':
             case 'core:EcoHeatingTargetTemperatureState':
                 this.postpone(this.computeStates);
+                break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 

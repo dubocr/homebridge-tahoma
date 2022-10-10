@@ -112,6 +112,9 @@ export default class AtlanticElectricalHeater extends HeatingSystem {
                     this.targetState.updateValue(targetState);
                 }
                 break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 }

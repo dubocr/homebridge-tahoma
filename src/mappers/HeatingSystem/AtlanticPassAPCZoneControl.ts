@@ -55,6 +55,10 @@ export default class AtlanticPassAPCZoneControl extends HeatingSystem {
             case 'io:PassAPCOperatingModeState':
             case 'core:HeatingCoolingAutoSwitchState':
                 this.postpone(this.computeStates);
+                break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 

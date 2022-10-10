@@ -4,7 +4,7 @@ import HeatingSystem from '../HeatingSystem';
 
 export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint extends HeatingSystem {
     protected THERMOSTAT_CHARACTERISTICS = ['prog'];
-    protected MIN_TEMP = 16;
+    protected MIN_TEMP = 7;
     protected MAX_TEMP = 28;
     protected TARGET_MODES = [
         Characteristics.TargetHeatingCoolingState.AUTO,
@@ -55,6 +55,10 @@ export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint e
             case 'io:TargetHeatingLevelState':
             case 'core:OperatingModeState':
                 this.postpone(this.computeStates);
+                break;
+
+            default:
+                super.onStateChanged(name, value);
                 break;
         }
     }

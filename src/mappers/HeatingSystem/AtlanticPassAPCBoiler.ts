@@ -23,6 +23,10 @@ export default class AtlanticPassAPCBoiler extends HeatingSystem {
                         this.on?.updateValue(true);
                         break;
                 }
+                break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 }

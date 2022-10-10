@@ -1,7 +1,8 @@
-import { Perms } from 'homebridge';
+import { Characteristic, Perms } from 'homebridge';
 import { Characteristics } from '../../Platform';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem';
+import { TotalConsumptionCharacteristic } from '../../CustomCharacteristics';
 
 export default class AtlanticPassAPCHeatPump extends HeatingSystem {
     protected MIN_TEMP = 0;
@@ -11,6 +12,7 @@ export default class AtlanticPassAPCHeatPump extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.COOL,
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
+    protected consumption: Characteristic | undefined;
 
     protected registerMainService() {
         const service = super.registerMainService();
@@ -44,6 +46,10 @@ export default class AtlanticPassAPCHeatPump extends HeatingSystem {
         switch (name) {
             case 'io:PassAPCOperatingModeState':
                 this.postpone(this.computeStates);
+                break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 

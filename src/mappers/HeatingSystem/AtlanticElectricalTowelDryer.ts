@@ -88,6 +88,9 @@ export default class AtlanticElectricalTowelDryer extends HeatingSystem {
             case 'io:TargetHeatingLevelState':
                 this.postpone(this.computeStates);
                 break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 

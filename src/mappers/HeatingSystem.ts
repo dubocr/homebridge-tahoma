@@ -2,7 +2,7 @@ import { Characteristics, Services } from '../Platform';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
 import Mapper from '../Mapper';
-import { EcoCharacteristic, ProgCharacteristic } from '../CustomCharacteristics';
+import { EcoCharacteristic, ProgCharacteristic, TotalConsumptionCharacteristic } from '../CustomCharacteristics';
 
 export default class HeatingSystem extends Mapper {
     protected THERMOSTAT_CHARACTERISTICS: string[] = [];
@@ -22,6 +22,8 @@ export default class HeatingSystem extends Mapper {
 
     protected prog: Characteristic | undefined;
     protected eco: Characteristic | undefined;
+
+    protected consumption: Characteristic | undefined;
 
     protected derogationDuration;
     protected comfortTemperature;
@@ -68,6 +70,11 @@ export default class HeatingSystem extends Mapper {
                 this.eco?.updateValue(value);
                 this.sendProgCommands();
             });
+        }
+
+        if (this.device.hasSensor('CumulativeElectricPowerConsumptionSensor')) {
+            service.addOptionalCharacteristic(TotalConsumptionCharacteristic);
+            this.consumption = service.getCharacteristic(TotalConsumptionCharacteristic);
         }
 
         this.targetState?.onSet(this.setTargetState.bind(this));
@@ -161,6 +168,9 @@ export default class HeatingSystem extends Mapper {
             case 'core:TemperatureState': this.onTemperatureUpdate(value); break;
             case 'core:TargetTemperatureState':
                 this.targetTemperature?.updateValue(value);
+                break;
+            case 'core:ElectricEnergyConsumptionState':
+                this.consumption?.updateValue(value / 1000);
                 break;
         }
     }

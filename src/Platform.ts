@@ -42,7 +42,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         this.exclude = config.exclude || [];
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
-            'ElectricitySensor', 'OnOffHeatingSystem', 'Wifi', 'RemoteController',
+            'OnOffHeatingSystem', 'Wifi', 'RemoteController',
             // AtlanticElectricalTowelDryer bad sensors
             'io:LightIOSystemDeviceSensor', 'io:RelativeHumidityIOSystemDeviceSensor', 'WeatherForecastSensor',
         );
@@ -64,7 +64,7 @@ export class Platform implements DynamicPlatformPlugin {
             log.debug('Executed didFinishLaunching callback');
             // run the method to discover / register your devices as accessories
             this.discoverDevices();
-            if(this.config['service'] !== 'local') {
+            if (this.config['service'] !== 'local') {
                 this.loadLocation();
             }
         });
@@ -77,13 +77,13 @@ export class Platform implements DynamicPlatformPlugin {
     async loadLocation() {
         let countryCode = 'en';
         const location = await this.client.getSetupLocation().catch((error) => this.log.warn('Fail to load lang file:', error));
-        if(location?.countryCode) {
+        if (location?.countryCode) {
             countryCode = location.countryCode.toLowerCase().trim();
         }
         this.translations = await import(`./lang/${countryCode}.json`)
             .catch(() => import('./lang/en.json'))
             .then((c) => c.default);
-        
+
     }
 
     /**

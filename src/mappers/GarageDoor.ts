@@ -61,7 +61,7 @@ export default class GarageDoor extends Mapper {
                                 this.onStateChanged(this.expectedStates[0], 'closed');
                             }, this.cycleDuration);
                         }
-                    } else {
+                    } else if (this.cyclic) {
                         this.requestStatesUpdate(60).catch((e) => this.warn(e));
                     }
                     break;
@@ -76,9 +76,8 @@ export default class GarageDoor extends Mapper {
 
     protected onStateChanged(name: string, value) {
         let targetState;
-        if(this.expectedStates.includes(name)) {
+        if (this.expectedStates.includes(name)) {
             switch (value) {
-                case 'unknown':
                 case 'open':
                     this.currentState?.updateValue(Characteristics.CurrentDoorState.OPEN);
                     targetState = Characteristics.TargetDoorState.OPEN;
@@ -90,6 +89,8 @@ export default class GarageDoor extends Mapper {
                 case 'closed':
                     this.currentState?.updateValue(Characteristics.CurrentDoorState.CLOSED);
                     targetState = Characteristics.TargetDoorState.CLOSED;
+                    break;
+                case 'unknown':
                     break;
             }
         }

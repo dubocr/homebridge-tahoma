@@ -76,6 +76,10 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             case 'io:PassAPCHeatingProfileState':
             case 'io:PassAPCCoolingProfileState':
                 this.postpone(this.computeStates);
+                break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 

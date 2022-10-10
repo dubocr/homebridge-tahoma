@@ -27,6 +27,9 @@ export default class ThermostatSetPoint extends HeatingSystem {
             case 'core:HeatingTargetTemperatureState':
                 this.targetTemperature?.updateValue(value);
                 break;
+            default:
+                super.onStateChanged(name, value);
+                break;
         }
     }
 }

@@ -31,7 +31,6 @@ export default class ValveHeatingTemperatureInterface extends HeatingSystem {
     }
 
     protected onStateChanged(name, value) {
-        super.onStateChanged(name, value);
         switch (name) {
             case 'core:OperatingModeState':
             case 'io:CurrentHeatingModeState':
@@ -39,6 +38,9 @@ export default class ValveHeatingTemperatureInterface extends HeatingSystem {
                 break;
             case 'core:TargetRoomTemperatureState':
                 this.targetTemperature?.updateValue(value);
+                break;
+            default:
+                super.onStateChanged(name, value);
                 break;
         }
     }
