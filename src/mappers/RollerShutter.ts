@@ -101,7 +101,7 @@ export default class RollerShutter extends Mapper {
                 Characteristics.PositionState.INCREASING :
                 Characteristics.PositionState.DECREASING;
             switch (state) {
-                case ExecutionState.TRANSMITTED:
+                case ExecutionState.IN_PROGRESS:
                     if (standalone) {
                         const delta = value - Number(this.currentPosition!.value);
                         const duration = this.offsetMovementDuration * 1000 + Math.round(this.movementDuration * Math.abs(delta) * 1000 / 100);
@@ -115,8 +115,6 @@ export default class RollerShutter extends Mapper {
                             }
                         }, duration);
                     }
-                    break;
-                case ExecutionState.IN_PROGRESS:
                     this.positionState?.updateValue(positionState);
                     break;
                 case ExecutionState.COMPLETED:

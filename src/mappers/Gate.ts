@@ -5,7 +5,7 @@ import GarageDoor from './GarageDoor';
 
 export default class Gate extends GarageDoor {
     protected expectedStates = ['core:OpenClosedPedestrianState'];
-    
+
     protected currentPedestrian: Characteristic | undefined;
     protected targetPedestrian: Characteristic | undefined;
     protected on: Characteristic | undefined;
@@ -67,7 +67,7 @@ export default class Gate extends GarageDoor {
         const action = await this.executeCommands(this.getLockCommands(value));
         action.on('update', (state) => {
             switch (state) {
-                case ExecutionState.TRANSMITTED:
+                case ExecutionState.IN_PROGRESS:
                     if (this.stateless && !this.pedestrianCommand && this.pedestrianDuration) {
                         this.info('Will stop movement in ' + this.pedestrianDuration + ' millisec');
                         this.cancelTimeout = setTimeout(() => {
@@ -119,7 +119,7 @@ export default class Gate extends GarageDoor {
     protected onStateChanged(name: string, value) {
         let targetState;
         let targetPedestrian;
-        if(this.expectedStates.includes(name)) {
+        if (this.expectedStates.includes(name)) {
             switch (value) {
                 case 'unknown':
                 case 'open':
