@@ -3,5 +3,8 @@ contact_links:
   - name: Device integration and bug
     url: https://dev.duboc.pro/homebridge-tahoma
     about: 
-      Start here for unsupported device or any command,state unexpected behaviour.\n
-      Pour un équipement non pris en charge ou pour un problème de pilotage/affichage de l'état de votre produit, c'est par ici.
+      Start here for unsupported device or any command,state unexpected behaviour
+  - name: Gestion d'un équipement et anomalies de fonctionnement
+    url: https://dev.duboc.pro/homebridge-tahoma
+    about: 
+      Pour un équipement non pris en charge ou pour un problème de pilotage/affichage de l'état de votre produit, c'est par ici
