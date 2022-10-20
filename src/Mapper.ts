@@ -1,5 +1,5 @@
 import { Characteristics, Services } from './Platform';
-import { CharacteristicValue, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { CharacteristicValue, HAPStatus, HapStatusError, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
 import { GREY } from './colors';
@@ -111,12 +111,12 @@ export default abstract class Mapper {
     }
 
     protected debounce(task, immediate: Array<CharacteristicValue> = []) {
-        return (value: CharacteristicValue) => {
+        return async (value: CharacteristicValue) => {
             if (this.debounceTimer !== null) {
                 clearTimeout(this.debounceTimer);
             }
             if (immediate.includes(value)) {
-                task.bind(this, value)();
+                await task.bind(this, value)();
             } else {
                 this.debounceTimer = setTimeout(async () => {
                     this.debounceTimer = null;
@@ -139,7 +139,7 @@ export default abstract class Mapper {
     protected async executeCommands(commands: Command | Array<Command> | undefined, standalone = false): Promise<Action> {
         if (commands === undefined || (Array.isArray(commands) && commands.length === 0)) {
             this.error('No target command for', this.device.label);
-            throw new Error('No target command for ' + this.device.label);
+            throw HAPStatus.RESOURCE_DOES_NOT_EXIST;
         } else if (Array.isArray(commands)) {
             for (const c of commands) {
                 this.info(c.name + JSON.stringify(c.parameters));
@@ -172,7 +172,7 @@ export default abstract class Mapper {
                         resolve(this.actionPromise.action);
                     } catch (error: any) {
                         this.error(commandName + ' ' + error.message);
-                        reject(error);
+                        reject(HAPStatus.SERVICE_COMMUNICATION_FAILURE);
                     }
                     this.actionPromise = null;
                 }, 100);
