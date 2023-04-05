@@ -19,7 +19,7 @@ jobs:
             if that solves the issue.
 
             This issue will be closed in case of inactivity.
-          days-before-stale: 30
-          days-before-close: 30
+          days-before-stale: 90
+          days-before-close: 120
           stale-issue-label: "inactive"
           exempt-issue-labels: "blocked,waiting"
