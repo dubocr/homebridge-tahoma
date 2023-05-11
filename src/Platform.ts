@@ -163,7 +163,7 @@ export class Platform implements DynamicPlatformPlugin {
                 const actionGroups = await this.client.getActionGroups();
 
                 for (const actionGroup of actionGroups) {
-                    if (this.exclude.includes(actionGroup.label) || actionGroup.label.startsWith('internal:')) {
+                    if (this.exclude.includes(actionGroup.label) || actionGroup.label.startsWith('internal:') || actionGroup.label === '') {
                         continue;
                     }
 
