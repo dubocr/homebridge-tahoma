@@ -42,7 +42,7 @@ export default class VenetianBlind extends RollerShutter {
     }
 
     protected getTargetCommands(value): Command | Command[] {
-        if (this.stateless) {
+        if (!this.stateless) {
             if (value === 100) {
                 return new Command('open');
             } else if (value === 0) {
