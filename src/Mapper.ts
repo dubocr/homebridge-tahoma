@@ -1,5 +1,5 @@
 import { Characteristics, Services } from './Platform';
-import { CharacteristicValue, HAPStatus, HapStatusError, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { CharacteristicValue, HAPStatus, Logger, PlatformAccessory, Service } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
 import { Platform } from './Platform';
 import { GREY } from './colors';
@@ -123,7 +123,7 @@ export default abstract class Mapper {
                     task.bind(this, value)().catch(() => null);
                 }, 500);
             }
-        }
+        };
     }
 
     protected postpone(task, ...args) {
