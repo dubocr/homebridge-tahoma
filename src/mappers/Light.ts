@@ -33,8 +33,9 @@ export default class Light extends Mapper {
     }
 
     protected async setOn(value) {
-        if (this.brightness !== undefined) { // when light has brightness control, we do not set on to avoid glitches with gradual lightning up
-            return
+        if (value && this.brightness !== undefined) {
+            // when light has brightness control, we do not set on to avoid glitches with gradual lightning up
+            return;
         }
         const action = await this.executeCommands(this.getOnOffCommands(value));
         action.on('update', (state, data) => {
