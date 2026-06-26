@@ -17,6 +17,10 @@
     "homebridge": ">=1.6.0"
   },
   "main": "dist/index.js",
+  "files": [
+    "dist/",
+    "config.schema.json"
+  ],
   "scripts": {
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "vitest run",
