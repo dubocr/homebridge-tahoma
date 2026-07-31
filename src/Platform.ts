@@ -44,7 +44,8 @@ export class Platform implements DynamicPlatformPlugin {
         this.exclude.push('Pod', 'ConfigurationComponent', 'NetworkComponent', 'ProtocolGateway', 'ConsumptionSensor',
             'OnOffHeatingSystem', 'Wifi', 'RemoteController',
             // AtlanticElectricalTowelDryer bad sensors
-            'io:LightIOSystemDeviceSensor', 'io:RelativeHumidityIOSystemDeviceSensor', 'WeatherForecastSensor',
+            'io:LightIOSystemDeviceSensor', 'io:RelativeHumidityIOSystemDeviceSensor', 'enocean:EnOceanHumidityComfortSensor',
+            'WeatherForecastSensor',
         );
         this.exposeScenarios = config.exposeScenarios;
         config.devicesConfig?.forEach(x => this.devicesConfig[x.key] = x);
@@ -52,9 +53,9 @@ export class Platform implements DynamicPlatformPlugin {
         const logger = Object.assign({}, log, {
             debug: (...args) => {
                 if (config['debug']) {
-                    log.info('\x1b[90m', ...args)
+                    log.info('\x1b[90m', ...args);
                 } else {
-                    log.debug(args.shift(), ...args)
+                    log.debug(args.shift(), ...args);
                 }
             },
         });

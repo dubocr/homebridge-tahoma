@@ -63,12 +63,6 @@
             "enum": [
               "flexom"
             ]
-          },
-          {
-            "title": "Flexom (Bouygues)",
-            "enum": [
-              "flexom"
-            ]
           }
         ],
         "required": true
