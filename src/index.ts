@@ -8,4 +8,4 @@ import { Platform } from './Platform.js';
  */
 export default (api: API) => {
     api.registerPlatform(PLATFORM_NAME, Platform);
-}
+};

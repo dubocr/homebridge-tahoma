@@ -78,6 +78,7 @@ export default abstract class Mapper {
      * Helper methods
      */
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected applyConfig(config) {
         //
     }
