@@ -1,8 +1,8 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import Mapper from '../Mapper';
-import { MyPositionCharacteristic } from '../CustomCharacteristics';
+import Mapper from '../Mapper.js';
+import { MyPositionCharacteristic } from '../CustomCharacteristics.js';
 
 export default class RollerShutter extends Mapper {
     protected expectedStates = ['core:ClosureState', 'core:TargetClosureState'];

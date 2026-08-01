@@ -1,6 +1,6 @@
 import { Characteristic } from 'homebridge';
-import { Characteristics, Services } from '../Platform';
-import Mapper from '../Mapper';
+import { Characteristics, Services } from '../Platform.js';
+import Mapper from '../Mapper.js';
 
 export default class WaterSensor extends Mapper {
     protected leak: Characteristic | undefined;

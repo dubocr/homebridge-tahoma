@@ -1,7 +1,7 @@
 
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic, Service } from 'homebridge';
-import Mapper from '../Mapper';
+import Mapper from '../Mapper.js';
 
 export default class AirSensor extends Mapper {
     protected quality: Characteristic | undefined;

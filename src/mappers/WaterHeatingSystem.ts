@@ -1,6 +1,6 @@
-import { Characteristics } from '../Platform';
+import { Characteristics } from '../Platform.js';
 import { Service } from 'homebridge';
-import HeatingSystem from './HeatingSystem';
+import HeatingSystem from './HeatingSystem.js';
 
 export default class WaterHeatingSystem extends HeatingSystem {
     protected MIN_TEMP = 40;

@@ -1,7 +1,7 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import GarageDoor from './GarageDoor';
+import GarageDoor from './GarageDoor.js';
 
 export default class Gate extends GarageDoor {
     protected expectedStates = ['core:OpenClosedPedestrianState'];

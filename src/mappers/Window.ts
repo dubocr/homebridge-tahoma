@@ -1,5 +1,5 @@
-import RollerShutter from './RollerShutter';
-import { Characteristics, Services } from '../Platform';
+import RollerShutter from './RollerShutter.js';
+import { Characteristics, Services } from '../Platform.js';
 
 export default class Window extends RollerShutter {
     protected registerMainService() {

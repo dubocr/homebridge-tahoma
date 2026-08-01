@@ -1,5 +1,5 @@
-import { Characteristics } from '../../Platform';
-import HeatingSystem from '../HeatingSystem';
+import { Characteristics } from '../../Platform.js';
+import HeatingSystem from '../HeatingSystem.js';
 
 export default class HeatingSetPoint extends HeatingSystem {
     protected registerMainService() {

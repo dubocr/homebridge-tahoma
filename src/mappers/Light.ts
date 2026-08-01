@@ -1,7 +1,7 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic, CharacteristicSetCallback } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import Mapper from '../Mapper';
+import Mapper from '../Mapper.js';
 
 export default class Light extends Mapper {
     protected on: Characteristic | undefined;

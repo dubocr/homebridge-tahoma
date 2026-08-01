@@ -1,5 +1,5 @@
 import { Service } from 'homebridge';
-import Mapper from '../Mapper';
+import Mapper from '../Mapper.js';
 
 export default class ConsumptionSensor extends Mapper {
     protected registerMainService(): Service {

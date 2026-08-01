@@ -1,8 +1,8 @@
-import { Characteristics, Services } from './Platform';
+import { Characteristics, Services } from './Platform.js';
 import { CharacteristicValue, HAPStatus, Logger, PlatformAccessory, Service } from 'homebridge';
 import { Device, State, Command, Action, ExecutionState } from 'overkiz-client';
-import { Platform } from './Platform';
-import { GREY } from './colors';
+import { Platform } from './Platform.js';
+import { GREY } from './colors.js';
 
 export default abstract class Mapper {
     protected log: Logger;
@@ -77,7 +77,7 @@ export default abstract class Mapper {
     /**
      * Helper methods
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     protected applyConfig(config) {
         //
     }

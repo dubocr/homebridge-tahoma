@@ -1,6 +1,6 @@
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Characteristic } from 'homebridge';
-import AirSensor from '../AirSensor';
+import AirSensor from '../AirSensor.js';
 
 export default class RelativeHumiditySensor extends AirSensor {
     protected co2: Characteristic | undefined;

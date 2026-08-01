@@ -1,7 +1,7 @@
-import { Services } from '../../Platform';
+import { Services } from '../../Platform.js';
 import { Characteristic } from 'homebridge';
-import { CurrentConsumptionCharacteristic, TotalConsumptionCharacteristic } from '../../CustomCharacteristics';
-import ElectricitySensor from '../ElectricitySensor';
+import { CurrentConsumptionCharacteristic, TotalConsumptionCharacteristic } from '../../CustomCharacteristics.js';
+import ElectricitySensor from '../ElectricitySensor.js';
 
 
 export default class CumulativeElectricPowerConsumptionSensor extends ElectricitySensor {

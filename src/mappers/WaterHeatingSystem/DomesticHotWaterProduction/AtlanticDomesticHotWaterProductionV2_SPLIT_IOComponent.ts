@@ -1,7 +1,7 @@
 import { Service } from 'homebridge';
 import { Command } from 'overkiz-client';
-import { Characteristics } from '../../../Platform';
-import DomesticHotWaterProduction from '../DomesticHotWaterProduction';
+import { Characteristics } from '../../../Platform.js';
+import DomesticHotWaterProduction from '../DomesticHotWaterProduction.js';
 
 export default class AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent extends DomesticHotWaterProduction {
     protected THERMOSTAT_CHARACTERISTICS = ['eco'];

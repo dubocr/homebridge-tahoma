@@ -1,5 +1,5 @@
-import { Characteristics } from '../../Platform';
-import ContactSensor from '../ContactSensor';
+import { Characteristics } from '../../Platform.js';
+import ContactSensor from '../ContactSensor.js';
 
 export default class WaterDetectionSensor extends ContactSensor {
     protected onStateChanged(name: string, value) {

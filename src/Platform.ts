@@ -1,11 +1,11 @@
 import { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { Client, Execution, Action } from 'overkiz-client';
-import Mapper from './Mapper';
-import SceneMapper from './SceneMapper';
-import { CustomCharacteristics } from './CustomCharacteristics';
-import { BLUE, GREY, RESET } from './colors';
+import Mapper from './Mapper.js';
+import SceneMapper from './SceneMapper.js';
+import { CustomCharacteristics } from './CustomCharacteristics.js';
+import { BLUE, GREY, RESET } from './colors.js';
 
 
 export let Services: typeof Service;
@@ -85,8 +85,8 @@ export class Platform implements DynamicPlatformPlugin {
         if (location?.countryCode) {
             countryCode = location.countryCode.toLowerCase().trim();
         }
-        this.translations = await import(`./lang/${countryCode}.json`)
-            .catch(() => import('./lang/en.json'))
+        this.translations = await import(`./lang/${countryCode}.json`, { with: { type: 'json' } })
+            .catch(() => import('./lang/en.json', { with: { type: 'json' } }))
             .then((c) => c.default);
 
     }
@@ -153,11 +153,12 @@ export class Platform implements DynamicPlatformPlugin {
                 this.log.info(`Configure device ${BLUE}${accessory.displayName}${RESET}`);
                 this.log.info(`${GREY}  ${device.definition.uiClass} > ${device.definition.widgetName}`);
 
-                const mapper = await import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}/${device.uniqueName}`)
-                    .catch(() => import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}`))
-                    .catch(() => import(`./mappers/${device.definition.uiClass}`))
+                // eslint-disable-next-line max-len
+                const mapper = await import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}/${device.uniqueName}.js`)
+                    .catch(() => import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}.js`))
+                    .catch(() => import(`./mappers/${device.definition.uiClass}.js`))
                     .then((c) => c.default)
-                    .catch(() => Mapper);
+                    .catch(() => ({ default: Mapper }));
                 new mapper(this, accessory, device).build();
 
                 uuids.push(device.uuid);

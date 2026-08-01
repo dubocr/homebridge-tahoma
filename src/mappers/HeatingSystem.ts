@@ -1,8 +1,8 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import Mapper from '../Mapper';
-import { EcoCharacteristic, ProgCharacteristic, TotalConsumptionCharacteristic } from '../CustomCharacteristics';
+import Mapper from '../Mapper.js';
+import { EcoCharacteristic, ProgCharacteristic, TotalConsumptionCharacteristic } from '../CustomCharacteristics.js';
 
 export default class HeatingSystem extends Mapper {
     protected THERMOSTAT_CHARACTERISTICS: string[] = [];

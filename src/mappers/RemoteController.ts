@@ -1,6 +1,6 @@
 import { Characteristic } from 'homebridge';
-import Mapper from '../Mapper';
-import { Characteristics, Services } from '../Platform';
+import Mapper from '../Mapper.js';
+import { Characteristics, Services } from '../Platform.js';
 
 export default class RemoteController extends Mapper {
     protected event: Characteristic | undefined;

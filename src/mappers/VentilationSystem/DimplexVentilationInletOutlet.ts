@@ -1,7 +1,7 @@
 
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Command } from 'overkiz-client';
-import VentilationSystem from '../VentilationSystem';
+import VentilationSystem from '../VentilationSystem.js';
 
 export default class DimplexVentilationInletOutlet extends VentilationSystem {
     protected getTargetStateCommands(value): Command | Array<Command> {

@@ -1,5 +1,5 @@
 import { Command } from 'overkiz-client';
-import RollerShutter from '../RollerShutter';
+import RollerShutter from '../RollerShutter.js';
 
 export default class RTSGeneric extends RollerShutter {
     protected getTargetCommands(value) {

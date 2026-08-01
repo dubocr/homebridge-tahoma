@@ -1,4 +1,4 @@
-import RollerShutter from '../RollerShutter';
+import RollerShutter from '../RollerShutter.js';
 export default class PositionableRollerShutterUno extends RollerShutter {
     protected onStateChanged(name: string, value) {
         switch(name) {

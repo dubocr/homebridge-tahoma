@@ -1,7 +1,7 @@
-import { Characteristics, Services } from '../../Platform';
+import { Characteristics, Services } from '../../Platform.js';
 import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import HeatingSystem from '../HeatingSystem';
+import HeatingSystem from '../HeatingSystem.js';
 
 export default class AtlanticElectricalTowelDryer extends HeatingSystem {
     protected THERMOSTAT_CHARACTERISTICS = ['prog'];

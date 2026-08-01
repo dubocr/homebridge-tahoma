@@ -1,6 +1,6 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Service } from 'homebridge';
-import Mapper from '../Mapper';
+import Mapper from '../Mapper.js';
 
 export default class ElectricitySensor extends Mapper {
     protected registerMainService(): Service {

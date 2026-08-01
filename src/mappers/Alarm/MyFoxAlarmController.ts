@@ -1,6 +1,6 @@
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Command } from 'overkiz-client';
-import Alarm from '../Alarm';
+import Alarm from '../Alarm.js';
 
 export default class MyFoxAlarmController extends Alarm {
     protected getTargetCommands(value): Command | Array<Command> {

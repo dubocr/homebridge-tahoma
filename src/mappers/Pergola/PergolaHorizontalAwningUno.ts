@@ -1,4 +1,4 @@
-import Pergola from '../Pergola';
+import Pergola from '../Pergola.js';
 
 export default class PergolaHorizontalAwningUno extends Pergola {
     protected onStateChanged(name: string, value) {

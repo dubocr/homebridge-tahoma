@@ -1,6 +1,6 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic } from 'homebridge';
-import Mapper from '../Mapper';
+import Mapper from '../Mapper.js';
 
 export default class HumiditySensor extends Mapper {
     protected humidity: Characteristic | undefined;

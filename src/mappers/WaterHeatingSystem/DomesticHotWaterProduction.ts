@@ -1,8 +1,8 @@
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import WaterHeatingSystem from '../WaterHeatingSystem';
-import { CurrentShowerCharacteristic, TargetShowerCharacteristic } from '../../CustomCharacteristics';
+import WaterHeatingSystem from '../WaterHeatingSystem.js';
+import { CurrentShowerCharacteristic, TargetShowerCharacteristic } from '../../CustomCharacteristics.js';
 
 export default class DomesticHotWaterProduction extends WaterHeatingSystem {
     protected THERMOSTAT_CHARACTERISTICS = ['eco'];

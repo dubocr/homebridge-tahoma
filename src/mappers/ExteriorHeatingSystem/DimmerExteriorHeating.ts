@@ -1,7 +1,7 @@
 import { Characteristic, Service } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import { Characteristics, Services } from '../../Platform';
-import ExteriorHeatingSystem from '../ExteriorHeatingSystem';
+import { Characteristics, Services } from '../../Platform.js';
+import ExteriorHeatingSystem from '../ExteriorHeatingSystem.js';
 
 export default class DimmerExteriorHeating extends ExteriorHeatingSystem {
     protected level: Characteristic | undefined;

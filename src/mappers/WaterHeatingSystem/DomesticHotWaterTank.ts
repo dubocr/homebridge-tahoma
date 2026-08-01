@@ -1,6 +1,6 @@
 import { Service } from 'homebridge';
 import { Command } from 'overkiz-client';
-import WaterHeatingSystem from '../WaterHeatingSystem';
+import WaterHeatingSystem from '../WaterHeatingSystem.js';
 
 export default class DomesticHotWaterTank extends WaterHeatingSystem {
     protected registerMainService(): Service {

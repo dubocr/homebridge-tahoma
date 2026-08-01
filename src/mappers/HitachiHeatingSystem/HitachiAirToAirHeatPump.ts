@@ -1,6 +1,6 @@
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Command } from 'overkiz-client';
-import HeatingSystem from '../HeatingSystem';
+import HeatingSystem from '../HeatingSystem.js';
 
 export default class HitachiAirToAirHeatPump extends HeatingSystem {
     protected MIN_TEMP = 16;

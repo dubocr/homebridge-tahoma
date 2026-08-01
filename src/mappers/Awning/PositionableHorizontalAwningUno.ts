@@ -1,4 +1,4 @@
-import Awning from '../Awning';
+import Awning from '../Awning.js';
 export default class PositionableHorizontalAwningUno extends Awning {
     protected onStateChanged(name: string, value) {
         switch(name) {

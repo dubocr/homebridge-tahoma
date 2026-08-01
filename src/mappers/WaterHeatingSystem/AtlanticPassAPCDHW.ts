@@ -1,6 +1,6 @@
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Command } from 'overkiz-client';
-import WaterHeatingSystem from '../WaterHeatingSystem';
+import WaterHeatingSystem from '../WaterHeatingSystem.js';
 
 export default class AtlanticPassAPCDHW extends WaterHeatingSystem {
     protected THERMOSTAT_CHARACTERISTICS = ['eco', 'prog'];

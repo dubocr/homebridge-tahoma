@@ -1,5 +1,5 @@
-import HeatingSystem from '../HeatingSystem';
-import TemperatureSensor from '../TemperatureSensor';
+import HeatingSystem from '../HeatingSystem.js';
+import TemperatureSensor from '../TemperatureSensor.js';
 
 export default class DHWSetPoint extends TemperatureSensor {
 

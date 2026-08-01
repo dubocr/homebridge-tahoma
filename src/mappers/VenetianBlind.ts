@@ -1,7 +1,7 @@
-import { Characteristics, Services } from '../Platform';
+import { Characteristics, Services } from '../Platform.js';
 import { Characteristic } from 'homebridge';
 import { Command, ExecutionState } from 'overkiz-client';
-import RollerShutter from './RollerShutter';
+import RollerShutter from './RollerShutter.js';
 
 export default class VenetianBlind extends RollerShutter {
     protected currentAngle: Characteristic | undefined;

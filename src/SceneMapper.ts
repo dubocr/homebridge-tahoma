@@ -1,7 +1,7 @@
-import { Characteristics, Services } from './Platform';
+import { Characteristics, Services } from './Platform.js';
 import { Characteristic, Logger, PlatformAccessory, Service } from 'homebridge';
 import { ExecutionState, ActionGroup, Execution } from 'overkiz-client';
-import { Platform } from './Platform';
+import { Platform } from './Platform.js';
 
 export default class Mapper {
     protected log: Logger;

@@ -1,6 +1,6 @@
-import { Characteristics } from '../../Platform';
+import { Characteristics } from '../../Platform.js';
 import { Command } from 'overkiz-client';
-import HeatingSystem from '../HeatingSystem';
+import HeatingSystem from '../HeatingSystem.js';
 
 export default class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint extends HeatingSystem {
     protected THERMOSTAT_CHARACTERISTICS = ['prog'];
