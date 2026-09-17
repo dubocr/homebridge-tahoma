@@ -12,6 +12,7 @@ export let Services: typeof Service;
 export let Characteristics: typeof Characteristic;
 
 const DEFAULT_RETRY_DELAY = 60;
+const MAX_RETRY_DELAY = 300;
 
 /**
  * HomebridgePlatform
@@ -197,7 +198,7 @@ export class Platform implements DynamicPlatformPlugin {
             this.log.error(error);
             this.log.error('Retry in ' + this.retryDelay + ' sec...');
             setTimeout(this.discoverDevices.bind(this), this.retryDelay * 1000);
-            this.retryDelay *= 2;
+            this.retryDelay = Math.min(this.retryDelay * 2, MAX_RETRY_DELAY);
         }
     }
 
