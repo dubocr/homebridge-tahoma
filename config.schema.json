@@ -148,6 +148,11 @@
               "minimum": 0,
               "description": "Duration from 'opened' to 'closed' position to estimate intermediate positions"
             },
+            "openCloseOnly": {
+              "title": "Open/close only",
+              "type": "boolean",
+              "description": "For stateless (RTS) roller shutters without movement duration: round intermediate positions to fully open (>= 50%) or fully closed (< 50%) instead of sending 'My'"
+            },
             "cyclic": {
               "title": "Cyclic",
               "type": "boolean",
@@ -229,7 +234,8 @@
                     "devicesConfig[].blindMode",
                     "devicesConfig[].lowSpeed",
                     "devicesConfig[].blindsOnRollerShutter",
-                    "devicesConfig[].movementDuration"
+                    "devicesConfig[].movementDuration",
+                    "devicesConfig[].openCloseOnly"
                   ]
                 },
                 {

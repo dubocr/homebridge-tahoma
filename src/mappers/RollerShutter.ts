@@ -20,6 +20,7 @@ export default class RollerShutter extends Mapper {
     protected blindsOnRollerShutter;
     protected movementDuration;
     protected offsetMovementDuration;
+    protected openCloseOnly;
 
     protected cancelTimeout;
 
@@ -30,6 +31,7 @@ export default class RollerShutter extends Mapper {
         this.movementDuration = config['movementDuration'] || 0;
         this.offsetMovementDuration = config['offsetMovementDuration'] || 0;
         this.blindsOnRollerShutter = config['blindsOnRollerShutter'] || false;
+        this.openCloseOnly = config['openCloseOnly'] || false;
     }
 
     protected registerMainService() {
@@ -91,6 +93,12 @@ export default class RollerShutter extends Mapper {
     * HomeKit '100' (Open) => 0% Closure
     **/
     async setTargetPosition(value) {
+        if (this.stateless && this.openCloseOnly && !(this.movementDuration > 0) && value !== 0 && value !== 100) {
+            // Stateless covering without position estimation: round to fully open / fully closed
+            // instead of sending 'my' (which stops the shutter if it is moving)
+            value = value >= 50 ? 100 : 0;
+            this.targetPosition?.updateValue(value);
+        }
         if (this.cancelTimeout !== null) {
             clearTimeout(this.cancelTimeout);
         }
