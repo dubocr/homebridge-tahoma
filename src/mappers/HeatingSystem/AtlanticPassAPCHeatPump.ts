@@ -1,8 +1,7 @@
-import { Characteristic, Perms } from 'homebridge';
+import { Perms } from 'homebridge';
 import { Characteristics } from '../../Platform.js';
 import { Command } from 'overkiz-client';
 import HeatingSystem from '../HeatingSystem.js';
-import { TotalConsumptionCharacteristic } from '../../CustomCharacteristics.js';
 
 export default class AtlanticPassAPCHeatPump extends HeatingSystem {
     protected MIN_TEMP = 0;
@@ -13,13 +12,43 @@ export default class AtlanticPassAPCHeatPump extends HeatingSystem {
         Characteristics.TargetHeatingCoolingState.OFF,
     ];
 
+    protected applyConfig(config) {
+        super.applyConfig(config);
+
+        const thermalConfigurations = this.platform.devices
+            .filter(device => device.parent === this.device)
+            .map(device => device.get('core:ThermalConfigurationState'));
+
+        const supportsHeating = thermalConfigurations.some(configuration =>
+            configuration === 'heating' || configuration === 'heatingAndCooling',
+        );
+        const supportsCooling = thermalConfigurations.some(configuration =>
+            configuration === 'cooling' || configuration === 'heatingAndCooling',
+        );
+
+        if (!supportsHeating && !supportsCooling) {
+            return;
+        }
+
+        this.TARGET_MODES = [
+            ...(supportsHeating ? [Characteristics.TargetHeatingCoolingState.HEAT] : []),
+            ...(supportsCooling ? [Characteristics.TargetHeatingCoolingState.COOL] : []),
+            Characteristics.TargetHeatingCoolingState.OFF,
+        ];
+    }
+
     protected registerMainService() {
         const service = super.registerMainService();
         this.targetTemperature?.setProps({ perms: [Perms.PAIRED_READ, Perms.EVENTS] });
         return service;
     }
 
-    protected getTargetStateCommands(value): Command | Array<Command> {
+    protected getTargetStateCommands(value): Command | Array<Command> | undefined {
+        if (!this.TARGET_MODES.includes(value)) {
+            this.log.warn(`Ignoring unsupported operating mode for ${this.device.label}: ${value}`);
+            return undefined;
+        }
+
         switch (value) {
             case Characteristics.TargetHeatingCoolingState.AUTO:
                 return new Command('setPassAPCOperatingMode', 'heating');
@@ -37,7 +66,7 @@ export default class AtlanticPassAPCHeatPump extends HeatingSystem {
     }
 
 
-    protected getTargetTemperatureCommands(value): Command | Array<Command> {
+    protected getTargetTemperatureCommands(): Command | Array<Command> {
         return [];
     }
 
@@ -70,7 +99,7 @@ export default class AtlanticPassAPCHeatPump extends HeatingSystem {
         }
 
 
-        if (this.targetState !== undefined && targetState != null && this.isIdle) {
+        if (this.targetState !== undefined && typeof targetState === 'number' && this.isIdle) {
             this.targetState.updateValue(targetState);
         }
     }

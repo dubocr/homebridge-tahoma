@@ -12,6 +12,21 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
     ];
 
     private refreshStatesTimeout;
+    private hasRoomTemperatureSensor = false;
+
+    public build() {
+        this.hasRoomTemperatureSensor = this.device.hasState('core:TemperatureState') ||
+            this.device.sensors.some(sensor => sensor.hasState('core:TemperatureState'));
+        super.build();
+    }
+
+    protected registerMainService() {
+        const service = super.registerMainService();
+        if (!this.hasRoomTemperatureSensor) {
+            this.currentTemperature?.updateValue(new Error('No room temperature sensor available'));
+        }
+        return service;
+    }
 
     protected applyConfig(config) {
         super.applyConfig(config);
@@ -62,7 +77,9 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
     protected onStateChanged(name, value) {
         switch (name) {
             case 'core:TemperatureState':
-                this.onTemperatureUpdate(value);
+                if (this.hasRoomTemperatureSensor) {
+                    this.onTemperatureUpdate(value);
+                }
                 break;
             case 'core:TargetTemperatureState':
                 if (value >= 16) {
@@ -92,7 +109,7 @@ export default class AtlanticPassAPCHeatingAndCoolingZone extends HeatingSystem 
             targetState = Characteristics.TargetHeatingCoolingState.OFF;
             this.currentState?.updateValue(Characteristics.CurrentHeatingCoolingState.OFF);
         } else {
-            targetTemperature = targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`) ||
+            targetTemperature = this.device.get(`core:${heatingCooling}TargetTemperatureState`) ||
                 this.device.get('core:TargetTemperatureState');
             const currentTemperature = this.currentTemperature?.value || targetTemperature;
             if (heatingCooling === 'Heating') {
