@@ -1,7 +1,7 @@
 import { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
-import { Client, Execution, Action } from 'overkiz-client';
+import { Client, Execution, Action, Device } from 'overkiz-client';
 import Mapper from './Mapper.js';
 import SceneMapper from './SceneMapper.js';
 import { CustomCharacteristics } from './CustomCharacteristics.js';
@@ -22,6 +22,7 @@ export class Platform implements DynamicPlatformPlugin {
     // this is used to track restored cached accessories
     private readonly accessories: PlatformAccessory[] = [];
     public readonly client: Client;
+    public devices: Array<Device> = [];
 
     private readonly exclude: Array<string>;
     private readonly exposeScenarios: boolean | Array<string>;
@@ -110,6 +111,7 @@ export class Platform implements DynamicPlatformPlugin {
         try {
             const uuids = Array<string>();
             const devices = await this.client.getDevices();
+            this.devices = devices;
             this.log.debug(devices.length + ' devices discovered');
 
             // loop over the discovered devices and register each one if it has not already been registered
