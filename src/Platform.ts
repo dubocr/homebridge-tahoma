@@ -158,7 +158,7 @@ export class Platform implements DynamicPlatformPlugin {
                     .catch(() => import(`./mappers/${device.definition.uiClass}/${device.definition.widgetName}.js`))
                     .catch(() => import(`./mappers/${device.definition.uiClass}.js`))
                     .then((c) => c.default)
-                    .catch(() => ({ default: Mapper }));
+                    .catch(() => Mapper);
                 new mapper(this, accessory, device).build();
 
                 uuids.push(device.uuid);
